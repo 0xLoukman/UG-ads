@@ -406,6 +406,7 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
 
 const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { label: string, options: string[], selectedOptions: string[], onToggle: (option: string) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [query, setQuery] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -418,35 +419,75 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const filtered = useMemo(() => {
+        const q = query.toLowerCase();
+        return options.filter(o => o.toLowerCase().includes(q));
+    }, [options, query]);
+
+    const visibleSelected = selectedOptions.slice(0, 2);
+    const extraCount = Math.max(0, selectedOptions.length - visibleSelected.length);
+
     return (
         <div ref={containerRef}>
              <label className="text-sm font-medium text-gray-700">{label}</label>
              <div className="relative mt-1">
-                <button onClick={() => setIsOpen(!isOpen)} className="w-full p-2 border border-gray-200 rounded-lg flex justify-between items-center text-left min-h-[42px]">
-                    <div className="flex flex-wrap gap-1.5">
-                        {selectedOptions.length > 0 
-                            ? selectedOptions.map(option => (
-                                <span key={option} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    {option}
-                                </span>
-                            ))
-                            : <span className="text-gray-500">Select campaign types...</span>}
+                <button onClick={() => setIsOpen(!isOpen)} className="w-full px-2 py-2 border border-gray-200 rounded-lg flex justify-between items-center text-left min-h-[40px]">
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                        {selectedOptions.length > 0 ? (
+                            <>
+                                {visibleSelected.map(option => (
+                                    <span key={option} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                        {option}
+                                    </span>
+                                ))}
+                                {extraCount > 0 && (
+                                    <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">+{extraCount}</span>
+                                )}
+                            </>
+                        ) : (
+                            <span className="text-gray-500 text-sm">Select campaign types...</span>
+                        )}
                     </div>
                     <ChevronDownIcon className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && (
-                     <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                        {options.map(option => (
-                            <li key={option} onClick={() => onToggle(option)} className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center justify-between">
-                               <span>{option}</span>
-                               {selectedOptions.includes(option) && (
-                                   <svg className="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                   </svg>
-                               )}
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
+                        <div className="p-2 border-b border-gray-100">
+                            <input
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Search types"
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md"
+                            />
+                        </div>
+                        <div className="max-h-48 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {filtered.length === 0 ? (
+                                <div className="col-span-2 text-xs text-gray-500 px-2 py-1.5">No matches</div>
+                            ) : (
+                                filtered.map(option => {
+                                    const active = selectedOptions.includes(option);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={option}
+                                            onClick={() => onToggle(option)}
+                                            className={`flex items-center justify-between w-full text-sm px-2 py-1.5 rounded-md border ${active ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-white border-gray-200 text-gray-700'} hover:bg-gray-50`}
+                                        >
+                                            <span className="truncate">{option}</span>
+                                            {active && (
+                                                <svg className="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                            )}
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 p-2 border-t border-gray-100">
+                            <button onClick={() => options.forEach(o => !selectedOptions.includes(o) && onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">Select All</button>
+                            <button onClick={() => selectedOptions.forEach(o => onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Clear</button>
+                            <button onClick={() => setIsOpen(false)} className="ml-auto text-xs px-2 py-1 rounded-full bg-black text-white hover:bg-gray-800">Done</button>
+                        </div>
+                    </div>
                 )}
              </div>
         </div>
