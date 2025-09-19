@@ -1,11 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FullCampaign, CampaignSummary, Channel, Market } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY as string) || (process.env.GEMINI_API_KEY as string) });
 
 // ===== SHARED SCHEMAS =====
 const marketSchema = {
