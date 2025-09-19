@@ -1,7 +1,34 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { FullCampaign, CampaignSummary, Channel, Market } from '../types';
 
-const ai = new GoogleGenAI({ apiKey: (process.env.API_KEY as string) || (process.env.GEMINI_API_KEY as string) });
+const getApiKey = (): string | null => {
+  try {
+    // Prefer runtime-provided keys (localStorage or global)
+    if (typeof localStorage !== 'undefined') {
+      const fromLs = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('gemini_api_key');
+      if (fromLs && fromLs.trim()) return fromLs.trim();
+    }
+    const globalKey = (globalThis as any)?.__GEMINI_API_KEY__;
+    if (typeof globalKey === 'string' && globalKey.trim()) return globalKey.trim();
+  } catch {}
+
+  // Fallback to environment
+  const viteEnv = (import.meta as any)?.env || {};
+  const key = viteEnv.VITE_GEMINI_API_KEY || viteEnv.GEMINI_API_KEY || (process as any)?.env?.GEMINI_API_KEY || (process as any)?.env?.API_KEY;
+  return key || null;
+};
+
+let aiClient: GoogleGenAI | null = null;
+const ensureClient = (): GoogleGenAI => {
+  const key = getApiKey();
+  if (!key) {
+    throw new Error('Missing Gemini API key. Add VITE_GEMINI_API_KEY in Settings or paste your key in the app (it will be stored locally).');
+  }
+  if (!aiClient) aiClient = new GoogleGenAI({ apiKey: key });
+  return aiClient;
+};
+
+export const hasGeminiKey = (): boolean => !!getApiKey();
 
 // ===== SHARED SCHEMAS =====
 const marketSchema = {
@@ -85,7 +112,7 @@ ${brief}
     }
     
     try {
-        const response = await ai.models.generateContent({
+        const response = await ensureClient().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: finalPrompt,
             config: {
@@ -237,7 +264,7 @@ CRITICAL RULES:
 export const generateCampaignDetails = async (summaries: CampaignSummary[], brief: string): Promise<FullCampaign[]> => {
     const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(summaries, null, 2)}"""`;
     try {
-        const response = await ai.models.generateContent({
+        const response = await ensureClient().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
@@ -323,7 +350,7 @@ export const generateCreativeAsset = async (
     `;
 
     try {
-        const response = await ai.models.generateContent({
+        const response = await ensureClient().models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
         });
