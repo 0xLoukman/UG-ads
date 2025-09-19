@@ -559,25 +559,6 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
             <div className="w-full max-w-3xl space-y-6">
                 <h2 className="text-3xl font-bold text-gray-800 text-center tracking-tight">What campaign you would like to launch</h2>
                 <div className="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
-                    {!hasKey && (
-                        <div className="mb-3 p-3 rounded-lg border border-yellow-300 bg-yellow-50">
-                            <p className="text-sm font-medium text-yellow-800">Gemini API key required</p>
-                            <div className="mt-2 flex flex-col sm:flex-row gap-2">
-                                <input
-                                    type="password"
-                                    value={keyInput}
-                                    onChange={(e) => setKeyInput(e.target.value)}
-                                    placeholder="Paste Gemini API key"
-                                    className="flex-1 px-3 py-2 border border-yellow-300 rounded-md bg-white placeholder-yellow-700/60"
-                                />
-                                <button
-                                    onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
-                                    className="px-4 py-2 rounded-md bg-black text-white hover:bg-gray-800"
-                                >Save</button>
-                            </div>
-                            <p className="mt-1 text-xs text-yellow-700">Stored locally in your browser. You can also set VITE_GEMINI_API_KEY in Settings.</p>
-                        </div>
-                    )}
                     {/* Mode Toggle */}
                     <div className="flex justify-center p-2">
                         <div className="bg-gray-100 p-1 rounded-full flex space-x-1">
@@ -666,9 +647,6 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                     )}
 
                     <div className="mt-3 p-2 border-t border-gray-100">
-                        {(!hasKey) && (
-                            <div className="mb-2 text-xs text-red-600">Add a Gemini API key to enable AI features.</div>
-                        )}
                         {inputMode === 'manual' && isGenerateDisabled && (
                             <div className="mb-2 text-xs text-red-600">
                                 <p className="font-medium">Complete the following:</p>
@@ -678,7 +656,29 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                             </div>
                         )}
                         <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-2"></div>
+                            <div className="flex items-center space-x-2">
+                                {!hasKey ? (
+                                    <details className="text-xs text-gray-500">
+                                        <summary className="cursor-pointer list-none underline underline-offset-2 decoration-dotted">Set Gemini key</summary>
+                                        <div className="mt-2 flex gap-2">
+                                            <input
+                                                type="password"
+                                                value={keyInput}
+                                                onChange={(e) => setKeyInput(e.target.value)}
+                                                placeholder="Paste Gemini API key"
+                                                className="px-2 py-1 text-xs border border-gray-200 rounded-md"
+                                            />
+                                            <button
+                                                onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
+                                                className="px-2 py-1 text-xs rounded-md bg-black text-white hover:bg-gray-800"
+                                            >Save</button>
+                                        </div>
+                                        <p className="mt-1 text-[10px] text-gray-500">Stored locally in your browser.</p>
+                                    </details>
+                                ) : (
+                                    <span className="text-xs text-gray-500">Gemini enabled</span>
+                                )}
+                            </div>
                             <button
                                 onClick={handleGenerate}
                                 disabled={isGenerateDisabled}
