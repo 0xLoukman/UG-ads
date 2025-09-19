@@ -463,6 +463,20 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     const [manualSecondaryMarkets, setManualSecondaryMarkets] = useState<Market[]>([]);
     const [manualCampaignTypes, setManualCampaignTypes] = useState<string[]>([]);
 
+    const detectKey = () => {
+        try {
+            return Boolean(
+                (import.meta as any)?.env?.VITE_GEMINI_API_KEY ||
+                (import.meta as any)?.env?.GEMINI_API_KEY ||
+                (window as any)?.__GEMINI_API_KEY__ ||
+                localStorage.getItem('GEMINI_API_KEY') ||
+                localStorage.getItem('gemini_api_key')
+            );
+        } catch { return false; }
+    };
+    const [hasKey, setHasKey] = useState<boolean>(detectKey());
+    const [keyInput, setKeyInput] = useState<string>('');
+
     const manualIssues = useMemo(() => {
         const issues: string[] = [];
         if (!brief.trim()) issues.push('Add a creative brief');
@@ -497,13 +511,32 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
         }
     };
     
-    const isGenerateDisabled = inputMode === 'manual' ? manualIssues.length > 0 : (!brief.trim() || selectedChannels.length === 0);
+    const isGenerateDisabled = (inputMode === 'manual' ? manualIssues.length > 0 : (!brief.trim() || selectedChannels.length === 0)) || !hasKey;
 
     return (
         <div className="flex justify-center items-start pt-8 sm:pt-16">
             <div className="w-full max-w-3xl space-y-6">
                 <h2 className="text-3xl font-bold text-gray-800 text-center tracking-tight">What campaign you would like to launch</h2>
                 <div className="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
+                    {!hasKey && (
+                        <div className="mb-3 p-3 rounded-lg border border-yellow-300 bg-yellow-50">
+                            <p className="text-sm font-medium text-yellow-800">Gemini API key required</p>
+                            <div className="mt-2 flex flex-col sm:flex-row gap-2">
+                                <input
+                                    type="password"
+                                    value={keyInput}
+                                    onChange={(e) => setKeyInput(e.target.value)}
+                                    placeholder="Paste Gemini API key"
+                                    className="flex-1 px-3 py-2 border border-yellow-300 rounded-md bg-white placeholder-yellow-700/60"
+                                />
+                                <button
+                                    onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
+                                    className="px-4 py-2 rounded-md bg-black text-white hover:bg-gray-800"
+                                >Save</button>
+                            </div>
+                            <p className="mt-1 text-xs text-yellow-700">Stored locally in your browser. You can also set VITE_GEMINI_API_KEY in Settings.</p>
+                        </div>
+                    )}
                     {/* Mode Toggle */}
                     <div className="flex justify-center p-2">
                         <div className="bg-gray-100 p-1 rounded-full flex space-x-1">
@@ -592,6 +625,9 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                     )}
 
                     <div className="mt-3 p-2 border-t border-gray-100">
+                        {(!hasKey) && (
+                            <div className="mb-2 text-xs text-red-600">Add a Gemini API key to enable AI features.</div>
+                        )}
                         {inputMode === 'manual' && isGenerateDisabled && (
                             <div className="mb-2 text-xs text-red-600">
                                 <p className="font-medium">Complete the following:</p>
