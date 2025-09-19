@@ -327,7 +327,7 @@ const ChannelButton = ({ channel, icon, selected, onClick }: { channel: Channel,
     )
 }
 
-const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMarkets }: { label: string, selectedMarkets: Market[], onAdd: (market: Market) => void, onRemove: (market: Market) => void, allSelectedMarkets: Market[] }) => {
+const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMarkets, onClear }: { label: string, selectedMarkets: Market[], onAdd: (market: Market) => void, onRemove: (market: Market) => void, allSelectedMarkets: Market[], onClear?: () => void }) => {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -357,7 +357,12 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
 
     return (
         <div ref={containerRef}>
-            <label className="text-sm font-medium text-gray-700">{label}</label>
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">{label}</label>
+                {onClear && selectedMarkets.length > 0 && (
+                    <button onClick={onClear} className="text-xs text-gray-500 hover:text-gray-700">Clear</button>
+                )}
+            </div>
             <div className="relative mt-1">
                 <div className="w-full p-2 border border-gray-200 rounded-lg flex flex-wrap gap-2 min-h-[42px]">
                     {selectedMarkets.map(market => (
@@ -373,17 +378,25 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onFocus={() => setIsOpen(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && filteredCountries[0]) handleSelect(filteredCountries[0]);
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         placeholder="Search for a country..."
                         className="flex-grow p-0 border-none focus:ring-0"
                     />
                 </div>
-                {isOpen && filteredCountries.length > 0 && (
+                {isOpen && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-                        {filteredCountries.map(c => (
-                            <li key={c.iso} onClick={() => handleSelect(c)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">
-                                {c.name}
-                            </li>
-                        ))}
+                        {filteredCountries.length === 0 ? (
+                            <li className="px-4 py-3 text-sm text-gray-500">No countries match "{query}"</li>
+                        ) : (
+                            filteredCountries.map(c => (
+                                <li key={c.iso} onClick={() => handleSelect(c)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">
+                                    {c.name}
+                                </li>
+                            ))
+                        )}
                     </ul>
                 )}
             </div>
@@ -449,7 +462,16 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     const [manualPrimaryMarkets, setManualPrimaryMarkets] = useState<Market[]>([]);
     const [manualSecondaryMarkets, setManualSecondaryMarkets] = useState<Market[]>([]);
     const [manualCampaignTypes, setManualCampaignTypes] = useState<string[]>([]);
-    
+
+    const manualIssues = useMemo(() => {
+        const issues: string[] = [];
+        if (!brief.trim()) issues.push('Add a creative brief');
+        if (manualPrimaryMarkets.length + manualSecondaryMarkets.length === 0) issues.push('Select at least one market');
+        if (manualCampaignTypes.length === 0) issues.push('Choose at least one campaign type');
+        if (selectedChannels.length === 0) issues.push('Pick at least one channel');
+        return issues;
+    }, [brief, manualPrimaryMarkets, manualSecondaryMarkets, manualCampaignTypes, selectedChannels]);
+
     const allSelectedMarkets = useMemo(() => [...manualPrimaryMarkets, ...manualSecondaryMarkets], [manualPrimaryMarkets, manualSecondaryMarkets]);
 
     const handleToggleChannel = (channel: Channel) => {
@@ -461,20 +483,21 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     };
 
     const handleGenerate = () => {
+        if (inputMode === 'manual' && manualIssues.length > 0) return;
         if (!brief.trim()) return;
-        
+
         if (inputMode === 'manual') {
-            onGenerate(brief, selectedChannels, { 
-                primaryMarkets: manualPrimaryMarkets, 
-                secondaryMarkets: manualSecondaryMarkets, 
-                campaignTypes: manualCampaignTypes 
+            onGenerate(brief, selectedChannels, {
+                primaryMarkets: manualPrimaryMarkets,
+                secondaryMarkets: manualSecondaryMarkets,
+                campaignTypes: manualCampaignTypes
             });
         } else {
             onGenerate(brief, selectedChannels);
         }
     };
     
-    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || (inputMode === 'manual' && (allSelectedMarkets.length === 0 || manualCampaignTypes.length === 0));
+    const isGenerateDisabled = inputMode === 'manual' ? manualIssues.length > 0 : (!brief.trim() || selectedChannels.length === 0);
 
     return (
         <div className="flex justify-center items-start pt-8 sm:pt-16">
@@ -501,61 +524,93 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                             placeholder="Enter all the details about the campaign you would like to create, including markets, campaign types, and creative direction..."
                         />
                     ) : (
-                         <div className="p-3 space-y-4">
+                         <div className="p-3 space-y-5">
                             <div>
-                                 <label className="text-sm font-medium text-gray-700">Creative Brief</label>
+                                 <div className="flex items-center justify-between">
+                                    <label className="text-sm font-medium text-gray-700">1. Creative Brief</label>
+                                 </div>
                                  <textarea
                                     value={brief}
                                     onChange={(e) => setBrief(e.target.value)}
-                                    className="w-full h-24 mt-1 p-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 placeholder-gray-400"
+                                    className="w-full h-28 mt-1 p-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 placeholder-gray-400"
                                     placeholder="Describe your product, target audience, and key messaging..."
                                 />
+                                <p className="mt-1 text-xs text-gray-500">Keep it concise. This guides the AI for copy tone and value props.</p>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <MarketSelector 
-                                    label="Primary Markets (separate campaigns)"
-                                    selectedMarkets={manualPrimaryMarkets}
-                                    onAdd={(market) => setManualPrimaryMarkets(prev => [...prev, market])}
-                                    onRemove={(market) => setManualPrimaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                    allSelectedMarkets={allSelectedMarkets}
-                                />
-                                <MarketSelector 
-                                    label="Secondary Markets (clustered campaign)"
-                                    selectedMarkets={manualSecondaryMarkets}
-                                    onAdd={(market) => setManualSecondaryMarkets(prev => [...prev, market])}
-                                    onRemove={(market) => setManualSecondaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                    allSelectedMarkets={allSelectedMarkets}
-                                />
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">2. Channels</p>
+                                <div className="flex items-center flex-wrap gap-2">
+                                    <ChannelButton channel="TikTok" icon={<TiktokIcon />} selected={selectedChannels.includes('TikTok')} onClick={handleToggleChannel} />
+                                    <ChannelButton channel="Google" icon={<GoogleIcon />} selected={selectedChannels.includes('Google')} onClick={handleToggleChannel} />
+                                    <ChannelButton channel="Meta" icon={<MetaIcon />} selected={selectedChannels.includes('Meta')} onClick={handleToggleChannel} />
+                                </div>
+                                <p className="mt-1 text-xs text-gray-500">Selected: {selectedChannels.length > 0 ? selectedChannels.join(', ') : 'None'}</p>
                             </div>
-                             <MultiSelectDropdown
-                                label="Campaign Types"
-                                options={ALL_CAMPAIGN_TYPES}
-                                selectedOptions={manualCampaignTypes}
-                                onToggle={(option) => {
-                                    setManualCampaignTypes(prev => 
-                                        prev.includes(option) 
-                                            ? prev.filter(t => t !== option)
-                                            : [...prev, option]
-                                    )
-                                }}
-                            />
+                            <div>
+                                <p className="text-sm font-medium text-gray-700 mb-2">3. Markets</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <MarketSelector
+                                        label={`Primary Markets (separate campaigns) — ${manualPrimaryMarkets.length}`}
+                                        selectedMarkets={manualPrimaryMarkets}
+                                        onAdd={(market) => setManualPrimaryMarkets(prev => [...prev, market])}
+                                        onRemove={(market) => setManualPrimaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
+                                        allSelectedMarkets={allSelectedMarkets}
+                                        onClear={() => setManualPrimaryMarkets([])}
+                                    />
+                                    <MarketSelector
+                                        label={`Secondary Markets (clustered) — ${manualSecondaryMarkets.length}`}
+                                        selectedMarkets={manualSecondaryMarkets}
+                                        onAdd={(market) => setManualSecondaryMarkets(prev => [...prev, market])}
+                                        onRemove={(market) => setManualSecondaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
+                                        allSelectedMarkets={allSelectedMarkets}
+                                        onClear={() => setManualSecondaryMarkets([])}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <MultiSelectDropdown
+                                    label={`4. Campaign Types — ${manualCampaignTypes.length}`}
+                                    options={ALL_CAMPAIGN_TYPES}
+                                    selectedOptions={manualCampaignTypes}
+                                    onToggle={(option) => {
+                                        setManualCampaignTypes(prev =>
+                                            prev.includes(option)
+                                                ? prev.filter(t => t !== option)
+                                                : [...prev, option]
+                                        )
+                                    }}
+                                />
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                    {ALL_CAMPAIGN_TYPES.map(ct => (
+                                        <button key={ct} onClick={() => setManualCampaignTypes(prev => prev.includes(ct) ? prev : [...prev, ct])} className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full">{ct}</button>
+                                    ))}
+                                    <button onClick={() => setManualCampaignTypes(ALL_CAMPAIGN_TYPES)} className="px-2.5 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-full">Add All</button>
+                                    <button onClick={() => setManualCampaignTypes([])} className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full">Clear</button>
+                                </div>
+                            </div>
                          </div>
                     )}
 
-                    <div className="flex justify-between items-center mt-2 p-2">
-                        <div className="flex items-center space-x-2">
-                            <ChannelButton channel="TikTok" icon={<TiktokIcon />} selected={selectedChannels.includes('TikTok')} onClick={handleToggleChannel} />
-                            <ChannelButton channel="Google" icon={<GoogleIcon />} selected={selectedChannels.includes('Google')} onClick={handleToggleChannel} />
-                            <ChannelButton channel="Meta" icon={<MetaIcon />} selected={selectedChannels.includes('Meta')} onClick={handleToggleChannel} />
+                    <div className="mt-3 p-2 border-t border-gray-100">
+                        {inputMode === 'manual' && isGenerateDisabled && (
+                            <div className="mb-2 text-xs text-red-600">
+                                <p className="font-medium">Complete the following:</p>
+                                <ul className="list-disc list-inside">
+                                    {manualIssues.map((m, i) => (<li key={i}>{m}</li>))}
+                                </ul>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-2"></div>
+                            <button
+                                onClick={handleGenerate}
+                                disabled={isGenerateDisabled}
+                                className="flex items-center justify-center space-x-2 bg-black text-white font-semibold py-2 px-5 rounded-full hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <SparklesIcon className="w-4 h-4" />
+                                <span>Create campaign</span>
+                            </button>
                         </div>
-                        <button 
-                            onClick={handleGenerate} 
-                            disabled={isGenerateDisabled}
-                            className="flex items-center justify-center space-x-2 bg-black text-white font-semibold py-2 px-5 rounded-full hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <SparklesIcon className="w-4 h-4" />
-                            <span>Create campaign</span>
-                        </button>
                     </div>
                 </div>
             </div>
