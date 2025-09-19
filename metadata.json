@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Campaign Brief Parser",
+  "description": "An intelligent application that uses Gemini to parse unstructured marketing campaign briefs into a structured, actionable format, and then generates a detailed campaign plan.",
+  "requestFramePermissions": []
+}
