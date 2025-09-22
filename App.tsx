@@ -651,13 +651,17 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
 
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 relative" ref={dropdownRef}>
-                                <label className="inline-flex items-center justify-center w-9 h-9 rounded-lg border cursor-pointer hover:bg-gray-50">
-                                    <input type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
-                                    <span className="text-base">📎</span>
-                                </label>
-                                <button onClick={() => setShowMarkets(v=>!v)} className="w-9 h-9 rounded-lg border text-xs hover:bg-gray-50">🌍</button>
+                                <button
+                                    onClick={() => setShowMarkets(v=>!v)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 19 20" fill="none">
+                                        <path d="M6.33913 10.6787H11.7386C11.6566 12.503 11.2521 14.1831 10.678 15.4135C10.3555 16.1065 10.0076 16.5958 9.68518 16.8956C9.36839 17.1926 9.1506 17.2407 9.03746 17.2407C8.92433 17.2407 8.70654 17.1926 8.38975 16.8956C8.06731 16.5958 7.71941 16.1036 7.39697 15.4135C6.82279 14.1831 6.41832 12.503 6.3363 10.6787H6.33913ZM11.7415 9.32103H6.34196C6.42115 7.49668 6.82562 5.81658 7.39979 4.58621C7.72224 3.89607 8.07014 3.40392 8.39258 3.1041C8.70937 2.80712 8.92716 2.75903 9.04029 2.75903C9.15343 2.75903 9.37122 2.80712 9.68801 3.1041C10.0104 3.40392 10.3583 3.89607 10.6808 4.58621C11.255 5.81658 11.6594 7.49668 11.7415 9.32103ZM13.0991 9.32103C13.0001 6.89988 12.375 4.65126 11.4614 3.17481C14.0664 4.09689 15.9841 6.46995 16.25 9.32103H13.0991ZM16.25 10.6787C15.9841 13.5298 14.0664 15.9028 11.4614 16.8249C12.375 15.3484 13.0001 13.0998 13.0991 10.6787H16.25ZM4.98147 10.6787C5.08047 13.0998 5.70556 15.3484 6.61914 16.8249C4.01415 15.9 2.09646 13.5298 1.83059 10.6787H4.98147ZM1.83059 9.32103C2.09646 6.46995 4.01415 4.09689 6.61914 3.17481C5.70556 4.65126 5.08047 6.89988 4.98147 9.32103H1.83059Z" fill="currentColor"/>
+                                    </svg>
+                                    Markets
+                                </button>
                                 {showMarkets && (
-                                    <div className="absolute left-12 bottom-12 w-80 rounded-2xl border bg-white shadow-xl p-3 z-30">
+                                    <div className="absolute left-0 top-12 w-80 rounded-2xl border bg-white shadow-xl p-3 z-30">
                                         <div className="text-sm font-medium mb-2">Add markets</div>
                                         <input autoFocus value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search countries…" className="w-full rounded-xl border px-3 py-2 text-sm mb-2" />
                                         <div className="max-h-64 overflow-auto space-y-1 pr-1">
