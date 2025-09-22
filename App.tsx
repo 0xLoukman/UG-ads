@@ -1215,8 +1215,8 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             const isEditing = editingId === s.id;
                             const marketLabelList = (s.market.iso === 'WW' ? s.market.name.split(',').map(n => n.trim()) : [s.market.name]).map(name => `${name} (${COUNTRIES.find(c=>c.name===name)?.iso || s.market.iso})`);
                             return (
-                            <>
-                            <tr key={s.id} className="bg-white border-b hover:bg-gray-50">
+                            <React.Fragment key={s.id}>
+                            <tr className="bg-white border-b hover:bg-gray-50">
                                 <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{channelIcons[s.channel]}</span><span>{s.channel}</span></td>
                                 <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
                                 <td className="px-6 py-3">{s.campaignType}</td>
@@ -1226,7 +1226,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                 <td className="px-6 py-3 text-right"><button onClick={() => setEditingId(s.id)} className="text-xs px-2 py-1 rounded-md border border-gray-200">Edit</button></td>
                             </tr>
                             {isEditing && (
-                                <tr className="bg-gray-50 border-b">
+                                <tr className="bg-gray-50 border-b" key={`${s.id}-edit`}>
                                     <td colSpan={headers.length} className="px-6 py-4">
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             <div>
@@ -1286,7 +1286,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                     </td>
                                 </tr>
                             )}
-                            </>
+                            </React.Fragment>
                             );
                         })}
                     </tbody>
