@@ -1521,7 +1521,7 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
-            <main className="max-w-6xl mx-auto p-4 md:p-8">
+            <main className={view==='details' ? 'w-full p-0 md:p-0' : 'max-w-6xl mx-auto p-4 md:p-8'}>
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-start" role="alert">
                         <ErrorIcon/>
