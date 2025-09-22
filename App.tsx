@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useRef, useEffect } from "react"
 import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market } from "./types";
 import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd } from "./services/geminiService";
 
-type View = 'input' | 'summary' | 'details';
+type View = 'input' | 'summary' | 'details' | 'review';
 type SortConfig = { key: keyof CampaignSummary | 'browserLangs'; direction: 'ascending' | 'descending' } | null;
 type InputMode = 'prompt' | 'manual';
 
@@ -238,6 +238,54 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
                 </div>
             </div>
             {isOpen && <div className="p-4 space-y-4">{children}</div>}
+        </div>
+    );
+};
+
+// ===== Preview Component =====
+const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
+    const isSearchLike = campaign.channel === 'Google' && (/brand|search/i.test(campaign.campaignType));
+    const google = campaign.googleAds;
+
+    const firstAd = (google as any)?.ads?.[0];
+    const asset = google?.assetGroups?.[0];
+
+    const urlHost = (() => {
+        const url = (firstAd?.finalUrl || asset?.finalUrl || '').trim();
+        try { return url ? new URL(url).host + (new URL(url).pathname.replace(/\/$/, '')) : campaign.market?.name?.toLowerCase().replace(/\s+/g,'') + '.example.com'; } catch { return url || 'example.com'; }
+    })();
+
+    return (
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+            <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600">
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/475656/youtube-color.svg" alt="YouTube"/><span>Youtube</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/475647/gmail-color.svg" alt="Gmail"/><span>Gmail</span></div>
+                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src="https://www.svgrepo.com/show/378732/google-color.svg" alt="Search"/><span>Search</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/376340/google-discover.svg" alt="Feed"/><span>Feed</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/511490/monitor.svg" alt="Display"/><span>Display</span></div>
+            </div>
+            <div className="p-6">
+                <div className="mx-auto max-w-md bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <div className="bg-white rounded-xl p-4 border border-gray-200">
+                        <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
+                        <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
+                            {isSearchLike ? (
+                                <>
+                                    {(firstAd?.headlines?.[0] || asset?.headlines?.[0] || 'Your headline here')}
+                                    {firstAd?.headlines?.[1] || asset?.headlines?.[1] ? ' | ' + (firstAd?.headlines?.[1] || asset?.headlines?.[1]) : ''}
+                                </>
+                            ) : (asset?.headlines?.[0] || 'Performance Max preview')}
+                        </div>
+                        <div className="text-[12px] text-gray-700 mt-1">
+                            {(firstAd?.descriptions?.[0] || asset?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
+                        </div>
+                        <div className="mt-3 space-y-2">
+                            <div className="h-6 bg-gray-100 rounded-md" />
+                            <div className="h-6 bg-gray-100 rounded-md" />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
@@ -1214,7 +1262,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     );
 };
 
-const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void }) => {
+const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void }) => {
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(campaigns[0]?.id || null);
     const selectedCampaign = useMemo(() => campaigns.find(c => c.id === selectedCampaignId), [campaigns, selectedCampaignId]);
 
@@ -1258,8 +1306,8 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
                 </button>
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="flex items-start space-x-6">
-                <aside className="w-1/4 sticky top-24">
+            <div className="grid grid-cols-12 gap-4 items-start">
+                <aside className="col-span-3 sticky top-24 max-h-[70vh] overflow-auto">
                     <nav className="flex flex-col space-y-1">
                         {campaigns.map(c => (
                             <button
@@ -1276,7 +1324,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
                         ))}
                     </nav>
                 </aside>
-                <main className="w-3/4">
+                <main className="col-span-5">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
                             {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
@@ -1285,6 +1333,70 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
                         </div>
                     )}
                 </main>
+                <section className="col-span-4 sticky top-24">
+                    {selectedCampaign && <CampaignPreview campaign={selectedCampaign} />}
+                </section>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+                <div className="max-w-6xl mx-auto p-3 flex items-center justify-between">
+                    <div className="text-xs text-gray-500">Review all campaigns before launch.</div>
+                    <button onClick={onReview} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">
+                        <SparklesIcon className="w-4 h-4" />
+                        Review & publish
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ===== Review View =====
+const ReviewView = ({ campaigns, onBack }: { campaigns: FullCampaign[]; onBack: () => void }) => {
+    return (
+        <div className="space-y-4 pb-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-800">4. Review & publish</h2>
+                <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900"><BackIcon /><span>Back to edit</span></button>
+            </div>
+            <p className="text-gray-600">Double-check each campaign before launching.</p>
+            <div className="space-y-3">
+                {campaigns.map(c => (
+                    <div key={c.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="text-sm font-semibold text-gray-800">{c.campaignName}</div>
+                                <div className="text-xs text-gray-500">{c.channel} • {c.campaignType} • {c.market.name} • Lang: {c.languages.join(', ')}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">Assets: {(c.googleAds?.assetGroups?.length || 0) + (c.googleAds?.adGroups?.length || 0)}</div>
+                        </div>
+                        {c.channel === 'Google' && (
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-gray-700">
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Asset Groups</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(c.googleAds?.assetGroups || []).map(ag => (<li key={ag.id}>{ag.name}</li>))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Ad Groups</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(c.googleAds?.adGroups || []).map(g => (<li key={g.id}>{g.name}</li>))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Ads</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(((c as any).googleAds || {}).ads || []).map((ad:any) => (<li key={ad.id}>{(ad.headlines?.[0] || ad.finalUrl || 'Ad')}</li>))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-end">
+                <button className="px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">Publish</button>
             </div>
         </div>
     );
@@ -1360,7 +1472,9 @@ const App: React.FC = () => {
             case 'summary':
                 return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
-                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} />;
+                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} />;
+            case 'review':
+                return <ReviewView campaigns={campaigns} onBack={() => setView('details')} />;
             default:
                 return null;
         }
