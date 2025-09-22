@@ -1323,7 +1323,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     ];
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-0">
             <div className={`border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible`}>
                 <table className="w-full text-sm text-left text-gray-600 relative">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -1468,13 +1468,13 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
     };
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-0">
              <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200 bg-white">
                 <div className="col-span-3 px-3 py-2 border-r border-gray-200">Campaigns</div>
                 <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
                 <div className="col-span-4 px-4 py-2">Preview</div>
             </div>
-            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-260px)] mt-0">
+            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-180px)] mt-0">
                 <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
                     <nav className="flex flex-col space-y-1" aria-label="Campaign list">
