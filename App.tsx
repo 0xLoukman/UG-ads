@@ -999,63 +999,86 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedSummaries.map(s => (
-                            <tr key={s.id} className="bg-white border-b hover:bg-gray-50 align-top">
+                        {sortedSummaries.map(s => {
+                            const isEditing = editingId === s.id;
+                            const marketLabelList = (s.market.iso === 'WW' ? s.market.name.split(',').map(n => n.trim()) : [s.market.name]).map(name => `${name} (${COUNTRIES.find(c=>c.name===name)?.iso || s.market.iso})`);
+                            return (
+                            <tr key={s.id} className={`bg-white border-b ${isEditing ? 'align-top' : ''} hover:bg-gray-50`}>
                                 <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{channelIcons[s.channel]}</span><span>{s.channel}</span></td>
                                 <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">
-                                    <input
-                                        value={s.campaignName}
-                                        onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))}
-                                        className="w-full text-sm border border-gray-200 rounded-md px-2 py-1"
-                                    />
+                                    {isEditing ? (
+                                        <input value={s.campaignName} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                    ) : (
+                                        <span>{s.campaignName}</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-3">
-                                    <input
-                                        list={`types-${s.id}`}
-                                        value={s.campaignType}
-                                        onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))}
-                                        className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1"
-                                    />
-                                    <datalist id={`types-${s.id}`}>
-                                        {ALL_CAMPAIGN_TYPES.map(t => (<option key={t} value={t} />))}
-                                    </datalist>
+                                    {isEditing ? (
+                                        <>
+                                            <input list={`types-${s.id}`} value={s.campaignType} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))} className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                            <datalist id={`types-${s.id}`}>{ALL_CAMPAIGN_TYPES.map(t => (<option key={t} value={t} />))}</datalist>
+                                        </>
+                                    ) : (
+                                        <span>{s.campaignType}</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-3">
-                                    <select
-                                        value={s.market.iso}
-                                        onChange={(e)=> {
-                                            const iso = e.target.value;
-                                            const country = { name: findMarket(iso)?.name || iso, iso } as Omit<Market,'browserLangs'>;
-                                            const nextMarket = getMarketWithLangs(country);
-                                            onUpdate(s.id, prev => ({...prev, market: nextMarket}));
-                                        }}
-                                        className="text-sm border border-gray-200 rounded-md px-2 py-1"
-                                    >
-                                        {COUNTRIES.map(c => (<option key={c.iso} value={c.iso}>{c.name} ({c.iso})</option>))}
-                                    </select>
+                                    {isEditing ? (
+                                        <MultiSelectDropdown
+                                            label="Markets"
+                                            options={countryLabels}
+                                            selectedOptions={marketLabelList}
+                                            onToggle={(label) => {
+                                                const currentSet = new Set<string>(marketLabelList);
+                                                if (currentSet.has(label)) currentSet.delete(label); else currentSet.add(label);
+                                                const arr = Array.from(currentSet);
+                                                const isos = arr.map(parseIso).filter(Boolean);
+                                                const names = marketNamesFromLabels(arr);
+                                                const langs = Array.from(new Set(isos.flatMap(iso => getMarketWithLangs({ name: findMarket(iso)?.name || iso, iso } as any).browserLangs)));
+                                                const nextMarket: Market = arr.length > 1 ? { name: names.join(', '), iso: 'WW', browserLangs: langs } : getMarketWithLangs({ name: names[0] || s.market.name, iso: isos[0] || s.market.iso } as any);
+                                                onUpdate(s.id, prev => ({...prev, market: nextMarket }));
+                                            }}
+                                        />
+                                    ) : (
+                                        <span>{s.market.name} ({s.market.iso})</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-3">
-                                    <input
-                                        value={s.market.browserLangs.join(', ')}
-                                        onChange={(e)=> {
-                                            const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean);
-                                            onUpdate(s.id, prev => ({...prev, market: { ...prev.market, browserLangs: list }}));
-                                        }}
-                                        className="w-48 text-sm border border-gray-200 rounded-md px-2 py-1"
-                                    />
+                                    {isEditing ? (
+                                        <MultiSelectDropdown
+                                            label="Browser Langs"
+                                            options={allLangOptions}
+                                            selectedOptions={s.market.browserLangs}
+                                            onToggle={(opt) => {
+                                                const set = new Set(s.market.browserLangs);
+                                                set.has(opt) ? set.delete(opt) : set.add(opt);
+                                                onUpdate(s.id, prev => ({...prev, market: { ...prev.market, browserLangs: Array.from(set) }}));
+                                            }}
+                                        />
+                                    ) : (
+                                        <span>{s.market.browserLangs.join(', ')}</span>
+                                    )}
                                 </td>
                                 <td className="px-6 py-3">
-                                    <input
-                                        value={s.languages.join(', ')}
-                                        onChange={(e)=> {
-                                            const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean);
-                                            onUpdate(s.id, prev => ({...prev, languages: list }));
-                                        }}
-                                        className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1"
-                                    />
+                                    {isEditing ? (
+                                        <input value={s.languages.join(', ')} onChange={(e)=> { const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean); onUpdate(s.id, prev => ({...prev, languages: list })); }} className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                    ) : (
+                                        <span>{s.languages.join(', ')}</span>
+                                    )}
+                                </td>
+                                <td className="px-6 py-3">
+                                    {isEditing ? (
+                                        <div className="flex gap-2">
+                                            <button onClick={() => setEditingId(null)} className="text-xs px-2 py-1 rounded-md bg-black text-white">Done</button>
+                                            <button onClick={() => setEditingId(null)} className="text-xs px-2 py-1 rounded-md bg-gray-100">Cancel</button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={() => setEditingId(s.id)} className="text-xs px-2 py-1 rounded-md border border-gray-200">Edit</button>
+                                    )}
                                 </td>
                             </tr>
-                        ))}
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
