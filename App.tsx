@@ -99,10 +99,7 @@ const Header = () => (
         <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
                 <img src="https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F1003138594934a01b42521ec1d693a8d" alt="Logo" className="h-8 w-auto object-contain" />
-                <div className="leading-tight">
-                    <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Campaign Generator</h1>
-                    <div className="text-xs text-gray-500">AI Campaign generator</div>
-                </div>
+                <div className="text-xs text-gray-500">AI Campaign generator</div>
             </div>
         </div>
     </header>
