@@ -674,6 +674,8 @@ type GuidedPromptRequirement = {
     format?: (choice: string) => string;
 };
 
+import { generateGuidedHint, hasGeminiKey } from "./services/geminiService";
+
 const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string; onChange: (text: string) => void; schema: GuidedPromptRequirement[]; placeholder?: string; }) => {
     const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
     const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
