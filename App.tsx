@@ -664,6 +664,94 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
     )
 }
 
+// ===== Guided Prompt =====
+type GuidedPromptRequirement = {
+    id: string;
+    label: string;
+    instruction: string;
+    detect: (text: string) => boolean;
+    suggestions?: string[];
+    format?: (choice: string) => string;
+};
+
+const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string; onChange: (text: string) => void; schema: GuidedPromptRequirement[]; placeholder?: string; }) => {
+    const [sel, setSel] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
+    const taRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
+    const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
+
+    const insertSnippet = (snippet: string) => {
+        const before = value.slice(0, sel.start);
+        const after = value.slice(sel.end);
+        const needsSpace = before.length > 0 && !/\s$/.test(before);
+        const sep = before.length ? (needsSpace ? ' ' : '') : '';
+        const newVal = `${before}${sep}${snippet}${after}`;
+        onChange(newVal);
+        requestAnimationFrame(() => {
+            if (taRef.current) {
+                const pos = (before + sep + snippet).length;
+                taRef.current.selectionStart = taRef.current.selectionEnd = pos;
+                taRef.current.focus();
+            }
+        });
+    };
+
+    const handleChip = (req: GuidedPromptRequirement, choice: string) => {
+        const snippet = req.format ? req.format(choice) : choice;
+        insertSnippet(snippet);
+    };
+
+    return (
+        <div>
+            <textarea
+                ref={taRef}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                onSelect={(e) => {
+                    const t = e.currentTarget;
+                    setSel({ start: t.selectionStart || 0, end: t.selectionEnd || 0 });
+                }}
+                className="w-full h-20 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
+                placeholder={placeholder || 'Enter a task'}
+            />
+
+            <div className="mt-2 flex items-center flex-wrap gap-1.5">
+                {status.map(s => (
+                    <span key={s.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border ${s.done ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
+                        {s.done ? '✓' : '•'} {s.label}
+                    </span>
+                ))}
+                {status.every(s => s.done) && (
+                    <span className="ml-auto text-xs px-2 py-0.5 rounded-md bg-green-600 text-white">Complete</span>
+                )}
+            </div>
+
+            {missing.length > 0 && (
+                <div className="mt-2 space-y-2">
+                    {missing.map(req => (
+                        <div key={req.id} className="bg-gray-50 border border-gray-200 rounded-lg p-2">
+                            <div className="text-xs text-gray-600 mb-1">{req.instruction}</div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {(req.suggestions || []).map(choice => (
+                                    <button
+                                        key={choice}
+                                        type="button"
+                                        onClick={() => handleChip(req, choice)}
+                                        className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                                    >
+                                        {req.format ? req.format(choice) : choice}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 // ===== Markets data and helpers =====
 const MARKETS: { code: string; name: string }[] = [
   { code: "FR", name: "France" },
@@ -798,6 +886,61 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
         );
     };
 
+    const guidedSchema: GuidedPromptRequirement[] = useMemo(() => {
+        const countryNames = COUNTRIES.map(c => c.name);
+        const countryIsos = COUNTRIES.map(c => c.iso);
+        return [
+            {
+                id: 'market',
+                label: 'Market',
+                instruction: 'Add your target market',
+                detect: (text: string) => {
+                    const t = text.toLowerCase();
+                    const byName = countryNames.some(n => t.includes(n.toLowerCase()));
+                    const byIso = countryIsos.some(iso => new RegExp(`\\b${iso.toLowerCase()}\\b`).test(t));
+                    return byName || byIso || /market\s*:/.test(t);
+                },
+                suggestions: ['United States', 'United Kingdom', 'Germany', 'France', 'UAE', 'Saudi Arabia'],
+                format: (choice: string) => `Market: ${choice}`,
+            },
+            {
+                id: 'type',
+                label: 'Campaign Type',
+                instruction: 'Specify the campaign type',
+                detect: (text: string) => {
+                    const t = text.toLowerCase();
+                    return ALL_CAMPAIGN_TYPES.some(ct => t.includes(ct.toLowerCase())) || /campaign\s*type\s*:/.test(t);
+                },
+                suggestions: ALL_CAMPAIGN_TYPES,
+                format: (choice: string) => `Campaign type: ${choice}`,
+            },
+            {
+                id: 'audience',
+                label: 'Audience',
+                instruction: 'Add your audience',
+                detect: (text: string) => /audience\s*:|families|parents|students|travelers|business|luxury/i.test(text),
+                suggestions: ['families', 'business travelers', 'students', 'parents', 'luxury seekers'],
+                format: (choice: string) => `Audience: ${choice}`,
+            },
+            {
+                id: 'style',
+                label: 'Tone/Style',
+                instruction: 'Choose a tone/style',
+                detect: (text: string) => /tone\s*:|style\s*:|friendly|luxury|playful|formal|urgent|informative/i.test(text),
+                suggestions: ['friendly', 'luxury', 'playful', 'formal', 'urgent', 'informative'],
+                format: (choice: string) => `Tone: ${choice}`,
+            },
+            {
+                id: 'goal',
+                label: 'Goal',
+                instruction: 'Specify the goal',
+                detect: (text: string) => /goal\s*:|bookings|brand awareness|leads|traffic|sales/i.test(text),
+                suggestions: ['drive bookings', 'brand awareness', 'generate leads', 'increase traffic', 'boost sales'],
+                format: (choice: string) => `Goal: ${choice}`,
+            },
+        ];
+    }, []);
+
     const handleGenerate = () => {
         if (!brief.trim() || !hasKey) return;
         const singles = marketItems.filter(i => i.type === 'single');
@@ -830,12 +973,7 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <div className="p-4 pb-3">
                         <div className="mb-4">
-                            <textarea
-                                value={brief}
-                                onChange={(e) => setBrief(e.target.value)}
-                                className="w-full h-20 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
-                                placeholder="Enter a task"
-                            />
+                            <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
                         </div>
 
                         <div className="flex items-center justify-between">
