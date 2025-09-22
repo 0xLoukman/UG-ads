@@ -1338,7 +1338,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
                 <div className="col-span-4 px-4 py-2">Preview</div>
             </div>
-            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-260px)]">
+            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-260px)] mt-0">
                 <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
                     <nav className="flex flex-col space-y-1" aria-label="Campaign list">
