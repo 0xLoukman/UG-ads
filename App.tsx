@@ -1345,7 +1345,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
             <div className="grid grid-cols-12 gap-0 items-start bg-white border border-gray-200 rounded-lg overflow-hidden w-full">
-                <aside className="col-span-3 sticky top-24 max-h-[70vh] overflow-auto border-r border-gray-200 p-3">
+                <aside className="col-span-3 self-start max-h-[80vh] overflow-auto border-r border-gray-200 p-3">
                     <nav className="flex flex-col space-y-1">
                         {campaigns.map(c => (
                             <button
