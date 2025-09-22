@@ -20,6 +20,7 @@ export interface Ad {
     headlines: string[];
     descriptions: string[];
     keywords?: string[];
+    assignedAdGroupId?: string | null;
 }
 
 export interface AdGroup {
