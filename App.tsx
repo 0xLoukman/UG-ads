@@ -1701,6 +1701,7 @@ const App: React.FC = () => {
     const [brief, setBrief] = useState("");
     const [summaries, setSummaries] = useState<CampaignSummary[]>([]);
     const [campaigns, setCampaigns] = useState<FullCampaign[]>([]);
+    const [topTab, setTopTab] = useState<'campaign' | 'creative'>('campaign');
 
     const handleGenerateSummary = async (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => {
         setIsLoading(true);
