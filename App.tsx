@@ -1057,10 +1057,6 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     };
     const [hasKey, setHasKey] = useState<boolean>(detectKey());
     const [keyInput, setKeyInput] = useState<string>('');
-    const [showCreateMenu, setShowCreateMenu] = useState(false);
-    const [manualType, setManualType] = useState<string>(ALL_CAMPAIGN_TYPES[0]);
-    const createMenuRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => { const onDoc = (e: MouseEvent) => { if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) setShowCreateMenu(false); }; document.addEventListener('mousedown', onDoc); return () => document.removeEventListener('mousedown', onDoc); }, []);
 
     const handleToggleChannel = (channel: Channel) => {
         setSelectedChannels(prev =>
@@ -1201,31 +1197,14 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                                     <ChannelDropdown selected={selectedChannels[0] || 'Google'} onSelect={(c) => setSelectedChannels([c])} />
                                 </div>
 
-                                <div className="relative" ref={createMenuRef}>
-                                    <button
-                                        onClick={() => setShowCreateMenu(v=>!v)}
-                                        disabled={isGenerateDisabled}
-                                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        <SparklesIcon className="w-4 h-4" />
-                                        Create campaign
-                                        <svg className="w-3 h-3 ml-1" viewBox="0 0 10 6" fill="currentColor"><path d="M0 0l5 6 5-6H0z"/></svg>
-                                    </button>
-                                    {showCreateMenu && (
-                                        <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-2 z-30">
-                                            <button onClick={() => { setShowCreateMenu(false); handleGenerate(); }} disabled={isGenerateDisabled} className="w-full text-left px-3 py-2 rounded hover:bg-gray-50 text-sm">Create with AI</button>
-                                            <div className="border-t my-1" />
-                                            <div className="px-3 py-2 text-xs text-gray-600">Create manually</div>
-                                            <div className="px-3 pb-2">
-                                                <label className="block text-xs text-gray-600 mb-1">Campaign Type</label>
-                                                <select value={manualType} onChange={(e)=>setManualType(e.target.value)} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
-                                                    {ALL_CAMPAIGN_TYPES.map(t => (<option key={t} value={t}>{t}</option>))}
-                                                </select>
-                                            </div>
-                                            <button onClick={() => { setShowCreateMenu(false); const singles = marketItems.filter(i => i.type==='single'); const primary: Market[] = singles.map(i => getMarketWithLangs({ name: findMarket(i.codes[0])?.name || i.codes[0], iso: i.codes[0] } as any)); const clusters = marketItems.filter(i => i.type==='cluster'); let secondary: Market[] = []; if (clusters.length) { const codes = Array.from(new Set(clusters.flatMap(c=>c.codes))); const name = codes.map(c => findMarket(c)?.name || c).join(', '); const langs = codes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat(); secondary = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }]; } onGenerate(brief || `${manualType} campaign`, selectedChannels, { primaryMarkets: primary, secondaryMarkets: secondary, campaignTypes: [manualType] }); }} className="w-full text-left px-3 py-2 rounded bg-gray-900 text-white text-sm hover:bg-gray-800">Create manually</button>
-                                        </div>
-                                    )}
-                                </div>
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={isGenerateDisabled}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <SparklesIcon className="w-4 h-4" />
+                                    Create campaign
+                                </button>
                             </div>
                         </div>
 
