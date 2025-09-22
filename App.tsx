@@ -349,9 +349,15 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                                 ad={ad}
                                 googleAdGroups={googleAds.adGroups || []}
                                 currentCombos={currentPlanCombos}
-                                onAssignPlan={(adGroupId) => { onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], adGroupId); }}
-                                onAssignExternal={(campaignName, adGroupName) => { onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], { campaignName, adGroupName }); }}
-                                onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
+                                onAssignPlan={(adGroupId) => {
+                                    const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='plan' && t.adGroupId===adGroupId));
+                                    onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'plan', adGroupId }]);
+                                }}
+                                onAssignExternal={(campaignName, adGroupName) => {
+                                    const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===campaignName && t.adGroupName===adGroupName));
+                                    onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'external', campaignName, adGroupName }]);
+                                }}
+                                onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], []); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
                             />
                             <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 inline-flex ml-2" />
                         </div>
