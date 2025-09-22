@@ -278,7 +278,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
         if (isSearchLike) {
             return (
                 <div className="p-3 border-b border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-600" role="tablist" aria-label="Preview surfaces">
-                    <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src={ICONS.search} alt="Search"/><span>Search</span></div>
+                    <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
                 </div>
             );
         }
@@ -287,7 +287,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
             <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600">
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.youtube} alt="YouTube"/><span>Youtube</span></div>
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.gmail} alt="Gmail"/><span>Gmail</span></div>
-                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src={ICONS.search} alt="Search"/><span>Search</span></div>
+                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.feed} alt="Feed"/><span>Feed</span></div>
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.display} alt="Display"/><span>Display</span></div>
             </div>
