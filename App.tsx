@@ -316,7 +316,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                             setCreatingAd(true);
                             const ad = await generateGoogleSearchAd(brief, campaign);
                             const firstGroupId = googleAds.adGroups?.[0]?.id || null;
-                            (ad as any).assignedAdGroupId = firstGroupId;
+                            (ad as any).assignedTargets = firstGroupId ? [{ source: 'plan', adGroupId: firstGroupId }] : [];
                             const existing: any[] = (googleAds as any).ads || [];
                             onUpdate(['googleAds', 'ads'], [ad, ...existing]);
                             setExpandedAdId(ad.id);
