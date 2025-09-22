@@ -667,6 +667,24 @@ const MARKETS: { code: string; name: string }[] = [
   { code: "AT", name: "Austria" }
 ];
 const findMarket = (c: string) => MARKETS.find(m => m.code === c);
+const LANGUAGE_LIST: { code: string; name: string }[] = [
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'nl', name: 'Dutch' },
+  { code: 'sv', name: 'Swedish' },
+  { code: 'no', name: 'Norwegian' },
+  { code: 'da', name: 'Danish' },
+  { code: 'fi', name: 'Finnish' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'zh', name: 'Chinese' }
+];
+const langNameFromCode = (code: string) => LANGUAGE_LIST.find(l => l.code === code)?.name || code;
+const langCodeFromName = (name: string) => LANGUAGE_LIST.find(l => l.name === name)?.code || name;
 const suggestClusterName = (codes: string[]) => {
   const names = codes.map(c => findMarket(c)?.name || c);
   if (names.length <= 3) return names.join(" · ");
