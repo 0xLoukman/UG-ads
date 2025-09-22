@@ -684,14 +684,18 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
     }, [schema, value]);
 
     const topText = useMemo(() => {
+        const raw = (value || '').trim();
         if (missing.length === 0) return "Perfect! You're all set — hit Create campaign 🚀";
+        if (raw.length === 0 || missing.length === schema.length) {
+            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ✍️';
+        }
         const next = missing[0];
         switch (next.id) {
             case 'market':
                 return 'Hey! Which markets do you want to target? 🌍 (e.g., US, UK, Germany)';
             case 'type':
                 return has('market')
-                    ? "That's cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯"
+                    ? "That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯"
                     : 'Which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
             case 'hotel':
                 return has('market') && has('type')
@@ -702,7 +706,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
             default:
                 return `Hint: ${next.instruction}`;
         }
-    }, [missing, has]);
+    }, [missing, has, value, schema]);
 
     return (
         <div>
