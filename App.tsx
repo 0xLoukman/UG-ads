@@ -1029,8 +1029,12 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                             </div>
                                             <div>
                                                 <label className="block text-xs text-gray-600 mb-1">Campaign Type</label>
-                                                <input list={`types-${s.id}`} value={s.campaignType} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
-                                                <datalist id={`types-${s.id}`}>{ALL_CAMPAIGN_TYPES.map(t => (<option key={t} value={t} />))}</datalist>
+                                                <select value={s.campaignType} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+                                                    <option value="Brand">Brand</option>
+                                                    <option value="PMax">PMax</option>
+                                                    <option value="Remarketing">Remarketing</option>
+                                                    <option value="Hotel Ads">Hotel Ads</option>
+                                                </select>
                                             </div>
                                             <div className="sm:col-span-2">
                                                 <MultiSelectDropdown label="Markets" options={countryLabels} selectedOptions={marketLabelList} onToggle={(label) => {
@@ -1296,10 +1300,27 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
 // Advanced assignment dropdown component
 const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPlan, onAssignExternal, onUnassign }: { ad: any, googleAdGroups: {id:string; name:string}[], currentCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[], onAssignPlan: (adGroupId:string)=>void, onAssignExternal: (campaignName:string, adGroupName:string)=>void, onUnassign: ()=>void }) => {
     const [open, setOpen] = useState(false);
-    const [campaignName, setCampaignName] = useState('');
-    const [adGroupName, setAdGroupName] = useState('');
+    // Mock existing campaigns/ad groups from Google Ads account
+    const mockExisting = [
+        { campaignName: '[UG]-Brand-USA', adGroups: ['Brand Exact', 'Brand Phrase'] },
+        { campaignName: '[UG]-Remarketing-ALL', adGroups: ['All Visitors 30d', 'Cart Abandoners 14d'] },
+        { campaignName: '[UG]-Hotel-EN', adGroups: ['Hotel Brand EN', 'Generic Hotel EN'] },
+        { campaignName: '[UG]-PMax-Core', adGroups: ['Asset Group A', 'Asset Group B'] },
+    ];
 
     const assignedCount = (ad.assignedTargets?.length || 0) + (ad.assignedAdGroupId ? 1 : 0) + (ad.assignedExternal ? 1 : 0);
+
+    const hasExternal = (cName: string, gName: string) => (ad.assignedTargets || []).some((t:any)=> t.source==='external' && t.campaignName===cName && t.adGroupName===gName);
+    const toggleExternal = (cName: string, gName: string) => {
+        if (hasExternal(cName, gName)) {
+            const remain = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===cName && t.adGroupName===gName));
+            onUnassign();
+            remain.filter((x:any)=> x.source==='plan' && x.adGroupId).forEach((x:any)=> onAssignPlan(x.adGroupId));
+            remain.filter((x:any)=> x.source==='external').forEach((x:any)=> onAssignExternal(x.campaignName, x.adGroupName));
+        } else {
+            onAssignExternal(cName, gName);
+        }
+    };
 
     const isCheckedPlan = (id: string) => {
         if (ad.assignedAdGroupId === id) return true;
@@ -1343,25 +1364,24 @@ const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPla
                     </div>
                     <div className="border-t border-gray-100 pt-2 mt-2" />
                     <div className="text-[11px] font-semibold text-gray-500 mb-1">Existing account</div>
-                    <div className="space-y-2">
-                        <input value={campaignName} onChange={(e)=> setCampaignName(e.target.value)} placeholder="Campaign name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
-                        <input value={adGroupName} onChange={(e)=> setAdGroupName(e.target.value)} placeholder="Ad group name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
-                        <div className="flex items-center justify-between gap-2">
-                            <button onClick={() => { onUnassign(); setOpen(false); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign all</button>
-                            <button onClick={() => { if (campaignName.trim() && adGroupName.trim()) { onAssignExternal(campaignName.trim(), adGroupName.trim()); setCampaignName(''); setAdGroupName(''); } }} className="text-xs px-2 py-1 rounded-md bg-black text-white">Add</button>
-                        </div>
-                        {(ad.assignedTargets || []).filter((t:any)=> t.source==='external').map((t:any, idx:number) => (
-                            <div key={idx} className="text-xs text-gray-700 flex items-center justify-between px-2 py-1 bg-gray-50 rounded-md">
-                                <span>{t.campaignName} / {t.adGroupName}</span>
-                                <button className="text-red-500" onClick={() => {
-                                    const remain = (ad.assignedTargets || []).filter((x:any)=> !(x.source==='external' && x.campaignName===t.campaignName && x.adGroupName===t.adGroupName));
-                                    // Reconstruct via provided callbacks: unassign all then re-add remaining
-                                    onUnassign();
-                                    remain.filter((x:any)=> x.source==='plan' && x.adGroupId).forEach((x:any)=> onAssignPlan(x.adGroupId));
-                                    remain.filter((x:any)=> x.source==='external').forEach((x:any)=> onAssignExternal(x.campaignName, x.adGroupName));
-                                }}>Remove</button>
+                    <div className="max-h-48 overflow-auto space-y-2 pr-1">
+                        {mockExisting.map((mc, i) => (
+                            <div key={i} className="border border-gray-100 rounded-md">
+                                <div className="px-2 py-1 text-xs font-semibold text-gray-700">{mc.campaignName}</div>
+                                <div className="px-2 pb-2 space-y-1">
+                                    {mc.adGroups.map((g, j) => (
+                                        <label key={j} className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" className="h-3.5 w-3.5" checked={hasExternal(mc.campaignName, g)} onChange={()=> toggleExternal(mc.campaignName, g)} />
+                                            <span>{g}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
                         ))}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-2">
+                        <button onClick={() => { onUnassign(); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign all</button>
+                        <button onClick={() => setOpen(false)} className="text-xs px-2 py-1 rounded-md bg-black text-white">Done</button>
                     </div>
                     <div className="flex justify-end mt-2"><button onClick={()=> setOpen(false)} className="text-xs px-2 py-1 rounded-md border">Done</button></div>
                 </div>
