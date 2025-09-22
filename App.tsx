@@ -1363,7 +1363,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         ))}
                     </nav>
                 </aside>
-                <main className="col-span-5 border-r border-gray-200 p-4">
+                <main className="col-span-5 self-start border-r border-gray-200 p-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
                             {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
