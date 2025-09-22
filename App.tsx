@@ -678,20 +678,36 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
     const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
     const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
 
+    const has = useCallback((id: string) => {
+        const req = schema.find(r => r.id === id);
+        return req ? req.detect(value) : false;
+    }, [schema, value]);
+
     const topText = useMemo(() => {
-        if (missing.length === 0) return 'Prompt complete — ready to generate';
-        const parts = missing.map(m => m.instruction);
-        return `Hint: ${parts.join(' • ')}`;
-    }, [missing]);
+        if (missing.length === 0) return "Perfect! You're all set — hit Create campaign 🚀";
+        const next = missing[0];
+        switch (next.id) {
+            case 'market':
+                return 'Hey! Which markets do you want to target? 🌍 (e.g., US, UK, Germany)';
+            case 'type':
+                return has('market')
+                    ? "That's cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯"
+                    : 'Which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
+            case 'hotel':
+                return has('market') && has('type')
+                    ? 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨'
+                    : 'Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
+            case 'angle':
+                return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
+            default:
+                return `Hint: ${next.instruction}`;
+        }
+    }, [missing, has]);
 
     return (
         <div>
             <div className="mb-2 text-xs">
-                {missing.length === 0 ? (
-                    <span className="text-green-700">{topText}</span>
-                ) : (
-                    <span className="text-gray-600">{topText}</span>
-                )}
+                <span className={missing.length === 0 ? 'text-green-700' : 'text-gray-600'}>{topText}</span>
             </div>
             <textarea
                 value={value}
@@ -844,50 +860,34 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
             {
                 id: 'market',
                 label: 'Market',
-                instruction: 'Add your target market',
+                instruction: 'Add the markets you want to target',
                 detect: (text: string) => {
                     const t = text.toLowerCase();
                     const byName = countryNames.some(n => t.includes(n.toLowerCase()));
                     const byIso = countryIsos.some(iso => new RegExp(`\\b${iso.toLowerCase()}\\b`).test(t));
                     return byName || byIso || /market\s*:/.test(t);
                 },
-                suggestions: ['United States', 'United Kingdom', 'Germany', 'France', 'UAE', 'Saudi Arabia'],
-                format: (choice: string) => `Market: ${choice}`,
             },
             {
                 id: 'type',
                 label: 'Campaign Type',
-                instruction: 'Specify the campaign type',
+                instruction: 'Specify which campaign type you want to create',
                 detect: (text: string) => {
                     const t = text.toLowerCase();
                     return ALL_CAMPAIGN_TYPES.some(ct => t.includes(ct.toLowerCase())) || /campaign\s*type\s*:/.test(t);
                 },
-                suggestions: ALL_CAMPAIGN_TYPES,
-                format: (choice: string) => `Campaign type: ${choice}`,
             },
             {
-                id: 'audience',
-                label: 'Audience',
-                instruction: 'Add your audience',
-                detect: (text: string) => /audience\s*:|families|parents|students|travelers|business|luxury/i.test(text),
-                suggestions: ['families', 'business travelers', 'students', 'parents', 'luxury seekers'],
-                format: (choice: string) => `Audience: ${choice}`,
+                id: 'hotel',
+                label: 'Hotel Details',
+                instruction: 'Tell us about the hotel (name, location, stars, USPs)',
+                detect: (text: string) => /hotel|resort|property|rooms|stars|amenities|spa|pool|boutique|located|location|nearby/i.test(text),
             },
             {
-                id: 'style',
-                label: 'Tone/Style',
-                instruction: 'Choose a tone/style',
-                detect: (text: string) => /tone\s*:|style\s*:|friendly|luxury|playful|formal|urgent|informative/i.test(text),
-                suggestions: ['friendly', 'luxury', 'playful', 'formal', 'urgent', 'informative'],
-                format: (choice: string) => `Tone: ${choice}`,
-            },
-            {
-                id: 'goal',
-                label: 'Goal',
-                instruction: 'Specify the goal',
-                detect: (text: string) => /goal\s*:|bookings|brand awareness|leads|traffic|sales/i.test(text),
-                suggestions: ['drive bookings', 'brand awareness', 'generate leads', 'increase traffic', 'boost sales'],
-                format: (choice: string) => `Goal: ${choice}`,
+                id: 'angle',
+                label: 'Creative Direction',
+                instruction: 'Share your angle/creative direction',
+                detect: (text: string) => /angle|creative direction|theme|season(al)?|luxury|family|deal|romance|business|wellness|eco/i.test(text),
             },
         ];
     }, []);
