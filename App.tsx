@@ -1521,6 +1521,126 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
     );
 };
 
+// ===== Creative Generator View =====
+const CreativeGeneratorView = () => {
+    const [prompt, setPrompt] = useState('');
+    const [images, setImages] = useState<string[]>([]);
+    const [logo, setLogo] = useState<string | null>(null);
+    const [copy, setCopy] = useState<{ heading: string; subtext: string; cta: string } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const SIZES = [
+        { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+    ] as const;
+
+    const onFiles = async (fileList: FileList | null, set: (arr: string[]) => void, appendTo?: string[]) => {
+        if (!fileList) return;
+        const arr = await Promise.all(Array.from(fileList).map(f => new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); })));
+        const next = [...(appendTo || []), ...arr];
+        set(next);
+    };
+
+    const generate = async () => {
+        setIsLoading(true);
+        try {
+            const c = await generateBannerCopy(prompt);
+            setCopy(c);
+        } finally { setIsLoading(false); }
+    };
+
+    const downloadHtml = (w: number, h: number) => {
+        const bg = images[0] || '';
+        const lg = logo || images[1] || '';
+        const c = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
+        const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><style>*{box-sizing:border-box}body{margin:0}.banner{position:relative;width:${w}px;height:${h}px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden;border:1px solid #e5e7eb;border-radius:8px} .bg{position:absolute;inset:0;background-image:url('${bg}');background-size:cover;background-position:center;filter:saturate(1.05)} .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.35))} .content{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)} .heading{font-weight:800;line-height:1.1;margin:0 0 4px 0;font-size:${Math.max(12, Math.min(24, Math.round(h*0.16)))}px} .sub{font-weight:500;margin:0 0 10px 0;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px;opacity:.95} .cta{display:inline-block;background:#111;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none} .logo{position:absolute;top:8px;right:8px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px}</style></head><body><div class="banner"><div class="bg"></div><div class="overlay"></div><img class="logo" src="${lg}" alt="logo"/><div class="content"><h3 class="heading">${c.heading}</h3><p class="sub">${c.subtext}</p><a class="cta" href="#">${c.cta}</a></div></div></body></html>`;
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `banner-${w}x${h}.html`;
+        a.click();
+        setTimeout(()=> URL.revokeObjectURL(a.href), 1000);
+    };
+
+    return (
+        <div className="space-y-4 pb-16">
+            <div className="flex items-center justify-between">
+                <div>
+                    <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
+                    <div className="text-xs text-gray-500">Upload brand assets and generate HTML5 banners</div>
+                </div>
+                <button onClick={generate} disabled={isLoading} className="px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                    <label className="block text-xs text-gray-600 mb-1">Prompt</label>
+                    <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Images</div>
+                            <div className="text-xs text-gray-500 mb-2">Upload 1–5 photos (used as background)</div>
+                            <input id="creative-images" type="file" className="hidden" accept="image/*" multiple onChange={(e)=> onFiles(e.target.files, setImages, images)} />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
+                                <label htmlFor="creative-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Logo</div>
+                            <div className="text-xs text-gray-500 mb-2">SVG or PNG logo for branding</div>
+                            <input id="creative-logo" type="file" className="hidden" accept="image/*" onChange={async (e)=> { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => setLogo(r.result as string); r.readAsDataURL(f); }} />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {logo && <img src={logo} className="h-8 w-auto object-contain border rounded" alt="logo" />}
+                                <label htmlFor="creative-logo" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Upload logo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div className="text-sm font-medium text-gray-800 mb-2">Copy</div>
+                    <div className="text-xs text-gray-500 mb-2">Preview and tweak generated text</div>
+                    <div className="space-y-2">
+                        <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        <input value={copy?.cta || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), cta: e.target.value })} placeholder="Button label" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-4">
+                <div className="text-sm font-medium text-gray-800 mb-2">Banners</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {SIZES.map(s => (
+                        <div key={s.key} className="border border-gray-200 rounded-lg p-3">
+                            <div className="text-xs text-gray-600 mb-2">{s.label}</div>
+                            <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                                <div className="relative" style={{width: s.w, height: s.h}}>
+                                    {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />
+                                    {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                    <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                        <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                        <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                        <div>
+                                            <button className="mt-1 px-2 py-1 rounded-full bg-black text-white font-bold" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-2 flex justify-end">
+                                <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // ===== Review View =====
 const ReviewView = ({ campaigns, onBack }: { campaigns: FullCampaign[]; onBack: () => void }) => {
     return (
