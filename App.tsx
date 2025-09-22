@@ -230,6 +230,8 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
     if (!googleAds) return null;
 
     const [creatingGroup, setCreatingGroup] = useState(false);
+    const [expandedAdId, setExpandedAdId] = useState<string | null>(null);
+    const isPMax = /pmax|performance\s*max|hotel/i.test(campaign.campaignType);
 
     const addAdGroup = async () => {
         setCreatingGroup(true);
@@ -260,6 +262,8 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                 </CollapsibleCard>
             ))}
 
+            { !isPMax && (
+            <>
             <div className="flex items-center justify-between py-2">
                 <h3 className="text-sm font-semibold text-gray-700">Ad Groups (Search/Brand)</h3>
                 <button onClick={addAdGroup} disabled={creatingGroup} className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-1">
@@ -289,7 +293,9 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                         const ad = await generateGoogleSearchAd(brief, campaign);
                         const firstGroupId = googleAds.adGroups?.[0]?.id || null;
                         (ad as any).assignedAdGroupId = firstGroupId;
-                        onAdd(['googleAds', 'ads'], ad);
+                        const existing: any[] = (googleAds as any).ads || [];
+                        onUpdate(['googleAds', 'ads'], [ad, ...existing]);
+                        setExpandedAdId(ad.id);
                     }}
                     className="px-3 py-1.5 text-xs rounded-md bg-gray-900 text-white hover:bg-gray-800"
                 >
@@ -300,47 +306,61 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                 <div className="text-xs text-gray-500 mb-2">No ads yet — click “Create Ad”.</div>
             )}
 
-            {((googleAds as any).ads || []).map((ad: any, adIndex: number) => (
-                <div key={ad.id} className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                        <label className="text-xs text-gray-600">Assign to Ad Group</label>
-                        <select
-                            value={ad.assignedAdGroupId || ''}
-                            onChange={(e) => onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], e.target.value || null)}
-                            className="text-xs border border-gray-200 rounded-md px-2 py-1"
-                        >
-                            <option value="">Unassigned</option>
-                            {(googleAds.adGroups || []).map(g => (
-                                <option key={g.id} value={g.id}>{g.name}</option>
-                            ))}
-                        </select>
-                        <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 ml-auto" />
+            {((googleAds as any).ads || []).map((ad: any, adIndex: number) => {
+                const expanded = expandedAdId === ad.id;
+                return (
+                <div key={ad.id} className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
+                    <div className="flex items-center gap-2 p-3 border-b border-gray-100">
+                        <button onClick={() => setExpandedAdId(expanded ? null : ad.id)} className="text-xs font-medium text-gray-700 hover:text-gray-900">
+                            {expanded ? '▾' : '▸'} Ad {adIndex + 1}
+                        </button>
+                        <div className="text-xs text-gray-500 truncate max-w-[50%]">{ad.headlines?.[0] || ad.finalUrl || 'New Ad'}</div>
+                        <div className="ml-auto flex items-center gap-2">
+                            <label className="text-xs text-gray-600">Assign</label>
+                            <select
+                                value={ad.assignedAdGroupId || ''}
+                                onChange={(e) => onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], e.target.value || null)}
+                                className="text-xs border border-gray-200 rounded-md px-2 py-1"
+                            >
+                                <option value="">Unassigned</option>
+                                {(googleAds.adGroups || []).map(g => (
+                                    <option key={g.id} value={g.id}>{g.name}</option>
+                                ))}
+                            </select>
+                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100" />
+                        </div>
                     </div>
-                    <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} />
-                    <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
-                    <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
-                    <div className="mt-3">
-                        <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords ({(ad.keywords?.length || 0)})</h4>
-                        {(() => {
-                            const kws = ad.keywords || [];
-                            const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
-                            return (
-                                <div>
-                                    <ul className="space-y-1">
-                                        {kws.map((kw: string, i: number) => (
-                                            <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
-                                                <EditableField value={kw} onSave={(v) => { const next = [...kws]; next[i] = v; updateKeywords(next); }} fieldType="keyword" />
-                                                <IconButton onClick={() => { const next = kws.filter((_: any, idx: number)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    <IconButton onClick={async () => { const newKw = await onGenerate('keyword', kws); updateKeywords([...(kws as string[]), newKw]); }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
-                                </div>
-                            )
-                        })()}
+                    {expanded && (
+                    <div className="p-4">
+                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} />
+                        <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
+                        <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+                        <div className="mt-3">
+                            <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords ({(ad.keywords?.length || 0)})</h4>
+                            {(() => {
+                                const kws = ad.keywords || [];
+                                const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
+                                return (
+                                    <div>
+                                        <ul className="space-y-1">
+                                            {kws.map((kw: string, i: number) => (
+                                                <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
+                                                    <EditableField value={kw} onSave={(v) => { const next = [...kws]; next[i] = v; updateKeywords(next); }} fieldType="keyword" />
+                                                    <IconButton onClick={() => { const next = kws.filter((_: any, idx: number)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </li>
+                                            ))}
+                                        </ul>
+                                        <IconButton onClick={async () => { const newKw = await onGenerate('keyword', kws); updateKeywords([...(kws as string[]), newKw]); }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
+                                    </div>
+                                )
+                            })()}
+                        </div>
                     </div>
+                    )}
                 </div>
-            ))}
+                );
+            })}
+            </>) }
         </>
     );
 };
