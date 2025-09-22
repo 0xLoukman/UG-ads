@@ -277,7 +277,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
     const Tabs = () => {
         if (isSearchLike) {
             return (
-                <div className="p-3 border-b border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-600">
+                <div className="p-3 border-b border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-600" role="tablist" aria-label="Preview surfaces">
                     <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src={ICONS.search} alt="Search"/><span>Search</span></div>
                 </div>
             );
