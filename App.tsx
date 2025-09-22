@@ -1039,4 +1039,39 @@ const App: React.FC = () => {
     );
 };
 
+// Channel dropdown component
+const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: (c: Channel) => void }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+    }, []);
+    const options: Channel[] = ['Google','Meta','TikTok'];
+    return (
+        <div className="relative" ref={ref}>
+            <button onClick={() => setOpen(v=>!v)} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                {selected === 'Google' && <GoogleIcon />}
+                {selected === 'Meta' && <MetaIcon />}
+                {selected === 'TikTok' && <TiktokIcon />}
+                {selected === 'Google' ? 'Adwords' : selected}
+                <svg className="w-2 h-2 fill-current" viewBox="0 0 7 5"><path d="M3.5 5L0.468911 0.5L6.53109 0.5L3.5 5Z"/></svg>
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                    {options.map(opt => (
+                        <button key={opt} onClick={() => { onSelect(opt); setOpen(false); }} className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''}`}>
+                            <span className="inline-flex items-center gap-2">
+                                <span className="text-gray-500">{channelIcons[opt]}</span>
+                                <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    )
+}
+
 export default App;
