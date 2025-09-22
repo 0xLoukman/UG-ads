@@ -674,8 +674,6 @@ type GuidedPromptRequirement = {
     format?: (choice: string) => string;
 };
 
-import { generateGuidedHint, hasGeminiKey } from "./services/geminiService";
-
 const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string; onChange: (text: string) => void; schema: GuidedPromptRequirement[]; placeholder?: string; }) => {
     const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
     const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
@@ -685,86 +683,30 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         return req ? req.detect(value) : false;
     }, [schema, value]);
 
-    const [mode, setMode] = useState<'manual' | 'llm'>('manual');
-    const [llmHint, setLlmHint] = useState<string>('');
-    const [llmLatencyMs, setLlmLatencyMs] = useState<number | null>(null);
-    const [llmLoading, setLlmLoading] = useState(false);
-
-    useEffect(() => {
-        if (mode !== 'llm') return;
-        let cancelled = false;
-        const run = async () => {
-            setLlmLoading(true); setLlmLatencyMs(null);
-            const start = performance.now();
-            const present = {
-                market: has('market'),
-                type: has('type'),
-                hotel: has('hotel'),
-                angle: has('angle'),
-            };
-            try {
-                const hint = await generateGuidedHint(value, present);
-                if (!cancelled) {
-                    setLlmHint(hint);
-                    setLlmLatencyMs(Math.round(performance.now() - start));
-                }
-            } catch (e) {
-                if (!cancelled) {
-                    setLlmHint('Hint unavailable — falling back to manual.');
-                }
-            } finally {
-                if (!cancelled) setLlmLoading(false);
-            }
-        };
-        const t = setTimeout(run, 400);
-        return () => { cancelled = true; clearTimeout(t); };
-    }, [mode, value, has]);
-
-    const manualTopText = useMemo(() => {
+    const topText = useMemo(() => {
         const raw = (value || '').trim();
-        if (missing.length === 0) return "Perfect! You're all set — hit Create campaign 🚀";
+        if (missing.length === 0) return "Looks great! Any extra details about the hotel or creative angle will help us craft even better campaigns — but this is enough to kick things off 🚀";
         if (raw.length === 0 || missing.length === schema.length) {
             return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ✍️';
         }
-        const next = missing[0];
-        switch (next.id) {
-            case 'market':
-                return 'Hey! Which markets do you want to target? 🌍 (e.g., US, UK, Germany)';
-            case 'type':
-                return has('market')
-                    ? "That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯"
-                    : 'Which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
-            case 'hotel':
-                return has('market') && has('type')
-                    ? 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨'
-                    : 'Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
-            case 'angle':
-                return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
-            default:
-                return `Hint: ${next.instruction}`;
-        }
-    }, [missing, has, value, schema]);
-
-    const topText = mode === 'llm' ? (llmHint || 'Thinking…') : manualTopText;
+        const mkt = has('market');
+        const typ = has('type');
+        if (!mkt && typ) return 'Nice direction! Which markets do you want to target? 🌍';
+        if (mkt && !typ) return 'That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
+        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
+        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
+        return 'You\'re doing great — add any extra details you think matter, or proceed when ready ✅';
+    }, [value, missing, schema, has]);
 
     return (
         <div>
-            <div className="mb-1 flex items-center justify-between text-xs">
-                <span className={missing.length === 0 ? 'text-green-700' : 'text-gray-600'}>{topText}</span>
-                <div className="flex items-center gap-2">
-                    {mode === 'llm' && (
-                        <span className="text-[10px] text-gray-400">{llmLoading ? '…' : (llmLatencyMs != null ? `${llmLatencyMs} ms` : '')}</span>
-                    )}
-                    <div className="inline-flex rounded-full border border-gray-200 overflow-hidden">
-                        <button className={`px-2 py-0.5 ${mode==='manual' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600'}`} onClick={()=>setMode('manual')}>Manual</button>
-                        <button className={`px-2 py-0.5 ${mode==='llm' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600'}`} onClick={()=>setMode('llm')} disabled={!hasGeminiKey()}>{hasGeminiKey() ? 'LLM' : 'LLM (no key)'}</button>
-                    </div>
-                </div>
+            <div className="mb-2 text-xs bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-gray-700">
+                {topText}
             </div>
             <textarea
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="w-full h-20 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
+                className="w-full h-20 p-3 border-0 rounded-lg outline-none focus:outline-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
                 placeholder={placeholder || 'Enter a task'}
             />
         </div>
@@ -1054,14 +996,14 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                                     <span className="text-xs text-gray-400">Use 🌍 to add markets or clusters</span>
                                 )}
                                 {marketItems.map((c, i) => (
-                                    <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 text-xs">
+                                    <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
                                         {c.type === 'single' ? '🌐' : '🗂️'} {c.name}
                                         <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">×</button>
                                     </span>
                                 ))}
                             </div>
                             {attachments.map((f, i) => (
-                                <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-50 border text-[11px]">
+                                <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
                                     📎 {f.name}
                                     <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
                                 </span>
