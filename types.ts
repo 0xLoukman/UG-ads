@@ -20,8 +20,9 @@ export interface Ad {
     headlines: string[];
     descriptions: string[];
     keywords?: string[];
-    assignedAdGroupId?: string | null;
-    assignedExternal?: { campaignName: string; adGroupName: string } | null;
+    assignedAdGroupId?: string | null; // legacy single-assignment
+    assignedExternal?: { campaignName: string; adGroupName: string } | null; // legacy single external
+    assignedTargets?: Array<{ source: 'plan' | 'external'; campaignId?: string; adGroupId?: string; campaignName?: string; adGroupName?: string }>; // preferred multi-assign
 }
 
 export interface AdGroup {
