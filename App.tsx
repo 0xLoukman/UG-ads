@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market } from "./types";
-import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType } from "./services/geminiService";
+import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd } from "./services/geminiService";
 
 type View = 'input' | 'summary' | 'details';
 type SortConfig = { key: keyof CampaignSummary | 'browserLangs'; direction: 'ascending' | 'descending' } | null;
@@ -229,8 +229,23 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
     const { googleAds } = campaign;
     if (!googleAds) return null;
 
+    const [creatingGroup, setCreatingGroup] = useState(false);
+
+    const addAdGroup = async () => {
+        setCreatingGroup(true);
+        try {
+            const group = await generateGoogleAdGroup(brief, campaign);
+            onAdd(['googleAds', 'adGroups'], group);
+        } finally { setCreatingGroup(false); }
+    };
+
     return (
         <>
+            {googleAds.assetGroups && googleAds.assetGroups.length > 0 && (
+                <div className="flex items-center justify-between py-2">
+                    <h3 className="text-sm font-semibold text-gray-700">Asset Groups (PMax)</h3>
+                </div>
+            )}
             {googleAds.assetGroups?.map((ag, agIndex) => (
                 <CollapsibleCard
                     key={ag.id}
@@ -244,6 +259,18 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                     <EditableList title="Descriptions" items={ag.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
                 </CollapsibleCard>
             ))}
+
+            <div className="flex items-center justify-between py-2">
+                <h3 className="text-sm font-semibold text-gray-700">Ad Groups (Search/Brand)</h3>
+                <button onClick={addAdGroup} disabled={creatingGroup} className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-1">
+                    {creatingGroup ? <SpinnerIcon className="w-4 h-4 text-white"/> : <PlusIcon className="w-4 h-4"/>}
+                    Add Ad Group
+                </button>
+            </div>
+            {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group”.</div>
+            )}
+
             {googleAds.adGroups?.map((adg, adgIndex) => (
                 <CollapsibleCard
                     key={adg.id}
@@ -251,11 +278,48 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'adGroups', adgIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'adGroups', adgIndex])}
                 >
+                    <div className="flex justify-end pb-2">
+                        <button
+                            onClick={async () => {
+                                const ad = await generateGoogleSearchAd(brief, campaign);
+                                onAdd(['googleAds', 'adGroups', adgIndex, 'ads'], ad);
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                        >
+                            Add Ad
+                        </button>
+                    </div>
                     {adg.ads.map((ad, adIndex) => (
                         <div key={ad.id} className="border-t border-gray-200 mt-4 pt-4 first:mt-0 first:pt-0 first:border-0">
                             <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'finalUrl'], newValue)} />
                             <EditableList title="Headlines" items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                             <EditableList title="Descriptions" items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+
+                            <div className="mt-3">
+                                <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords</h4>
+                                {(() => {
+                                    const kws = ad.keywords || [];
+                                    const updateKeywords = (arr: string[]) => onUpdate(['googleAds','adGroups', adgIndex, 'ads', adIndex, 'keywords'], arr);
+                                    return (
+                                        <div>
+                                            <ul className="space-y-1">
+                                                {kws.map((kw, i) => (
+                                                    <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
+                                                        <EditableField value={kw} onSave={(v) => {
+                                                            const next = [...kws]; next[i] = v; updateKeywords(next);
+                                                        }} fieldType="keyword" />
+                                                        <IconButton onClick={() => { const next = kws.filter((_, idx)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <IconButton onClick={async () => {
+                                                const newKw = await onGenerate('keyword', kws);
+                                                updateKeywords([...kws, newKw]);
+                                            }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
+                                        </div>
+                                    )
+                                })()}
+                            </div>
                         </div>
                     ))}
                 </CollapsibleCard>
