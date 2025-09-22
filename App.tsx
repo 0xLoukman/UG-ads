@@ -585,6 +585,7 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
         setAttachments(files.map(f => ({ name: f.name, size: f.size })));
     };
     const removeAttachment = (index: number) => setAttachments(att => att.filter((_, i) => i !== index));
+    const uploadInputRef = useRef<HTMLInputElement | null>(null);
     const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([]);
 
     const detectKey = () => {
@@ -692,7 +693,8 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
                                     </div>
                                 )}
 
-                                <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                                <input ref={uploadInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
+                                <button onClick={() => uploadInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
                                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
                                         <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
                                     </svg>
@@ -1048,7 +1050,7 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
         document.addEventListener('mousedown', onDoc);
         return () => document.removeEventListener('mousedown', onDoc);
     }, []);
-    const options: Channel[] = ['Google','Meta','TikTok'];
+    const options: Array<Channel | 'Bing'> = ['Google','Meta','TikTok','Bing'];
     return (
         <div className="relative" ref={ref}>
             <button onClick={() => setOpen(v=>!v)} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
@@ -1059,15 +1061,24 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
                 <svg className="w-2 h-2 fill-current" viewBox="0 0 7 5"><path d="M3.5 5L0.468911 0.5L6.53109 0.5L3.5 5Z"/></svg>
             </button>
             {open && (
-                <div className="absolute right-0 mt-1 w-40 bg-white border border-gray-200 rounded-lg shadow-lg p-1">
-                    {options.map(opt => (
-                        <button key={opt} onClick={() => { onSelect(opt); setOpen(false); }} className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''}`}>
-                            <span className="inline-flex items-center gap-2">
-                                <span className="text-gray-500">{channelIcons[opt]}</span>
-                                <span>{opt === 'Google' ? 'Adwords' : opt}</span>
-                            </span>
-                        </button>
-                    ))}
+                <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                    {options.map(opt => {
+                        const isDisabled = opt !== 'Google';
+                        return (
+                            <button
+                                key={opt}
+                                disabled={isDisabled}
+                                onClick={() => { if (!isDisabled) { onSelect('Google'); setOpen(false); } }}
+                                className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                                <span className="inline-flex items-center gap-2">
+                                    <span className="text-gray-500">{channelIcons[opt as Channel] || '🧪'}</span>
+                                    <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                                    {isDisabled && <span className="ml-2 text-[10px] text-gray-500">Coming soon</span>}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             )}
         </div>
