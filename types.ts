@@ -1,4 +1,3 @@
-
 export interface Market {
   name: string;
   iso: string;
@@ -20,6 +19,7 @@ export interface Ad {
     finalUrl: string;
     headlines: string[];
     descriptions: string[];
+    keywords?: string[];
 }
 
 export interface AdGroup {
