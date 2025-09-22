@@ -303,7 +303,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                             <option value="">Unassigned</option>
                             <option value={campaign.campaignName}>{campaign.campaignName}</option>
                         </select>
-                        <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => a.assignedAdGroupId === adg.id).length : 0}</div>
+                        <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => (a.assignedTargets || []).some((t:any)=> t.source==='plan' && t.adGroupId===adg.id) || a.assignedAdGroupId === adg.id).length : 0}</div>
                     </div>
                 </CollapsibleCard>
             ))}
