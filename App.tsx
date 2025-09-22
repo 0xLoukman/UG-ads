@@ -602,7 +602,7 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
                     <ChevronDownIcon className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && (
-                    <div className="absolute z-50 mt-1 w-[300px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-lg">
+                    <div className="absolute z-[1000] mt-1 w-[300px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-lg">
                         <div className="p-2 border-b border-gray-100">
                             <input
                                 value={query}
