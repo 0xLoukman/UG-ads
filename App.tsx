@@ -249,6 +249,84 @@ const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }
     );
 };
 
+const FieldSection = ({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) => (
+    <div className="py-3 border-t border-gray-100">
+        <div className="text-sm font-medium text-gray-800">{title}</div>
+        <div className="text-xs text-gray-500 mb-2">{hint}</div>
+        {children}
+    </div>
+);
+
+const AssignPillsPicker = ({ value, onChange, planCombos }: { value: Array<{ source: 'plan' | 'external'; adGroupId?: string; campaignName?: string; adGroupName?: string }>; onChange: (v: any[]) => void; planCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[]; }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => { const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }; document.addEventListener('mousedown', onDoc); return () => document.removeEventListener('mousedown', onDoc); }, []);
+
+    const mockExisting = [
+        { campaignName: '[UG]-Brand-USA', adGroups: ['Brand Exact', 'Brand Phrase'] },
+        { campaignName: '[UG]-Remarketing-ALL', adGroups: ['All Visitors 30d', 'Cart Abandoners 14d'] },
+        { campaignName: '[UG]-Hotel-EN', adGroups: ['Hotel Brand EN', 'Generic Hotel EN'] },
+        { campaignName: '[UG]-PMax-Core', adGroups: ['Asset Group A', 'Asset Group B'] },
+    ];
+
+    const isSelectedPlan = (id: string) => value?.some(v => v.source==='plan' && v.adGroupId===id);
+    const togglePlan = (id: string) => {
+        const set = new Set(value?.filter(Boolean).map(v => JSON.stringify(v)));
+        const key = JSON.stringify({ source:'plan', adGroupId:id });
+        if (set.has(key)) set.delete(key); else set.add(key);
+        onChange(Array.from(set).map(s => JSON.parse(s as string)));
+    };
+
+    const isSelectedExt = (cName: string, gName: string) => value?.some(v => v.source==='external' && v.campaignName===cName && v.adGroupName===gName);
+    const toggleExt = (cName: string, gName: string) => {
+        const set = new Set(value?.filter(Boolean).map(v => JSON.stringify(v)));
+        const key = JSON.stringify({ source:'external', campaignName:cName, adGroupName:gName });
+        if (set.has(key)) set.delete(key); else set.add(key);
+        onChange(Array.from(set).map(s => JSON.parse(s as string)));
+    };
+
+    return (
+        <div className="flex items-center gap-2 flex-wrap" ref={ref}>
+            {(value || []).map((v, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
+                    {v.source==='plan' ? 'Plan' : 'Existing'} {v.source==='plan' ? (planCombos.find(p=>p.adGroupId===v.adGroupId)?.adGroupName || '') : (v.adGroupName || '')}
+                    <button onClick={() => { v.source==='plan' ? togglePlan(v.adGroupId!) : toggleExt(v.campaignName!, v.adGroupName!); }} className="text-gray-500 hover:text-black">×</button>
+                </span>
+            ))}
+            <div className="relative">
+                <button onClick={() => setOpen(o=>!o)} className="px-2 py-1.5 text-xs rounded-md border">Assign</button>
+                {open && (
+                    <div className="absolute z-20 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                        <div className="text-[11px] text-gray-500 px-1 py-1">Current plan</div>
+                        <div className="max-h-40 overflow-auto">
+                            {planCombos.map(p => (
+                                <label key={p.adGroupId} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                    <input type="checkbox" className="h-3.5 w-3.5" checked={isSelectedPlan(p.adGroupId)} onChange={()=>togglePlan(p.adGroupId)} />
+                                    <span className="truncate">{p.campaignName} • {p.adGroupName}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="text-[11px] text-gray-500 px-1 py-1 border-t mt-1">Existing</div>
+                        <div className="max-h-40 overflow-auto">
+                            {mockExisting.map(ex => (
+                                <div key={ex.campaignName} className="px-1 py-1">
+                                    <div className="text-[11px] text-gray-500 px-1">{ex.campaignName}</div>
+                                    {ex.adGroups.map(g => (
+                                        <label key={g} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                            <input type="checkbox" className="h-3.5 w-3.5" checked={isSelectedExt(ex.campaignName, g)} onChange={()=>toggleExt(ex.campaignName, g)} />
+                                            <span className="truncate">{g}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: string, onUpdateTitle: (newTitle: string) => void, onDelete: () => void, children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(true);
 
@@ -514,22 +592,13 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds','ads', adIndex, 'headlines', 0], newTitle)}
                     onDelete={() => onDelete(['googleAds','ads', adIndex])}
                 >
-                    <div className="mb-3">
-                        <AdvancedAssignDropdown
-                            ad={ad}
-                            googleAdGroups={googleAds.adGroups || []}
-                            currentCombos={currentPlanCombos}
-                            onAssignPlan={(adGroupId) => {
-                                const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='plan' && t.adGroupId===adGroupId));
-                                onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'plan', adGroupId }]);
-                            }}
-                            onAssignExternal={(campaignName, adGroupName) => {
-                                const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===campaignName && t.adGroupName===adGroupName));
-                                onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'external', campaignName, adGroupName }]);
-                            }}
-                            onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], []); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
+                    <FieldSection title="Assign" hint="Select campaigns and ad groups">
+                        <AssignPillsPicker
+                            value={ad.assignedTargets || []}
+                            onChange={(next) => onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], next)}
+                            planCombos={currentPlanCombos}
                         />
-                    </div>
+                    </FieldSection>
                     {ad.assignedExternal && (
                         <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
@@ -542,11 +611,16 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                             </div>
                         </div>
                     )}
-                    <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
-                    <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
-                    <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
-                    <div className="mt-3">
-                        <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords ({(ad.keywords?.length || 0)})</h4>
+                    <FieldSection title="Final URL" hint="Set the destination page for this ad">
+                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
+                    </FieldSection>
+                    <FieldSection title="Headlines" hint="Add up to 15 headlines">
+                        <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
+                    </FieldSection>
+                    <FieldSection title="Descriptions" hint="Add up to 4 descriptions">
+                        <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+                    </FieldSection>
+                    <FieldSection title={`Keywords (${(ad.keywords?.length || 0)})`} hint="Add relevant search terms">
                         {(() => {
                             const kws = ad.keywords || [];
                             const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
@@ -564,7 +638,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                                 </div>
                             )
                         })()}
-                    </div>
+                    </FieldSection>
                 </CollapsibleCard>
             ))}
             </>) }
@@ -1249,14 +1323,6 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
 
     return (
         <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-800">2. Review and confirm campaign plan</h2>
-                 <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-                    <BackIcon />
-                    <span>Back to brief</span>
-                </button>
-            </div>
-            <p className="text-gray-600">Here is the high-level campaign structure generated from your brief. Review the campaigns below and click "Generate Details" to proceed.</p>
             <div className={`border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible`}>
                 <table className="w-full text-sm text-left text-gray-600 relative">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
@@ -1350,10 +1416,18 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                     </tbody>
                 </table>
             </div>
-             <button onClick={onConfirm} className="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors">
-                <SparklesIcon className="w-5 h-5 mr-2" />
-                Generate Details
-            </button>
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+                <div className="w-full px-4 md:px-8 py-3 flex items-center justify-between">
+                    <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm hover:bg-gray-200">
+                        <BackIcon className="w-4 h-4" />
+                        Back
+                    </button>
+                    <button onClick={onConfirm} className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        <SparklesIcon className="w-4 h-4" />
+                        Generate details
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
@@ -1394,15 +1468,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
 
     return (
         <div className="space-y-4">
-             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-800">3. Fine-tune your campaigns</h2>
-                 <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-                    <BackIcon />
-                    <span>Back to summary</span>
-                </button>
-            </div>
-            <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200 bg-white">
+             <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200 bg-white">
                 <div className="col-span-3 px-3 py-2 border-r border-gray-200">Campaigns</div>
                 <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
                 <div className="col-span-4 px-4 py-2">Preview</div>
@@ -1442,7 +1508,10 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
 
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
                 <div className="w-full px-4 md:px-8 py-3 flex items-center justify-between">
-                    <div className="text-xs text-gray-500">Review all campaigns before launch.</div>
+                    <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm hover:bg-gray-200">
+                        <BackIcon className="w-4 h-4" />
+                        Back
+                    </button>
                     <button onClick={onReview} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">
                         <SparklesIcon className="w-4 h-4" />
                         Review & publish
