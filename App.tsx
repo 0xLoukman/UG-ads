@@ -438,77 +438,66 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 <div className="text-xs text-gray-500 mb-2">No ads yet — click “Create Ad”.</div>
             )}
 
-            {((googleAds as any).ads || []).map((ad: any, adIndex: number) => {
-                const expanded = expandedAdId === ad.id;
-                return (
-                <div key={ad.id} className="bg-white border-b border-gray-200 mb-3">
-                    <div className="flex items-center gap-2 p-2.5">
-                        <button onClick={() => setExpandedAdId(expanded ? null : ad.id)} className="text-xs font-medium text-gray-700 hover:text-gray-900">
-                            {expanded ? '▾' : '▸'} Ad {adIndex + 1}
-                        </button>
-                        <div className="text-xs text-gray-500 truncate max-w-[50%]">{ad.headlines?.[0] || ad.finalUrl || 'New Ad'}</div>
-                        <div className="ml-auto">
-                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 inline-flex" />
-                        </div>
+            {((googleAds as any).ads || []).map((ad: any, adIndex: number) => (
+                <CollapsibleCard
+                    key={ad.id}
+                    title={ad.headlines?.[0] || ad.finalUrl || `Ad ${adIndex + 1}`}
+                    onUpdateTitle={(newTitle) => onUpdate(['googleAds','ads', adIndex, 'headlines', 0], newTitle)}
+                    onDelete={() => onDelete(['googleAds','ads', adIndex])}
+                >
+                    <div className="mb-3">
+                        <AdvancedAssignDropdown
+                            ad={ad}
+                            googleAdGroups={googleAds.adGroups || []}
+                            currentCombos={currentPlanCombos}
+                            onAssignPlan={(adGroupId) => {
+                                const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='plan' && t.adGroupId===adGroupId));
+                                onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'plan', adGroupId }]);
+                            }}
+                            onAssignExternal={(campaignName, adGroupName) => {
+                                const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===campaignName && t.adGroupName===adGroupName));
+                                onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'external', campaignName, adGroupName }]);
+                            }}
+                            onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], []); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
+                        />
                     </div>
-                    {expanded && (
-                    <div className="p-4">
-                        <div className="mb-3">
-                            <AdvancedAssignDropdown
-                                ad={ad}
-                                googleAdGroups={googleAds.adGroups || []}
-                                currentCombos={currentPlanCombos}
-                                onAssignPlan={(adGroupId) => {
-                                    const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='plan' && t.adGroupId===adGroupId));
-                                    onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'plan', adGroupId }]);
-                                }}
-                                onAssignExternal={(campaignName, adGroupName) => {
-                                    const existing = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===campaignName && t.adGroupName===adGroupName));
-                                    onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], [...existing, { source:'external', campaignName, adGroupName }]);
-                                }}
-                                onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], []); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
-                            />
-                        </div>
-                        {ad.assignedExternal && (
-                            <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                <div>
-                                    <label className="block text-xs text-gray-600 mb-1">Existing Campaign Name</label>
-                                    <input value={ad.assignedExternal.campaignName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'campaignName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. [UG]-Brand-USA" />
-                                </div>
-                                <div>
-                                    <label className="block text-xs text-gray-600 mb-1">Existing Ad Group Name</label>
-                                    <input value={ad.assignedExternal.adGroupName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'adGroupName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. Brand-Exact" />
-                                </div>
+                    {ad.assignedExternal && (
+                        <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-xs text-gray-600 mb-1">Existing Campaign Name</label>
+                                <input value={ad.assignedExternal.campaignName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'campaignName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. [UG]-Brand-USA" />
                             </div>
-                        )}
-                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
-                        <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
-                        <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
-                        <div className="mt-3">
-                            <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords ({(ad.keywords?.length || 0)})</h4>
-                            {(() => {
-                                const kws = ad.keywords || [];
-                                const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
-                                return (
-                                    <div>
-                                        <ul className="space-y-1">
-                                            {kws.map((kw: string, i: number) => (
-                                                <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
-                                                    <EditableField value={kw} onSave={(v) => { const next = [...kws]; next[i] = v; updateKeywords(next); }} fieldType="keyword" />
-                                                    <IconButton onClick={() => { const next = kws.filter((_: any, idx: number)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                </li>
-                                            ))}
-                                        </ul>
-                                        <IconButton onClick={async () => { const newKw = await onGenerate('keyword', kws); updateKeywords([...(kws as string[]), newKw]); }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
-                                    </div>
-                                )
-                            })()}
+                            <div>
+                                <label className="block text-xs text-gray-600 mb-1">Existing Ad Group Name</label>
+                                <input value={ad.assignedExternal.adGroupName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'adGroupName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. Brand-Exact" />
+                            </div>
                         </div>
-                    </div>
                     )}
-                </div>
-                );
-            })}
+                    <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
+                    <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
+                    <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+                    <div className="mt-3">
+                        <h4 className="text-sm font-semibold text-gray-600 mb-1">Keywords ({(ad.keywords?.length || 0)})</h4>
+                        {(() => {
+                            const kws = ad.keywords || [];
+                            const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
+                            return (
+                                <div>
+                                    <ul className="space-y-1">
+                                        {kws.map((kw: string, i: number) => (
+                                            <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
+                                                <EditableField value={kw} onSave={(v) => { const next = [...kws]; next[i] = v; updateKeywords(next); }} fieldType="keyword" />
+                                                <IconButton onClick={() => { const next = kws.filter((_: any, idx: number)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <IconButton onClick={async () => { const newKw = await onGenerate('keyword', kws); updateKeywords([...(kws as string[]), newKw]); }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
+                                </div>
+                            )
+                        })()}
+                    </div>
+                </CollapsibleCard>
+            ))}
             </>) }
         </>
     );
@@ -1349,8 +1338,8 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
                 <div className="col-span-4 px-4 py-2">Preview</div>
             </div>
-            <div className="grid grid-cols-12 gap-0 items-start bg-white overflow-hidden w-full">
-                <aside className="col-span-3 self-start max-h-[80vh] overflow-auto border-r border-gray-200 p-3">
+            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-260px)]">
+                <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
                     <nav className="flex flex-col space-y-1" aria-label="Campaign list">
                         {campaigns.map(c => (
@@ -1368,7 +1357,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         ))}
                     </nav>
                 </aside>
-                <main className="col-span-5 self-start border-r border-gray-200 p-4">
+                <main className="col-span-5 h-full overflow-auto border-r border-gray-200 p-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
                             {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
@@ -1377,7 +1366,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         </div>
                     )}
                 </main>
-                <section className="col-span-4 self-start p-4">
+                <section className="col-span-4 h-full overflow-auto p-4">
                     {selectedCampaign && <CampaignPreview campaign={selectedCampaign} />}
                 </section>
             </div>
