@@ -256,7 +256,7 @@ CRITICAL RULES:
 1.  Analyze the 'channel' for EACH campaign summary provided.
 2.  If 'channel' is 'Google':
     - If 'campaignType' is 'PMax', 'Hotel Ads', or 'Performance Max', you MUST generate a 'googleAds.assetGroups' array.
-    - If 'campaignType' is 'Search', 'Brand Search', or contains the word 'Brand' (e.g., 'Brand', 'Brand-Exact', 'Brand Search (Exact/Phrase)'), you MUST generate a 'googleAds.adGroups' array with at least one ad group and at least one ad per group.
+    - If 'campaignType' is 'Search', 'Brand Search', or contains the word 'Brand' (e.g., 'Brand', 'Brand-Exact', 'Brand Search (Exact/Phrase)'), you MUST generate BOTH: 'googleAds.adGroups' and a campaign-level 'googleAds.ads' array. Set each ad's 'assignedAdGroupId' to one of the ad group IDs.
 3.  If 'channel' is 'Meta', you MUST generate a 'meta.adSets' array, with each ad set containing ads with 'primaryText', 'headline', and 'description'.
 4.  If 'channel' is 'TikTok', you MUST generate a 'tikTok.adGroups' array, with each ad group containing ads with 'adText'.
 5.  DO NOT generate structures for the wrong channel. For a 'Meta' campaign, 'googleAds' and 'tikTok' properties must be null/omitted.
