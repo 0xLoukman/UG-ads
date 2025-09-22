@@ -495,14 +495,11 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
 }
 
 const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
-    const [inputMode, setInputMode] = useState<InputMode>('prompt');
     const [brief, setBrief] = useState("");
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Meta']);
-
-    // State for Manual Mode
-    const [manualPrimaryMarkets, setManualPrimaryMarkets] = useState<Market[]>([]);
-    const [manualSecondaryMarkets, setManualSecondaryMarkets] = useState<Market[]>([]);
-    const [manualCampaignTypes, setManualCampaignTypes] = useState<string[]>([]);
+    const [showMarkets, setShowMarkets] = useState(false);
+    const [showUpload, setShowUpload] = useState(false);
+    const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([]);
 
     const detectKey = () => {
         try {
@@ -518,17 +515,6 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     const [hasKey, setHasKey] = useState<boolean>(detectKey());
     const [keyInput, setKeyInput] = useState<string>('');
 
-    const manualIssues = useMemo(() => {
-        const issues: string[] = [];
-        if (!brief.trim()) issues.push('Add a creative brief');
-        if (manualPrimaryMarkets.length + manualSecondaryMarkets.length === 0) issues.push('Select at least one market');
-        if (manualCampaignTypes.length === 0) issues.push('Choose at least one campaign type');
-        if (selectedChannels.length === 0) issues.push('Pick at least one channel');
-        return issues;
-    }, [brief, manualPrimaryMarkets, manualSecondaryMarkets, manualCampaignTypes, selectedChannels]);
-
-    const allSelectedMarkets = useMemo(() => [...manualPrimaryMarkets, ...manualSecondaryMarkets], [manualPrimaryMarkets, manualSecondaryMarkets]);
-
     const handleToggleChannel = (channel: Channel) => {
         setSelectedChannels(prev =>
             prev.includes(channel)
@@ -538,156 +524,104 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     };
 
     const handleGenerate = () => {
-        if (inputMode === 'manual' && manualIssues.length > 0) return;
-        if (!brief.trim()) return;
-
-        if (inputMode === 'manual') {
-            onGenerate(brief, selectedChannels, {
-                primaryMarkets: manualPrimaryMarkets,
-                secondaryMarkets: manualSecondaryMarkets,
-                campaignTypes: manualCampaignTypes
-            });
-        } else {
-            onGenerate(brief, selectedChannels);
-        }
+        if (!brief.trim() || !hasKey) return;
+        onGenerate(brief, selectedChannels);
     };
-    
-    const isGenerateDisabled = (inputMode === 'manual' ? manualIssues.length > 0 : (!brief.trim() || selectedChannels.length === 0)) || !hasKey;
+
+    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey;
 
     return (
-        <div className="flex justify-center items-start pt-8 sm:pt-16">
-            <div className="w-full max-w-3xl space-y-6">
-                <h2 className="text-3xl font-bold text-gray-800 text-center tracking-tight">What campaign you would like to launch</h2>
-                <div className="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
-                    {/* Mode Toggle */}
-                    <div className="flex justify-center p-2">
-                        <div className="bg-gray-100 p-1 rounded-full flex space-x-1">
-                            <button onClick={() => setInputMode('prompt')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${inputMode === 'prompt' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                                AI Prompt
-                            </button>
-                            <button onClick={() => setInputMode('manual')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${inputMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                                Manual Setup
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {inputMode === 'prompt' ? (
-                        <textarea
-                            value={brief}
-                            onChange={(e) => setBrief(e.target.value)}
-                            className="w-full h-32 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-700 placeholder-gray-400"
-                            placeholder="Enter all the details about the campaign you would like to create, including markets, campaign types, and creative direction..."
-                        />
-                    ) : (
-                         <div className="p-3 space-y-5">
-                            <div>
-                                 <div className="flex items-center justify-between">
-                                    <label className="text-sm font-medium text-gray-700">1. Creative Brief</label>
-                                 </div>
-                                 <textarea
-                                    value={brief}
-                                    onChange={(e) => setBrief(e.target.value)}
-                                    className="w-full h-28 mt-1 p-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 placeholder-gray-400"
-                                    placeholder="Describe your product, target audience, and key messaging..."
-                                />
-                                <p className="mt-1 text-xs text-gray-500">Keep it concise. This guides the AI for copy tone and value props.</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">2. Channels</p>
-                                <div className="flex items-center flex-wrap gap-2">
-                                    <ChannelButton channel="TikTok" icon={<TiktokIcon />} selected={selectedChannels.includes('TikTok')} onClick={handleToggleChannel} />
-                                    <ChannelButton channel="Google" icon={<GoogleIcon />} selected={selectedChannels.includes('Google')} onClick={handleToggleChannel} />
-                                    <ChannelButton channel="Meta" icon={<MetaIcon />} selected={selectedChannels.includes('Meta')} onClick={handleToggleChannel} />
-                                </div>
-                                <p className="mt-1 text-xs text-gray-500">Selected: {selectedChannels.length > 0 ? selectedChannels.join(', ') : 'None'}</p>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-gray-700 mb-2">3. Markets</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <MarketSelector
-                                        label={`Primary Markets (separate campaigns) — ${manualPrimaryMarkets.length}`}
-                                        selectedMarkets={manualPrimaryMarkets}
-                                        onAdd={(market) => setManualPrimaryMarkets(prev => [...prev, market])}
-                                        onRemove={(market) => setManualPrimaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                        allSelectedMarkets={allSelectedMarkets}
-                                        onClear={() => setManualPrimaryMarkets([])}
-                                    />
-                                    <MarketSelector
-                                        label={`Secondary Markets (clustered) — ${manualSecondaryMarkets.length}`}
-                                        selectedMarkets={manualSecondaryMarkets}
-                                        onAdd={(market) => setManualSecondaryMarkets(prev => [...prev, market])}
-                                        onRemove={(market) => setManualSecondaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                        allSelectedMarkets={allSelectedMarkets}
-                                        onClear={() => setManualSecondaryMarkets([])}
-                                    />
-                                </div>
-                            </div>
-                            <div>
-                                <MultiSelectDropdown
-                                    label={`4. Campaign Types — ${manualCampaignTypes.length}`}
-                                    options={ALL_CAMPAIGN_TYPES}
-                                    selectedOptions={manualCampaignTypes}
-                                    onToggle={(option) => {
-                                        setManualCampaignTypes(prev =>
-                                            prev.includes(option)
-                                                ? prev.filter(t => t !== option)
-                                                : [...prev, option]
-                                        )
-                                    }}
-                                />
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {ALL_CAMPAIGN_TYPES.map(ct => (
-                                        <button key={ct} onClick={() => setManualCampaignTypes(prev => prev.includes(ct) ? prev : [...prev, ct])} className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full">{ct}</button>
-                                    ))}
-                                    <button onClick={() => setManualCampaignTypes(ALL_CAMPAIGN_TYPES)} className="px-2.5 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-full">Add All</button>
-                                    <button onClick={() => setManualCampaignTypes([])} className="px-2.5 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full">Clear</button>
-                                </div>
-                            </div>
-                         </div>
-                    )}
+        <div className="flex justify-center items-start pt-16 sm:pt-24">
+            <div className="w-full max-w-2xl space-y-6">
+                <div className="text-center">
+                    <h2 className="text-lg font-medium text-gray-800 mb-6">What campaign you would like to launch</h2>
+                </div>
 
-                    <div className="mt-3 p-2 border-t border-gray-100">
-                        {inputMode === 'manual' && isGenerateDisabled && (
-                            <div className="mb-2 text-xs text-red-600">
-                                <p className="font-medium">Complete the following:</p>
-                                <ul className="list-disc list-inside">
-                                    {manualIssues.map((m, i) => (<li key={i}>{m}</li>))}
-                                </ul>
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <div className="p-4 pb-3">
+                        <div className="mb-4">
+                            <textarea
+                                value={brief}
+                                onChange={(e) => setBrief(e.target.value)}
+                                className="w-full h-20 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
+                                placeholder="Enter a task"
+                            />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => setShowMarkets(!showMarkets)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 19 20" fill="none">
+                                        <path d="M6.33913 10.6787H11.7386C11.6566 12.503 11.2521 14.1831 10.678 15.4135C10.3555 16.1065 10.0076 16.5958 9.68518 16.8956C9.36839 17.1926 9.1506 17.2407 9.03746 17.2407C8.92433 17.2407 8.70654 17.1926 8.38975 16.8956C8.06731 16.5958 7.71941 16.1036 7.39697 15.4135C6.82279 14.1831 6.41832 12.503 6.3363 10.6787H6.33913ZM11.7415 9.32103H6.34196C6.42115 7.49668 6.82562 5.81658 7.39979 4.58621C7.72224 3.89607 8.07014 3.40392 8.39258 3.1041C8.70937 2.80712 8.92716 2.75903 9.04029 2.75903C9.15343 2.75903 9.37122 2.80712 9.68801 3.1041C10.0104 3.40392 10.3583 3.89607 10.6808 4.58621C11.255 5.81658 11.6594 7.49668 11.7415 9.32103ZM13.0991 9.32103C13.0001 6.89988 12.375 4.65126 11.4614 3.17481C14.0664 4.09689 15.9841 6.46995 16.25 9.32103H13.0991ZM16.25 10.6787C15.9841 13.5298 14.0664 15.9028 11.4614 16.8249C12.375 15.3484 13.0001 13.0998 13.0991 10.6787H16.25ZM4.98147 10.6787C5.08047 13.0998 5.70556 15.3484 6.61914 16.8249C4.01415 15.9 2.09646 13.5298 1.83059 10.6787H4.98147ZM1.83059 9.32103C2.09646 6.46995 4.01415 4.09689 6.61914 3.17481C5.70556 4.65126 5.08047 6.89988 4.98147 9.32103H1.83059Z" fill="currentColor"/>
+                                    </svg>
+                                    Markets
+                                </button>
+
+                                <button className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                                        <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
+                                    </svg>
+                                    Upload
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => {
+                                            if (selectedChannels.includes('Google')) {
+                                                setSelectedChannels(prev => prev.filter(c => c !== 'Google'));
+                                            } else if (selectedChannels.includes('Meta')) {
+                                                setSelectedChannels(['Google']);
+                                            } else if (selectedChannels.includes('TikTok')) {
+                                                setSelectedChannels(['Google']);
+                                            } else {
+                                                setSelectedChannels(['Google']);
+                                            }
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                    >
+                                        <GoogleIcon />
+                                        {selectedChannels.includes('Google') ? 'Google' : selectedChannels.includes('Meta') ? 'Meta' : selectedChannels.includes('TikTok') ? 'TikTok' : 'Adwords'}
+                                        <ChevronDownIcon className="w-3 h-3" />
+                                    </button>
+                                </div>
+
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={isGenerateDisabled}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <SparklesIcon className="w-4 h-4" />
+                                    Create campaign
+                                </button>
+                            </div>
+                        </div>
+
+                        {!hasKey && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                                <details className="text-xs text-gray-500">
+                                    <summary className="cursor-pointer list-none underline underline-offset-2 decoration-dotted">Set Gemini key</summary>
+                                    <div className="mt-2 flex gap-2">
+                                        <input
+                                            type="password"
+                                            value={keyInput}
+                                            onChange={(e) => setKeyInput(e.target.value)}
+                                            placeholder="Paste Gemini API key"
+                                            className="px-2 py-1 text-xs border border-gray-200 rounded-md"
+                                        />
+                                        <button
+                                            onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
+                                            className="px-2 py-1 text-xs rounded-md bg-black text-white hover:bg-gray-800"
+                                        >Save</button>
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-gray-500">Stored locally in your browser.</p>
+                                </details>
                             </div>
                         )}
-                        <div className="flex justify-between items-center">
-                            <div className="flex items-center space-x-2">
-                                {!hasKey ? (
-                                    <details className="text-xs text-gray-500">
-                                        <summary className="cursor-pointer list-none underline underline-offset-2 decoration-dotted">Set Gemini key</summary>
-                                        <div className="mt-2 flex gap-2">
-                                            <input
-                                                type="password"
-                                                value={keyInput}
-                                                onChange={(e) => setKeyInput(e.target.value)}
-                                                placeholder="Paste Gemini API key"
-                                                className="px-2 py-1 text-xs border border-gray-200 rounded-md"
-                                            />
-                                            <button
-                                                onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
-                                                className="px-2 py-1 text-xs rounded-md bg-black text-white hover:bg-gray-800"
-                                            >Save</button>
-                                        </div>
-                                        <p className="mt-1 text-[10px] text-gray-500">Stored locally in your browser.</p>
-                                    </details>
-                                ) : (
-                                    <span className="text-xs text-gray-500">Gemini enabled</span>
-                                )}
-                            </div>
-                            <button
-                                onClick={handleGenerate}
-                                disabled={isGenerateDisabled}
-                                className="flex items-center justify-center space-x-2 bg-black text-white font-semibold py-2 px-5 rounded-full hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <SparklesIcon className="w-4 h-4" />
-                                <span>Create campaign</span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
