@@ -228,7 +228,7 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
 
     return (
         <div className="border-t border-b border-gray-200">
-            <div className="flex items-center justify-between px-3 py-3">
+            <div className={`flex items-center justify-between px-4 py-3 ${isOpen ? 'bg-blue-50' : 'bg-gray-50'}`}>
                 <div className="flex-grow mr-3">
                     <EditableField value={title} onSave={onUpdateTitle} />
                 </div>
@@ -237,7 +237,7 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
                     <IconButton onClick={() => setIsOpen(!isOpen)} icon={<ChevronDownIcon className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} />} className="text-gray-500 hover:bg-gray-200" />
                 </div>
             </div>
-            {isOpen && <div className="px-3 pb-3 space-y-3">{children}</div>}
+            {isOpen && <div className="px-4 pb-3 space-y-3">{children}</div>}
         </div>
     );
 };
@@ -358,7 +358,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
     return (
         <>
             {googleAds.assetGroups && googleAds.assetGroups.length > 0 && (
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between px-4 py-2">
                     <h3 className="text-sm font-semibold text-gray-700">Asset Groups (PMax)</h3>
                 </div>
             )}
@@ -378,7 +378,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
 
             { !isPMax && (
             <>
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between px-4 py-2">
                 <h3 className="text-sm font-semibold text-gray-700">Ad Groups (Search/Brand)</h3>
                 <button onClick={addAdGroup} disabled={creatingGroup} className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-1">
                     {creatingGroup ? <SpinnerIcon className="w-4 h-4 text-white"/> : <PlusIcon className="w-4 h-4"/>}
@@ -411,7 +411,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </CollapsibleCard>
             ))}
 
-            <div className="flex items-center justify-between py-2">
+            <div className="flex items-center justify-between px-4 py-2">
                 <h3 className="text-sm font-semibold text-gray-700">Ads</h3>
                 <button
                     onClick={async () => {
@@ -1357,7 +1357,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         ))}
                     </nav>
                 </aside>
-                <main className="col-span-5 h-full overflow-auto border-r border-gray-200 p-4">
+                <main className="col-span-5 h-full overflow-auto border-r border-gray-200 px-0 py-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
                             {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
