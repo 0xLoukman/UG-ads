@@ -228,7 +228,7 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
 
     return (
         <div className="border-t border-b border-gray-200">
-            <div className="flex items-center justify-between p-2.5">
+            <div className="flex items-center justify-between px-3 py-3">
                 <div className="flex-grow mr-3">
                     <EditableField value={title} onSave={onUpdateTitle} />
                 </div>
@@ -237,7 +237,7 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
                     <IconButton onClick={() => setIsOpen(!isOpen)} icon={<ChevronDownIcon className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} />} className="text-gray-500 hover:bg-gray-200" />
                 </div>
             </div>
-            {isOpen && <div className="px-2.5 pb-3 space-y-3">{children}</div>}
+            {isOpen && <div className="px-3 pb-3 space-y-3">{children}</div>}
         </div>
     );
 };
@@ -435,7 +435,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!(googleAds as any).ads || (googleAds as any).ads.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ads yet — click “Create Ad���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ads yet — click “Create Ad”.</div>
             )}
 
             {((googleAds as any).ads || []).map((ad: any, adIndex: number) => (
