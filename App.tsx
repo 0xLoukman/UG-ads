@@ -1034,7 +1034,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                 <td className="px-6 py-3">{s.campaignType}</td>
                                 <td className="px-6 py-3">{s.market.name} ({s.market.iso})</td>
                                 <td className="px-6 py-3">{s.market.browserLangs.join(', ')}</td>
-                                <td className="px-6 py-3">{s.languages.join(', ')}</td>
+                                <td className="px-6 py-3">{s.languages.map(langNameFromCode).join(', ')}</td>
                                 <td className="px-6 py-3 text-right"><button onClick={() => setEditingId(s.id)} className="text-xs px-2 py-1 rounded-md border border-gray-200">Edit</button></td>
                             </tr>
                             {isEditing && (
