@@ -141,6 +141,7 @@ const googleAdSchema = {
         finalUrl: { type: Type.STRING, description: "The final URL for this specific ad." },
         headlines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 3 to 5 compelling headlines, each under 30 characters." },
         descriptions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 2 to 4 detailed descriptions, each under 90 characters." },
+        keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Optional list of brand keywords or search terms for this ad (Exact or Phrase match terms as plain strings)." },
     },
     required: ["id", "finalUrl", "headlines", "descriptions"]
 };
