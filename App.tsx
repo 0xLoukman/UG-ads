@@ -539,6 +539,52 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Meta']);
     const [showMarkets, setShowMarkets] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
+
+    // Markets dropdown state
+    const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
+    const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
+    const [q, setQ] = useState('');
+    const [picked, setPicked] = useState<string[]>([]);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const onDocClick = (e: MouseEvent) => {
+            if (!showMarkets) return;
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowMarkets(false);
+                setQ('');
+                setPicked([]);
+            }
+        };
+        document.addEventListener('mousedown', onDocClick);
+        return () => document.removeEventListener('mousedown', onDocClick);
+    }, [showMarkets]);
+    const visibleMarkets = useMemo(() => {
+        const base = MARKETS.filter(m => !assigned.has(m.code) || picked.includes(m.code));
+        if (!q.trim()) return base;
+        const s = q.trim().toLowerCase();
+        return base.filter(m => m.name.toLowerCase().includes(s) || m.code.toLowerCase().includes(s));
+    }, [q, assigned, picked]);
+    const togglePick = (code: string) => setPicked(p => p.includes(code) ? p.filter(x => x !== code) : [...p, code]);
+    const addMarketSingles = (codes: string[]) => {
+        const add = dedupeCodes(codes, assigned);
+        if (!add.length) return;
+        setMarketItems(it => [...it, ...add.map(c => ({ type: 'single', name: findMarket(c)?.name || c, codes: [c] }))]);
+    };
+    const addMarketCluster = (codes: string[]) => {
+        const add = dedupeCodes(codes, assigned);
+        if (add.length < 2) return;
+        const name = suggestClusterName(add);
+        setMarketItems(it => [...it, { type: 'cluster', name, codes: add }]);
+    };
+    const removeItem = (index: number) => setMarketItems(it => it.filter((_, i) => i !== index));
+
+    // Attachments
+    const [attachments, setAttachments] = useState<{name:string; size:number}[]>([]);
+    const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setAttachments(files.map(f => ({ name: f.name, size: f.size })));
+    };
+    const removeAttachment = (index: number) => setAttachments(att => att.filter((_, i) => i !== index));
     const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([]);
 
     const detectKey = () => {
