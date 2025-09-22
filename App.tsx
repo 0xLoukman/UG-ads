@@ -225,7 +225,7 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
 
 // ===== Channel-Specific Detail Components =====
 
-const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite }: { campaign: FullCampaign, brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string> }) => {
+const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string> }) => {
     const { googleAds } = campaign;
     if (!googleAds) return null;
 
@@ -233,6 +233,16 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
     const [creatingAd, setCreatingAd] = useState(false);
     const [expandedAdId, setExpandedAdId] = useState<string | null>(null);
     const isPMax = /pmax|performance\s*max|hotel/i.test(campaign.campaignType);
+
+    const currentPlanCombos = useMemo(() => {
+        const combos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[] = [];
+        (allCampaigns || []).forEach(c => {
+            if (c.channel !== 'Google') return;
+            const groups = c.googleAds?.adGroups || [];
+            groups.forEach(g => combos.push({ campaignId: c.id, campaignName: c.campaignName, adGroupId: g.id, adGroupName: g.name }));
+        });
+        return combos;
+    }, [allCampaigns]);
 
     const addAdGroup = async () => {
         setCreatingGroup(true);
@@ -273,7 +283,7 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group”.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -334,29 +344,16 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                             {expanded ? '▾' : '▸'} Ad {adIndex + 1}
                         </button>
                         <div className="text-xs text-gray-500 truncate max-w-[50%]">{ad.headlines?.[0] || ad.finalUrl || 'New Ad'}</div>
-                        <div className="ml-auto flex items-center gap-2">
-                            <label className="text-xs text-gray-600">Assign</label>
-                            <select
-                                value={ad.assignedAdGroupId || (ad.assignedExternal ? 'external' : '')}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (val === 'external') {
-                                        onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null);
-                                        onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], { campaignName: '', adGroupName: '' });
-                                    } else {
-                                        onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null);
-                                        onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], val || null);
-                                    }
-                                }}
-                                className="text-xs border border-gray-200 rounded-md px-2 py-1"
-                            >
-                                <option value="">Unassigned</option>
-                                {(googleAds.adGroups || []).map(g => (
-                                    <option key={g.id} value={g.id}>{g.name}</option>
-                                ))}
-                                <option value="external">Assign to existing account…</option>
-                            </select>
-                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100" />
+                        <div className="ml-auto relative">
+                            <AdvancedAssignDropdown
+                                ad={ad}
+                                googleAdGroups={googleAds.adGroups || []}
+                                currentCombos={currentPlanCombos}
+                                onAssignPlan={(adGroupId) => { onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], adGroupId); }}
+                                onAssignExternal={(campaignName, adGroupName) => { onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], { campaignName, adGroupName }); }}
+                                onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
+                            />
+                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 inline-flex ml-2" />
                         </div>
                     </div>
                     {expanded && (
@@ -1127,7 +1124,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
                 <main className="w-3/4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
-                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
+                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                             {selectedCampaign.channel === 'Meta' && <MetaCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                             {selectedCampaign.channel === 'TikTok' && <TikTokCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                         </div>
@@ -1277,5 +1274,47 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
         </div>
     )
 }
+
+// Advanced assignment dropdown component
+const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPlan, onAssignExternal, onUnassign }: { ad: any, googleAdGroups: {id:string; name:string}[], currentCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[], onAssignPlan: (adGroupId:string)=>void, onAssignExternal: (campaignName:string, adGroupName:string)=>void, onUnassign: ()=>void }) => {
+    const [open, setOpen] = useState(false);
+    const [campaignName, setCampaignName] = useState(ad.assignedExternal?.campaignName || '');
+    const [adGroupName, setAdGroupName] = useState(ad.assignedExternal?.adGroupName || '');
+    return (
+        <div className="relative inline-block">
+            <button onClick={() => setOpen(v=>!v)} className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
+                {ad.assignedExternal ? `${ad.assignedExternal.campaignName} / ${ad.assignedExternal.adGroupName}` : (ad.assignedAdGroupId ? (googleAdGroups.find(g => g.id === ad.assignedAdGroupId)?.name || 'Assigned') : 'Assign')}
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-1 w-[320px] bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
+                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Current plan</div>
+                    <div className="max-h-40 overflow-auto mb-2 space-y-1">
+                        {(googleAdGroups || []).length === 0 && currentCombos.length === 0 && (
+                            <div className="text-xs text-gray-400">No ad groups available</div>
+                        )}
+                        {(googleAdGroups || []).map(g => (
+                            <button key={`local-${g.id}`} className="w-full text-left text-sm px-2 py-1 rounded-md hover:bg-gray-100" onClick={() => { onAssignPlan(g.id); setOpen(false); }}>This campaign / {g.name}</button>
+                        ))}
+                        {currentCombos
+                            .filter(c => !googleAdGroups.some(g => g.id === c.adGroupId))
+                            .map(c => (
+                            <button key={`combo-${c.adGroupId}`} className="w-full text-left text-sm px-2 py-1 rounded-md hover:bg-gray-100" onClick={() => { onAssignPlan(c.adGroupId); setOpen(false); }}>{c.campaignName} / {c.adGroupName}</button>
+                        ))}
+                    </div>
+                    <div className="border-t border-gray-100 pt-2 mt-2" />
+                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Existing account</div>
+                    <div className="space-y-2">
+                        <input value={campaignName} onChange={(e)=> setCampaignName(e.target.value)} placeholder="Campaign name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                        <input value={adGroupName} onChange={(e)=> setAdGroupName(e.target.value)} placeholder="Ad group name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                        <div className="flex items-center justify-between">
+                            <button onClick={() => { onUnassign(); setOpen(false); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign</button>
+                            <button onClick={() => { onAssignExternal(campaignName, adGroupName); setOpen(false); }} disabled={!campaignName.trim() || !adGroupName.trim()} className="text-xs px-2 py-1 rounded-md bg-black text-white disabled:bg-gray-400">Assign</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 export default App;
