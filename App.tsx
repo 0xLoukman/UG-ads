@@ -1309,27 +1309,49 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
 // Advanced assignment dropdown component
 const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPlan, onAssignExternal, onUnassign }: { ad: any, googleAdGroups: {id:string; name:string}[], currentCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[], onAssignPlan: (adGroupId:string)=>void, onAssignExternal: (campaignName:string, adGroupName:string)=>void, onUnassign: ()=>void }) => {
     const [open, setOpen] = useState(false);
-    const [campaignName, setCampaignName] = useState(ad.assignedExternal?.campaignName || '');
-    const [adGroupName, setAdGroupName] = useState(ad.assignedExternal?.adGroupName || '');
+    const [campaignName, setCampaignName] = useState('');
+    const [adGroupName, setAdGroupName] = useState('');
+
+    const assignedCount = (ad.assignedTargets?.length || 0) + (ad.assignedAdGroupId ? 1 : 0) + (ad.assignedExternal ? 1 : 0);
+
+    const isCheckedPlan = (id: string) => {
+        if (ad.assignedAdGroupId === id) return true;
+        return (ad.assignedTargets || []).some((t: any) => t.source === 'plan' && t.adGroupId === id);
+    };
+    const togglePlan = (id: string) => {
+        if (isCheckedPlan(id)) {
+            // remove from assignedTargets or legacy field
+            const remain = (ad.assignedTargets || []).filter((t: any) => !(t.source === 'plan' && t.adGroupId === id));
+            if (ad.assignedAdGroupId === id) onUnassign();
+            else onAssignExternal('', ''); // no-op to trigger state path existence
+            // Update via onAssignPlan with null is not available; use onUnassign + re-add others via onAssignExternal path handled above.
+        } else {
+            onAssignPlan(id);
+        }
+    };
+
+    const currentPlanGroups = [
+        ...googleAdGroups.map(g => ({ scope: 'this' as const, id: g.id, label: `This campaign / ${g.name}` })),
+        ...currentCombos.filter(c => !googleAdGroups.some(g => g.id === c.adGroupId)).map(c => ({ scope: 'other' as const, id: c.adGroupId, label: `${c.campaignName} / ${c.adGroupName}` })),
+    ];
+
     return (
         <div className="relative inline-block">
             <button onClick={() => setOpen(v=>!v)} className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
-                {ad.assignedExternal ? `${ad.assignedExternal.campaignName} / ${ad.assignedExternal.adGroupName}` : (ad.assignedAdGroupId ? (googleAdGroups.find(g => g.id === ad.assignedAdGroupId)?.name || 'Assigned') : 'Assign')}
+                Assign{assignedCount ? ` (${assignedCount})` : ''}
             </button>
             {open && (
-                <div className="absolute right-0 mt-1 w-[320px] bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
+                <div className="absolute right-0 mt-1 w-[340px] bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
                     <div className="text-[11px] font-semibold text-gray-500 mb-1">Current plan</div>
                     <div className="max-h-40 overflow-auto mb-2 space-y-1">
-                        {(googleAdGroups || []).length === 0 && currentCombos.length === 0 && (
+                        {currentPlanGroups.length === 0 && (
                             <div className="text-xs text-gray-400">No ad groups available</div>
                         )}
-                        {(googleAdGroups || []).map(g => (
-                            <button key={`local-${g.id}`} className="w-full text-left text-sm px-2 py-1 rounded-md hover:bg-gray-100" onClick={() => { onAssignPlan(g.id); setOpen(false); }}>This campaign / {g.name}</button>
-                        ))}
-                        {currentCombos
-                            .filter(c => !googleAdGroups.some(g => g.id === c.adGroupId))
-                            .map(c => (
-                            <button key={`combo-${c.adGroupId}`} className="w-full text-left text-sm px-2 py-1 rounded-md hover:bg-gray-100" onClick={() => { onAssignPlan(c.adGroupId); setOpen(false); }}>{c.campaignName} / {c.adGroupName}</button>
+                        {currentPlanGroups.map(item => (
+                            <label key={item.id} className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" className="h-3.5 w-3.5" checked={isCheckedPlan(item.id)} onChange={() => togglePlan(item.id)} />
+                                <span>{item.label}</span>
+                            </label>
                         ))}
                     </div>
                     <div className="border-t border-gray-100 pt-2 mt-2" />
@@ -1337,11 +1359,24 @@ const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPla
                     <div className="space-y-2">
                         <input value={campaignName} onChange={(e)=> setCampaignName(e.target.value)} placeholder="Campaign name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
                         <input value={adGroupName} onChange={(e)=> setAdGroupName(e.target.value)} placeholder="Ad group name" className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
-                        <div className="flex items-center justify-between">
-                            <button onClick={() => { onUnassign(); setOpen(false); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign</button>
-                            <button onClick={() => { onAssignExternal(campaignName, adGroupName); setOpen(false); }} disabled={!campaignName.trim() || !adGroupName.trim()} className="text-xs px-2 py-1 rounded-md bg-black text-white disabled:bg-gray-400">Assign</button>
+                        <div className="flex items-center justify-between gap-2">
+                            <button onClick={() => { onUnassign(); setOpen(false); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign all</button>
+                            <button onClick={() => { if (campaignName.trim() && adGroupName.trim()) { onAssignExternal(campaignName.trim(), adGroupName.trim()); setCampaignName(''); setAdGroupName(''); } }} className="text-xs px-2 py-1 rounded-md bg-black text-white">Add</button>
                         </div>
+                        {(ad.assignedTargets || []).filter((t:any)=> t.source==='external').map((t:any, idx:number) => (
+                            <div key={idx} className="text-xs text-gray-700 flex items-center justify-between px-2 py-1 bg-gray-50 rounded-md">
+                                <span>{t.campaignName} / {t.adGroupName}</span>
+                                <button className="text-red-500" onClick={() => {
+                                    const remain = (ad.assignedTargets || []).filter((x:any)=> !(x.source==='external' && x.campaignName===t.campaignName && x.adGroupName===t.adGroupName));
+                                    // Reconstruct via provided callbacks: unassign all then re-add remaining
+                                    onUnassign();
+                                    remain.filter((x:any)=> x.source==='plan' && x.adGroupId).forEach((x:any)=> onAssignPlan(x.adGroupId));
+                                    remain.filter((x:any)=> x.source==='external').forEach((x:any)=> onAssignExternal(x.campaignName, x.adGroupName));
+                                }}>Remove</button>
+                            </div>
+                        ))}
                     </div>
+                    <div className="flex justify-end mt-2"><button onClick={()=> setOpen(false)} className="text-xs px-2 py-1 rounded-md border">Done</button></div>
                 </div>
             )}
         </div>
