@@ -384,3 +384,53 @@ export const generateCreativeAsset = async (
         throw new Error(error instanceof Error ? `Failed to generate creative asset: ${error.message}` : "An unknown error occurred.");
     }
 }
+
+// ===== Generators for complete Google Search objects =====
+export const generateGoogleSearchAd = async (brief: string, campaign: FullCampaign) => {
+    const prompt = `Original Brief: """${brief}"""\n\nGenerate ONE Google Search ad object for the following campaign: ${JSON.stringify({
+        channel: campaign.channel,
+        campaignName: campaign.campaignName,
+        campaignType: /brand/i.test(campaign.campaignType) ? 'Brand Search' : campaign.campaignType,
+        market: campaign.market,
+        languages: campaign.languages
+    })}`;
+
+    const response = await ensureClient().models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: 'application/json',
+            responseSchema: googleAdSchema,
+            systemInstruction: 'Return a single Google Search ad object strictly following the provided JSON schema.'
+        }
+    });
+    const ad = JSON.parse(response.text.trim());
+    return { ...ad, id: ad.id || self.crypto.randomUUID() } as import('../types').Ad;
+};
+
+export const generateGoogleAdGroup = async (brief: string, campaign: FullCampaign) => {
+    const prompt = `Original Brief: """${brief}"""\n\nGenerate ONE Google Search ad group with 1-2 ads for the following campaign: ${JSON.stringify({
+        channel: campaign.channel,
+        campaignName: campaign.campaignName,
+        campaignType: /brand/i.test(campaign.campaignType) ? 'Brand Search' : campaign.campaignType,
+        market: campaign.market,
+        languages: campaign.languages
+    })}`;
+
+    const response = await ensureClient().models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+            responseMimeType: 'application/json',
+            responseSchema: googleAdGroupSchema,
+            systemInstruction: 'Return a single Google Search ad group strictly following the schema. Prefer brand/exact naming where relevant.'
+        }
+    });
+    const group = JSON.parse(response.text.trim());
+    const normalized = {
+        ...group,
+        id: group.id || self.crypto.randomUUID(),
+        ads: (group.ads || []).map((ad: any) => ({ ...ad, id: ad.id || self.crypto.randomUUID() }))
+    };
+    return normalized as import('../types').AdGroup;
+};
