@@ -1073,13 +1073,13 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
                                 key={opt}
                                 disabled={isDisabled}
                                 onClick={() => { if (!isDisabled) { onSelect('Google'); setOpen(false); } }}
-                                className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                             >
                                 <span className="inline-flex items-center gap-2">
                                     <img src={channelIconSrc[opt as string]} className="w-4 h-4" alt={`${opt}`} />
                                     <span>{opt === 'Google' ? 'Adwords' : opt}</span>
-                                    {isDisabled && <span className="ml-2 text-[10px] text-gray-500">Coming soon</span>}
                                 </span>
+                                {isDisabled && <span className="ml-2 text-[10px] text-gray-500 whitespace-nowrap">Coming soon</span>}
                             </button>
                         );
                     })}
