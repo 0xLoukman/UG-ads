@@ -297,7 +297,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
     return (
         <div className="bg-white border border-gray-200 rounded-sm shadow-sm relative" role="region" aria-label="Ad preview">
             <Tabs />
-            <div className="p-6 relative">
+            <div className="p-6 relative" aria-live="polite">
                 <button aria-label="Previous" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <button aria-label="Next" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
                 <div className="mx-auto max-w-md bg-gray-50 rounded-2xl p-4 border border-gray-200">
