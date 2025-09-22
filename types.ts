@@ -74,6 +74,7 @@ export interface FullCampaign extends CampaignSummary {
     hotelPropertyFeed?: string;
     assetGroups?: AssetGroup[];
     adGroups?: AdGroup[];
+    ads?: Ad[];
   };
   meta?: {
     adSets: MetaAdSet[];
