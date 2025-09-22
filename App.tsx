@@ -284,7 +284,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
         }
         // PMax / Hotel → show all
         return (
-            <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600">
+            <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600" role="tablist" aria-label="Preview surfaces">
                 <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.youtube} width="20" height="20" decoding="async" alt="YouTube"/><span>YouTube</span></div>
                 <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.gmail} width="20" height="20" decoding="async" alt="Gmail"/><span>Gmail</span></div>
                 <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
