@@ -1372,7 +1372,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         </div>
                     )}
                 </main>
-                <section className="col-span-4 sticky top-24 p-4">
+                <section className="col-span-4 self-start p-4">
                     {selectedCampaign && <CampaignPreview campaign={selectedCampaign} />}
                 </section>
             </div>
