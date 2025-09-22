@@ -224,7 +224,7 @@ const EditableList = ({ title, items, onUpdate, onAdd, onDelete, onGenerate, onR
 };
 
 const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; }) => {
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
     const remaining = Math.max(0, max - (items?.length || 0));
     return (
         <div className="py-3 border-t border-gray-100">
