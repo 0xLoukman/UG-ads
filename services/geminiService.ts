@@ -142,6 +142,7 @@ const googleAdSchema = {
         headlines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 3 to 5 compelling headlines, each under 30 characters." },
         descriptions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 2 to 4 detailed descriptions, each under 90 characters." },
         keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Optional list of brand keywords or search terms for this ad (Exact or Phrase match terms as plain strings)." },
+        assignedAdGroupId: { type: Type.STRING, description: "ID of the ad group this ad should be assigned to (must match one of googleAds.adGroups[].id). Optional; can be omitted or null." },
     },
     required: ["id", "finalUrl", "headlines", "descriptions"]
 };
