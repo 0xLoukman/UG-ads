@@ -685,7 +685,42 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         return req ? req.detect(value) : false;
     }, [schema, value]);
 
-    const topText = useMemo(() => {
+    const [mode, setMode] = useState<'manual' | 'llm'>('manual');
+    const [llmHint, setLlmHint] = useState<string>('');
+    const [llmLatencyMs, setLlmLatencyMs] = useState<number | null>(null);
+    const [llmLoading, setLlmLoading] = useState(false);
+
+    useEffect(() => {
+        if (mode !== 'llm') return;
+        let cancelled = false;
+        const run = async () => {
+            setLlmLoading(true); setLlmLatencyMs(null);
+            const start = performance.now();
+            const present = {
+                market: has('market'),
+                type: has('type'),
+                hotel: has('hotel'),
+                angle: has('angle'),
+            };
+            try {
+                const hint = await generateGuidedHint(value, present);
+                if (!cancelled) {
+                    setLlmHint(hint);
+                    setLlmLatencyMs(Math.round(performance.now() - start));
+                }
+            } catch (e) {
+                if (!cancelled) {
+                    setLlmHint('Hint unavailable — falling back to manual.');
+                }
+            } finally {
+                if (!cancelled) setLlmLoading(false);
+            }
+        };
+        const t = setTimeout(run, 400);
+        return () => { cancelled = true; clearTimeout(t); };
+    }, [mode, value, has]);
+
+    const manualTopText = useMemo(() => {
         const raw = (value || '').trim();
         if (missing.length === 0) return "Perfect! You're all set — hit Create campaign 🚀";
         if (raw.length === 0 || missing.length === schema.length) {
@@ -710,10 +745,21 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         }
     }, [missing, has, value, schema]);
 
+    const topText = mode === 'llm' ? (llmHint || 'Thinking…') : manualTopText;
+
     return (
         <div>
-            <div className="mb-2 text-xs">
+            <div className="mb-1 flex items-center justify-between text-xs">
                 <span className={missing.length === 0 ? 'text-green-700' : 'text-gray-600'}>{topText}</span>
+                <div className="flex items-center gap-2">
+                    {mode === 'llm' && (
+                        <span className="text-[10px] text-gray-400">{llmLoading ? '…' : (llmLatencyMs != null ? `${llmLatencyMs} ms` : '')}</span>
+                    )}
+                    <div className="inline-flex rounded-full border border-gray-200 overflow-hidden">
+                        <button className={`px-2 py-0.5 ${mode==='manual' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600'}`} onClick={()=>setMode('manual')}>Manual</button>
+                        <button className={`px-2 py-0.5 ${mode==='llm' ? 'bg-gray-900 text-white' : 'bg-white text-gray-600'}`} onClick={()=>setMode('llm')} disabled={!hasGeminiKey()}>{hasGeminiKey() ? 'LLM' : 'LLM (no key)'}</button>
+                    </div>
+                </div>
             </div>
             <textarea
                 value={value}
