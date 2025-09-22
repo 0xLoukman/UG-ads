@@ -1346,7 +1346,8 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
             <div className="grid grid-cols-12 gap-0 items-start bg-white border border-gray-200 rounded-lg overflow-hidden w-full">
                 <aside className="col-span-3 self-start max-h-[80vh] overflow-auto border-r border-gray-200 p-3">
-                    <nav className="flex flex-col space-y-1">
+                    <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
+                    <nav className="flex flex-col space-y-1" aria-label="Campaign list">
                         {campaigns.map(c => (
                             <button
                                 key={c.id}
