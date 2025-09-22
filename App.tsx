@@ -118,6 +118,7 @@ const EditableField = ({ value, onSave, onGenerate, onRewrite, fieldType }: { va
     const [isEditing, setIsEditing] = useState(false);
     const [currentValue, setCurrentValue] = useState(value);
     const [isGenerating, setIsGenerating] = useState(false);
+    useEffect(() => { setCurrentValue(value); }, [value]);
 
     const handleSave = () => {
         onSave(currentValue);
@@ -136,6 +137,24 @@ const EditableField = ({ value, onSave, onGenerate, onRewrite, fieldType }: { va
         }
     };
     
+    if (fieldType === 'url') {
+        return (
+            <div className="w-full">
+                <label className="block text-xs text-gray-600 mb-1">Final URL</label>
+                <input
+                    type="url"
+                    value={currentValue}
+                    onChange={(e) => setCurrentValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                    placeholder="https://example.com"
+                    className="w-full text-sm border border-gray-200 rounded-md px-2 py-1"
+                    autoFocus
+                />
+            </div>
+        );
+    }
+
     if (isEditing) {
         return (
             <div className="flex items-center w-full">
@@ -266,7 +285,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'assetGroups', agIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'assetGroups', agIndex])}
                 >
-                    <EditableField value={ag.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'assetGroups', agIndex, 'finalUrl'], newValue)} />
+                    <EditableField value={ag.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'assetGroups', agIndex, 'finalUrl'], newValue)} fieldType="url" />
                     <EditableList title="Headlines" items={ag.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                     <EditableList title="Long Headlines" items={ag.longHeadlines} assetType="long headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'longHeadlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i])} onGenerate={(e) => onGenerate('long headline', e)} onRewrite={(e, r) => onRewrite('long headline', e, r)} />
                     <EditableList title="Descriptions" items={ag.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
@@ -376,7 +395,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                                 </div>
                             </div>
                         )}
-                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} />
+                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
                         <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                         <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
                         <div className="mt-3">
