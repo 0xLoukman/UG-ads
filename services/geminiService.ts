@@ -223,7 +223,8 @@ const fullCampaignSchema = {
             properties: {
                 hotelPropertyFeed: { type: Type.STRING, description: "If the campaign is for a hotel, provide a placeholder name for the Hotel Property Feed, e.g., 'HotelName_ACC'. Null otherwise." },
                 assetGroups: { type: Type.ARRAY, items: googleAssetGroupSchema, description: "For PMax or Hotel campaigns ONLY. A list containing at least one fully populated asset group." },
-                adGroups: { type: Type.ARRAY, items: googleAdGroupSchema, description: "For Search campaigns ONLY. A list containing at least one fully populated ad group." }
+                adGroups: { type: Type.ARRAY, items: googleAdGroupSchema, description: "For Search/Brand campaigns: list of ad groups." },
+                ads: { type: Type.ARRAY, items: googleAdSchema, description: "For Search/Brand campaigns: campaign-level list of ads. Each ad may include 'assignedAdGroupId' referencing one of the adGroups." }
             }
         },
         meta: {
