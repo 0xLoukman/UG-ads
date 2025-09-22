@@ -285,7 +285,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
         // PMax / Hotel → show all
         return (
             <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600">
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.youtube} alt="YouTube"/><span>Youtube</span></div>
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.youtube} width="20" height="20" decoding="async" alt="YouTube"/><span>YouTube</span></div>
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.gmail} alt="Gmail"/><span>Gmail</span></div>
                 <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
                 <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.feed} alt="Feed"/><span>Feed</span></div>
@@ -773,7 +773,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         const raw = (value || '').trim();
         if (missing.length === 0) return "Looks great! Any extra details about the hotel or creative angle will help us craft even better campaigns — but this is enough to kick things off 🚀";
         if (raw.length === 0 || missing.length === schema.length) {
-            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ✍️';
+            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ���️';
         }
         const mkt = has('market');
         const typ = has('type');
