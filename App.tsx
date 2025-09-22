@@ -494,6 +494,46 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
     )
 }
 
+// ===== Markets data and helpers =====
+const MARKETS: { code: string; name: string }[] = [
+  { code: "FR", name: "France" },
+  { code: "DE", name: "Germany" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "PT", name: "Portugal" },
+  { code: "NL", name: "Netherlands" },
+  { code: "BE", name: "Belgium" },
+  { code: "DK", name: "Denmark" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "FI", name: "Finland" },
+  { code: "AE", name: "UAE" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "QA", name: "Qatar" },
+  { code: "GB", name: "UK" },
+  { code: "IE", name: "Ireland" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" }
+];
+const findMarket = (c: string) => MARKETS.find(m => m.code === c);
+const suggestClusterName = (codes: string[]) => {
+  const names = codes.map(c => findMarket(c)?.name || c);
+  if (names.length <= 3) return names.join(" · ");
+  return `${names[0]} +${names.length - 1}`;
+};
+const dedupeCodes = (codes: string[], assignedSet: Set<string>) => Array.from(new Set(codes)).filter(c => !assignedSet.has(c));
+const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
+  const count = picked.length;
+  const anyNew = picked.some(c => !assignedSet.has(c));
+  return {
+    showAddMarket: count === 1 && anyNew,
+    showAddMarkets: count >= 2 && anyNew,
+    showAddCluster: count >= 2 && anyNew,
+  };
+};
+
+type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
+
 const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
     const [brief, setBrief] = useState("");
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Meta']);
