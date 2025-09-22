@@ -230,6 +230,7 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
     if (!googleAds) return null;
 
     const [creatingGroup, setCreatingGroup] = useState(false);
+    const [creatingAd, setCreatingAd] = useState(false);
     const [expandedAdId, setExpandedAdId] = useState<string | null>(null);
     const isPMax = /pmax|performance\s*max|hotel/i.test(campaign.campaignType);
 
@@ -282,7 +283,18 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'adGroups', adgIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'adGroups', adgIndex])}
                 >
-                    <div className="text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => a.assignedAdGroupId === adg.id).length : 0}</div>
+                    <div className="flex items-center gap-2 mb-2">
+                        <label className="text-xs text-gray-600">Assign to Campaign</label>
+                        <select
+                            value={(adg as any).assignedCampaignName || campaign.campaignName}
+                            onChange={(e) => onUpdate(['googleAds','adGroups', adgIndex, 'assignedCampaignName'], e.target.value)}
+                            className="text-xs border border-gray-200 rounded-md px-2 py-1"
+                        >
+                            <option value="">Unassigned</option>
+                            <option value={campaign.campaignName}>{campaign.campaignName}</option>
+                        </select>
+                        <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => a.assignedAdGroupId === adg.id).length : 0}</div>
+                    </div>
                 </CollapsibleCard>
             ))}
 
@@ -290,15 +302,22 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                 <h3 className="text-sm font-semibold text-gray-700">Ads</h3>
                 <button
                     onClick={async () => {
-                        const ad = await generateGoogleSearchAd(brief, campaign);
-                        const firstGroupId = googleAds.adGroups?.[0]?.id || null;
-                        (ad as any).assignedAdGroupId = firstGroupId;
-                        const existing: any[] = (googleAds as any).ads || [];
-                        onUpdate(['googleAds', 'ads'], [ad, ...existing]);
-                        setExpandedAdId(ad.id);
+                        try {
+                            setCreatingAd(true);
+                            const ad = await generateGoogleSearchAd(brief, campaign);
+                            const firstGroupId = googleAds.adGroups?.[0]?.id || null;
+                            (ad as any).assignedAdGroupId = firstGroupId;
+                            const existing: any[] = (googleAds as any).ads || [];
+                            onUpdate(['googleAds', 'ads'], [ad, ...existing]);
+                            setExpandedAdId(ad.id);
+                        } finally {
+                            setCreatingAd(false);
+                        }
                     }}
-                    className="px-3 py-1.5 text-xs rounded-md bg-gray-900 text-white hover:bg-gray-800"
+                    disabled={creatingAd}
+                    className="px-3 py-1.5 text-xs rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-400 flex items-center gap-2"
                 >
+                    {creatingAd ? <SpinnerIcon className="w-4 h-4 text-white"/> : null}
                     Create Ad
                 </button>
             </div>
@@ -318,20 +337,42 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                         <div className="ml-auto flex items-center gap-2">
                             <label className="text-xs text-gray-600">Assign</label>
                             <select
-                                value={ad.assignedAdGroupId || ''}
-                                onChange={(e) => onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], e.target.value || null)}
+                                value={ad.assignedAdGroupId || (ad.assignedExternal ? 'external' : '')}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === 'external') {
+                                        onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null);
+                                        onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], { campaignName: '', adGroupName: '' });
+                                    } else {
+                                        onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null);
+                                        onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], val || null);
+                                    }
+                                }}
                                 className="text-xs border border-gray-200 rounded-md px-2 py-1"
                             >
                                 <option value="">Unassigned</option>
                                 {(googleAds.adGroups || []).map(g => (
                                     <option key={g.id} value={g.id}>{g.name}</option>
                                 ))}
+                                <option value="external">Assign to existing account…</option>
                             </select>
                             <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100" />
                         </div>
                     </div>
                     {expanded && (
                     <div className="p-4">
+                        {ad.assignedExternal && (
+                            <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label className="block text-xs text-gray-600 mb-1">Existing Campaign Name</label>
+                                    <input value={ad.assignedExternal.campaignName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'campaignName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. [UG]-Brand-USA" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs text-gray-600 mb-1">Existing Ad Group Name</label>
+                                    <input value={ad.assignedExternal.adGroupName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'adGroupName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. Brand-Exact" />
+                                </div>
+                            </div>
+                        )}
                         <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} />
                         <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                         <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
