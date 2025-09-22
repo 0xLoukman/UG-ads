@@ -375,6 +375,28 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
 };
 
 
+// ===== Real-time Guided Hint (LLM) =====
+export const generateGuidedHint = async (
+    brief: string,
+    present: { market: boolean; type: boolean; hotel: boolean; angle: boolean }
+): Promise<string> => {
+    const sys = `You are a friendly UX guide helping users craft a marketing campaign prompt. Output ONE short, conversational hint line (<=140 chars), addressing the user, with playful tone and at most one emoji. Focus on the next most helpful nudge, not a checklist. Prioritize market and campaign type first, then hotel details, then creative angle. If everything seems present, encourage proceeding.`;
+    const prompt = `Brief:\n"""${brief.slice(0, 1000)}"""\n\nDetected:\n- market: ${present.market}\n- type: ${present.type}\n- hotel: ${present.hotel}\n- angle: ${present.angle}\n\nReturn only the hint line.`;
+    try {
+        const res = await ensureClient().models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { systemInstruction: sys }
+        });
+        const text = (res.text || '').trim();
+        if (!text) return 'Tell us more about your campaign — start anywhere and I\'ll guide you ✍️';
+        return text.replace(/^"|"$/g, '');
+    } catch (e) {
+        console.error('LLM hint error', e);
+        return 'Hint unavailable right now — using manual guidance instead.';
+    }
+};
+
 // ===== ON-DEMAND CREATIVE GENERATION =====
 
 export type AssetType =
