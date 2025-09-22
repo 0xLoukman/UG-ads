@@ -143,6 +143,7 @@ const googleAdSchema = {
         descriptions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 2 to 4 detailed descriptions, each under 90 characters." },
         keywords: { type: Type.ARRAY, items: { type: Type.STRING }, description: "Optional list of brand keywords or search terms for this ad (Exact or Phrase match terms as plain strings)." },
         assignedAdGroupId: { type: Type.STRING, description: "ID of the ad group this ad should be assigned to (must match one of googleAds.adGroups[].id). Optional; can be omitted or null." },
+        assignedTargets: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { source: { type: Type.STRING, enum: ['plan','external'] }, campaignId: { type: Type.STRING }, adGroupId: { type: Type.STRING }, campaignName: { type: Type.STRING }, adGroupName: { type: Type.STRING } } }, description: "Preferred multi-assignment list for this ad." },
     },
     required: ["id", "finalUrl", "headlines", "descriptions"]
 };
@@ -338,9 +339,26 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
             return c;
         });
 
+        // Convert legacy fields to assignedTargets for Google ads
+        const withAssignments = campaigns.map(c => {
+            if (c.channel !== 'Google' || !c.googleAds) return c;
+            const ads: any[] = (c.googleAds as any).ads || [];
+            const normAds = ads.map(ad => {
+                let targets = ad.assignedTargets || [];
+                if (ad.assignedAdGroupId && !targets.some((t:any)=> t.source==='plan' && t.adGroupId===ad.assignedAdGroupId)) {
+                    targets = [...targets, { source: 'plan', adGroupId: ad.assignedAdGroupId }];
+                }
+                if (ad.assignedExternal && !targets.some((t:any)=> t.source==='external' && t.campaignName===ad.assignedExternal.campaignName && t.adGroupName===ad.assignedExternal.adGroupName)) {
+                    targets = [...targets, { source: 'external', campaignName: ad.assignedExternal.campaignName, adGroupName: ad.assignedExternal.adGroupName }];
+                }
+                return { ...ad, assignedTargets: targets };
+            });
+            return { ...c, googleAds: { ...(c.googleAds as any), ads: normAds } } as FullCampaign;
+        });
+
         // Ensure brand/search campaigns have at least one ad group
         const needsAdGroup = (c: FullCampaign) => c.channel === 'Google' && (/brand/i.test(c.campaignType) || /search/i.test(c.campaignType));
-        const ensured = await Promise.all(lifted.map(async c => {
+        const ensured = await Promise.all(withAssignments.map(async c => {
             if (needsAdGroup(c) && (!c.googleAds || !c.googleAds.adGroups || c.googleAds.adGroups.length === 0)) {
                 const adGroup = await generateGoogleAdGroup(brief, c);
                 return { ...c, googleAds: { ...c.googleAds, adGroups: [adGroup] } } as FullCampaign;
