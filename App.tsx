@@ -1775,6 +1775,12 @@ const App: React.FC = () => {
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
             <main className={view==='details' ? 'w-full p-0 md:p-0' : 'max-w-6xl mx-auto p-4 md:p-8'}>
+                <div className="mb-4 border-b border-gray-200">
+                    <nav className="flex gap-2">
+                        <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
+                        <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
+                    </nav>
+                </div>
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-start" role="alert">
                         <ErrorIcon/>
@@ -1787,7 +1793,11 @@ const App: React.FC = () => {
                         </span>
                     </div>
                 )}
-                {renderContent()}
+                {topTab === 'creative' ? (
+                    <CreativeGeneratorView />
+                ) : (
+                    renderContent()
+                )}
             </main>
         </div>
     );
