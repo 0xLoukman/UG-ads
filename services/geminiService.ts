@@ -319,9 +319,28 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
             } : undefined
         }));
 
+        // Lift nested adGroups[].ads to campaign-level googleAds.ads with assignment when needed
+        const lifted = campaigns.map(c => {
+            if (c.channel !== 'Google' || !c.googleAds) return c;
+            const groups = c.googleAds.adGroups || [];
+            const existingAds: any[] = (c.googleAds as any).ads || [];
+            if (existingAds.length === 0 && groups.some(g => (g.ads || []).length > 0)) {
+                const flat = groups.flatMap(g => (g.ads || []).map(ad => ({ ...ad, assignedAdGroupId: g.id })));
+                return {
+                    ...c,
+                    googleAds: {
+                        ...c.googleAds,
+                        ads: flat,
+                        adGroups: groups.map(g => ({ ...g, ads: [] }))
+                    }
+                } as FullCampaign;
+            }
+            return c;
+        });
+
         // Ensure brand/search campaigns have at least one ad group
         const needsAdGroup = (c: FullCampaign) => c.channel === 'Google' && (/brand/i.test(c.campaignType) || /search/i.test(c.campaignType));
-        const ensured = await Promise.all(campaigns.map(async c => {
+        const ensured = await Promise.all(lifted.map(async c => {
             if (needsAdGroup(c) && (!c.googleAds || !c.googleAds.adGroups || c.googleAds.adGroups.length === 0)) {
                 const adGroup = await generateGoogleAdGroup(brief, c);
                 return { ...c, googleAds: { ...c.googleAds, adGroups: [adGroup] } } as FullCampaign;
