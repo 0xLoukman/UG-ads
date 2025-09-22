@@ -441,13 +441,19 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
             {((googleAds as any).ads || []).map((ad: any, adIndex: number) => {
                 const expanded = expandedAdId === ad.id;
                 return (
-                <div key={ad.id} className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
-                    <div className="flex items-center gap-2 p-3 border-b border-gray-100">
+                <div key={ad.id} className="bg-white border-b border-gray-200 mb-3">
+                    <div className="flex items-center gap-2 p-2.5">
                         <button onClick={() => setExpandedAdId(expanded ? null : ad.id)} className="text-xs font-medium text-gray-700 hover:text-gray-900">
                             {expanded ? '▾' : '▸'} Ad {adIndex + 1}
                         </button>
                         <div className="text-xs text-gray-500 truncate max-w-[50%]">{ad.headlines?.[0] || ad.finalUrl || 'New Ad'}</div>
-                        <div className="ml-auto relative">
+                        <div className="ml-auto">
+                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 inline-flex" />
+                        </div>
+                    </div>
+                    {expanded && (
+                    <div className="p-4">
+                        <div className="mb-3">
                             <AdvancedAssignDropdown
                                 ad={ad}
                                 googleAdGroups={googleAds.adGroups || []}
@@ -462,11 +468,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                                 }}
                                 onUnassign={() => { onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], []); onUpdate(['googleAds','ads', adIndex, 'assignedAdGroupId'], null); onUpdate(['googleAds','ads', adIndex, 'assignedExternal'], null); }}
                             />
-                            <IconButton onClick={() => onDelete(['googleAds','ads', adIndex])} icon={<TrashIcon className="w-4 h-4"/>} className="text-red-500 hover:bg-red-100 inline-flex ml-2" />
                         </div>
-                    </div>
-                    {expanded && (
-                    <div className="p-4">
                         {ad.assignedExternal && (
                             <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <div>
@@ -1342,6 +1344,11 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 </button>
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
+            <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200">
+                <div className="col-span-3 px-3 py-2 border-r border-gray-200">Campaigns</div>
+                <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
+                <div className="col-span-4 px-4 py-2">Preview</div>
+            </div>
             <div className="grid grid-cols-12 gap-0 items-start bg-white overflow-hidden w-full">
                 <aside className="col-span-3 self-start max-h-[80vh] overflow-auto border-r border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
