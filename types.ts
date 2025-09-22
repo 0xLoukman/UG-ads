@@ -21,12 +21,14 @@ export interface Ad {
     descriptions: string[];
     keywords?: string[];
     assignedAdGroupId?: string | null;
+    assignedExternal?: { campaignName: string; adGroupName: string } | null;
 }
 
 export interface AdGroup {
     id: string;
     name: string;
     ads: Ad[];
+    assignedCampaignName?: string | null;
 }
 
 // ===== META =====
