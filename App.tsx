@@ -531,7 +531,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group����.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1528,6 +1528,8 @@ const CreativeGeneratorView = () => {
     const [logo, setLogo] = useState<string | null>(null);
     const [copy, setCopy] = useState<{ heading: string; subtext: string; cta: string } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [template, setTemplate] = useState<'overlay' | 'logo-badge' | 'text-panel' | 'split'>('overlay');
+    const [accent, setAccent] = useState('#0ea5e9');
 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
