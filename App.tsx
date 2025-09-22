@@ -223,6 +223,32 @@ const EditableList = ({ title, items, onUpdate, onAdd, onDelete, onGenerate, onR
     );
 };
 
+const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; }) => {
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const remaining = Math.max(0, max - (items?.length || 0));
+    return (
+        <div className="py-3 border-t border-gray-100">
+            <div className="text-sm font-medium text-gray-800">{label}</div>
+            <div className="text-xs text-gray-500 mb-2">{hint}</div>
+            <div className="flex items-center gap-3 flex-wrap">
+                {items?.map((src, i) => (
+                    <div key={i} className="relative">
+                        <img src={src} alt={`${label} ${i+1}`} className="w-16 h-16 object-cover rounded-md border" />
+                        <button aria-label={`Remove ${label} ${i+1}`} onClick={() => onRemove(i)} className="absolute -top-2 -right-2 bg-white border rounded-full w-6 h-6 flex items-center justify-center text-red-500 hover:bg-red-50">×</button>
+                    </div>
+                ))}
+                <input ref={inputRef} className="hidden" type="file" accept={accept} multiple onChange={(e) => { if(e.target.files) { onAddFiles(e.target.files); e.currentTarget.value = ''; } }} />
+                {remaining > 0 && (
+                    <button onClick={() => inputRef.current?.click()} className="text-blue-600 text-sm font-semibold flex items-center gap-1">
+                        <span className="text-base leading-none">＋</span>
+                        <span>{label.toUpperCase()}</span>
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: string, onUpdateTitle: (newTitle: string) => void, onDelete: () => void, children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(true);
 
@@ -267,11 +293,11 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
     })();
 
     const ICONS = {
-        youtube: 'https://www.svgrepo.com/show/475656/youtube-color.svg',
-        gmail: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6b4b8f5cdd384281b538596266a1c7ef?format=webp&width=64',
-        search: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F916990820c0a409c89f8b1652e65da7b?format=webp&width=64',
-        feed: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fa73e5c0289df4a8584180c61ecc86e20?format=webp&width=64',
-        display: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Ff31f7e3448cd45708d82848dc587f62e?format=webp&width=64',
+        youtube: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Ffbae06c51cba4bbea5cd052e5783c200?format=webp&width=64',
+        gmail: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fdb918b8748404fcb953edc0cb74f09bd?format=webp&width=64',
+        search: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F8f9ab081ad3348488441612a62167de8?format=webp&width=64',
+        feed: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fe105de11ebfb46e1a1bb055962787132?format=webp&width=64',
+        display: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F38ac8ca1583a4c4588674017cd5d7a67?format=webp&width=64',
     } as const;
 
     const Tabs = () => {
@@ -370,6 +396,49 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                     onDelete={() => onDelete(['googleAds', 'assetGroups', agIndex])}
                 >
                     <EditableField value={ag.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'assetGroups', agIndex, 'finalUrl'], newValue)} fieldType="url" />
+
+                    <UploadSection
+                        label="Images"
+                        hint="Add up to 15 images"
+                        accept="image/*"
+                        max={15}
+                        items={ag.images || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 15).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.images || []), ...urls ].slice(0, 15);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'images'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.images || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); }}
+                    />
+
+                    <UploadSection
+                        label="Logos"
+                        hint="Add up to 5 logos"
+                        accept="image/*"
+                        max={5}
+                        items={ag.logos || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 5).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.logos || []), ...urls ].slice(0, 5);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.logos || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next); }}
+                    />
+
+                    <UploadSection
+                        label="Videos"
+                        hint="Add up to 5 videos"
+                        accept="video/*"
+                        max={5}
+                        items={ag.videos || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 5).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.videos || []), ...urls ].slice(0, 5);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'videos'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.videos || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'videos'], next); }}
+                    />
+
                     <EditableList title="Headlines" items={ag.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                     <EditableList title="Long Headlines" items={ag.longHeadlines} assetType="long headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'longHeadlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i])} onGenerate={(e) => onGenerate('long headline', e)} onRewrite={(e, r) => onRewrite('long headline', e, r)} />
                     <EditableList title="Descriptions" items={ag.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
