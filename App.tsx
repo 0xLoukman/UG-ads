@@ -1378,7 +1378,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <div className="max-w-6xl mx-auto p-3 flex items-center justify-between">
+                <div className="w-full px-4 md:px-8 py-3 flex items-center justify-between">
                     <div className="text-xs text-gray-500">Review all campaigns before launch.</div>
                     <button onClick={onReview} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">
                         <SparklesIcon className="w-4 h-4" />
