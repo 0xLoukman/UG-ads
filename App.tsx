@@ -611,7 +611,22 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
 
     const handleGenerate = () => {
         if (!brief.trim() || !hasKey) return;
-        onGenerate(brief, selectedChannels);
+        const singles = marketItems.filter(i => i.type === 'single');
+        const clusters = marketItems.filter(i => i.type === 'cluster');
+        const primaryMarkets: Market[] = singles.map(i => {
+            const code = i.codes[0];
+            const country = { name: findMarket(code)?.name || code, iso: code } as Omit<Market,'browserLangs'>;
+            return getMarketWithLangs(country);
+        });
+        let secondaryMarkets: Market[] = [];
+        if (clusters.length) {
+            const allCodes = Array.from(new Set(clusters.flatMap(c => c.codes)));
+            const name = allCodes.map(c => findMarket(c)?.name || c).join(', ');
+            const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
+            secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
+        }
+        const manual = (primaryMarkets.length || secondaryMarkets.length) ? { primaryMarkets, secondaryMarkets, campaignTypes: [] as string[] } : undefined;
+        onGenerate(brief, selectedChannels, manual);
     };
 
     const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey;
