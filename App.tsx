@@ -543,18 +543,19 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'adGroups', adgIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'adGroups', adgIndex])}
                 >
-                    <div className="flex items-center gap-2 mb-2">
-                        <label className="text-xs text-gray-600">Assign to Campaign</label>
-                        <select
-                            value={(adg as any).assignedCampaignName || campaign.campaignName}
-                            onChange={(e) => onUpdate(['googleAds','adGroups', adgIndex, 'assignedCampaignName'], e.target.value)}
-                            className="text-xs border border-gray-200 rounded-md px-2 py-1"
-                        >
-                            <option value="">Unassigned</option>
-                            <option value={campaign.campaignName}>{campaign.campaignName}</option>
-                        </select>
-                        <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => (a.assignedTargets || []).some((t:any)=> t.source==='plan' && t.adGroupId===adg.id) || a.assignedAdGroupId === adg.id).length : 0}</div>
-                    </div>
+                    <FieldSection title="Assign to campaign" hint="Select the campaign this ad group belongs to">
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={(adg as any).assignedCampaignName || campaign.campaignName}
+                                onChange={(e) => onUpdate(['googleAds','adGroups', adgIndex, 'assignedCampaignName'], e.target.value)}
+                                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
+                            >
+                                <option value="">Unassigned</option>
+                                <option value={campaign.campaignName}>{campaign.campaignName}</option>
+                            </select>
+                            <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => (a.assignedTargets || []).some((t:any)=> t.source==='plan' && t.adGroupId===adg.id) || a.assignedAdGroupId === adg.id).length : 0}</div>
+                        </div>
+                    </FieldSection>
                 </CollapsibleCard>
             ))}
 
