@@ -264,7 +264,15 @@ CRITICAL RULES:
 9.  The final output must be an array of full campaign objects, preserving the original 'id' for each campaign.`;
 
 export const generateCampaignDetails = async (summaries: CampaignSummary[], brief: string): Promise<FullCampaign[]> => {
-    const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(summaries, null, 2)}"""`;
+    // Normalize Google 'Brand' into 'Brand Search' to force Search structures
+    const normalized = summaries.map(s => {
+        if (s.channel === 'Google' && /brand/i.test(s.campaignType) && !/pmax|performance\s*max|hotel/i.test(s.campaignType)) {
+            return { ...s, campaignType: 'Brand Search' };
+        }
+        return s;
+    });
+
+    const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(normalized, null, 2)}"""`;
     try {
         const response = await ensureClient().models.generateContent({
             model: 'gemini-2.5-flash',
@@ -275,12 +283,12 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
                 responseSchema: fullPlanSchema,
             },
         });
-        
+
         const jsonText = response.text.trim();
         if (!jsonText) throw new Error("Received an empty response from the AI.");
-        
-        const campaigns = JSON.parse(jsonText) as FullCampaign[];
-        return campaigns.map(c => ({
+
+        let campaigns = JSON.parse(jsonText) as FullCampaign[];
+        campaigns = campaigns.map(c => ({
             ...c,
             googleAds: c.googleAds ? {
                 ...c.googleAds,
@@ -308,6 +316,18 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
                 }))
             } : undefined
         }));
+
+        // Ensure brand/search campaigns have at least one ad group
+        const needsAdGroup = (c: FullCampaign) => c.channel === 'Google' && (/brand/i.test(c.campaignType) || /search/i.test(c.campaignType));
+        const ensured = await Promise.all(campaigns.map(async c => {
+            if (needsAdGroup(c) && (!c.googleAds || !c.googleAds.adGroups || c.googleAds.adGroups.length === 0)) {
+                const adGroup = await generateGoogleAdGroup(brief, c);
+                return { ...c, googleAds: { ...c.googleAds, adGroups: [adGroup] } } as FullCampaign;
+            }
+            return c;
+        }));
+
+        return ensured;
 
     } catch (error) {
         console.error("Error generating campaign details with Gemini:", error);
