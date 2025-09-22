@@ -675,79 +675,30 @@ type GuidedPromptRequirement = {
 };
 
 const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string; onChange: (text: string) => void; schema: GuidedPromptRequirement[]; placeholder?: string; }) => {
-    const [sel, setSel] = useState<{ start: number; end: number }>({ start: 0, end: 0 });
-    const taRef = useRef<HTMLTextAreaElement | null>(null);
-
     const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
     const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
 
-    const insertSnippet = (snippet: string) => {
-        const before = value.slice(0, sel.start);
-        const after = value.slice(sel.end);
-        const needsSpace = before.length > 0 && !/\s$/.test(before);
-        const sep = before.length ? (needsSpace ? ' ' : '') : '';
-        const newVal = `${before}${sep}${snippet}${after}`;
-        onChange(newVal);
-        requestAnimationFrame(() => {
-            if (taRef.current) {
-                const pos = (before + sep + snippet).length;
-                taRef.current.selectionStart = taRef.current.selectionEnd = pos;
-                taRef.current.focus();
-            }
-        });
-    };
-
-    const handleChip = (req: GuidedPromptRequirement, choice: string) => {
-        const snippet = req.format ? req.format(choice) : choice;
-        insertSnippet(snippet);
-    };
+    const topText = useMemo(() => {
+        if (missing.length === 0) return 'Prompt complete — ready to generate';
+        const parts = missing.map(m => m.instruction);
+        return `Hint: ${parts.join(' • ')}`;
+    }, [missing]);
 
     return (
         <div>
+            <div className="mb-2 text-xs">
+                {missing.length === 0 ? (
+                    <span className="text-green-700">{topText}</span>
+                ) : (
+                    <span className="text-gray-600">{topText}</span>
+                )}
+            </div>
             <textarea
-                ref={taRef}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                onSelect={(e) => {
-                    const t = e.currentTarget;
-                    setSel({ start: t.selectionStart || 0, end: t.selectionEnd || 0 });
-                }}
                 className="w-full h-20 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
                 placeholder={placeholder || 'Enter a task'}
             />
-
-            <div className="mt-2 flex items-center flex-wrap gap-1.5">
-                {status.map(s => (
-                    <span key={s.id} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] border ${s.done ? 'bg-green-50 text-green-800 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'}`}>
-                        {s.done ? '✓' : '•'} {s.label}
-                    </span>
-                ))}
-                {status.every(s => s.done) && (
-                    <span className="ml-auto text-xs px-2 py-0.5 rounded-md bg-green-600 text-white">Complete</span>
-                )}
-            </div>
-
-            {missing.length > 0 && (
-                <div className="mt-2 space-y-2">
-                    {missing.map(req => (
-                        <div key={req.id} className="bg-gray-50 border border-gray-200 rounded-lg p-2">
-                            <div className="text-xs text-gray-600 mb-1">{req.instruction}</div>
-                            <div className="flex flex-wrap gap-1.5">
-                                {(req.suggestions || []).map(choice => (
-                                    <button
-                                        key={choice}
-                                        type="button"
-                                        onClick={() => handleChip(req, choice)}
-                                        className="px-2 py-1 text-xs rounded-full bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100"
-                                    >
-                                        {req.format ? req.format(choice) : choice}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
         </div>
     );
 };
