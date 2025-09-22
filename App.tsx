@@ -87,9 +87,9 @@ const channelIconSrc: Record<string, string> = {
     Bing: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F217a72f512e44b679bcb89421e851a42?format=webp&width=800',
 };
 const channelIcons: Record<Channel, React.ReactNode> = {
-    Google: <img src={channelIconSrc.Google} className="w-5 h-5" alt="Google Ads" />,
-    Meta: <img src={channelIconSrc.Meta} className="w-5 h-5" alt="Meta" />,
-    TikTok: <img src={channelIconSrc.TikTok} className="w-5 h-5" alt="TikTok" />,
+    Google: <img src={channelIconSrc.Google} className="h-5 w-auto object-contain" alt="Google Ads" />,
+    Meta: <img src={channelIconSrc.Meta} className="h-5 w-auto object-contain" alt="Meta" />,
+    TikTok: <img src={channelIconSrc.TikTok} className="h-5 w-auto object-contain" alt="TikTok" />,
 };
 
 // ===== UI COMPONENTS =====
@@ -1093,17 +1093,21 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                                 }} />
                                             </div>
                                             <div>
-                                                <MultiSelectDropdown
-                                                    label="Ad Languages"
-                                                    options={LANGUAGE_LIST.map(l => l.name)}
-                                                    selectedOptions={s.languages.map(langNameFromCode)}
-                                                    onToggle={(name) => {
-                                                        const set = new Set(s.languages.map(langNameFromCode));
-                                                        set.has(name) ? set.delete(name) : set.add(name);
-                                                        const codes = Array.from(set).map(langCodeFromName);
-                                                        onUpdate(s.id, prev => ({...prev, languages: codes }));
+                                                <label className="text-sm font-medium text-gray-700">Ad Language</label>
+                                                <select
+                                                    value={s.languages[0] ? langNameFromCode(s.languages[0]) : ''}
+                                                    onChange={(e) => {
+                                                        const selected = e.target.value;
+                                                        const code = langCodeFromName(selected);
+                                                        onUpdate(s.id, prev => ({ ...prev, languages: selected ? [code] : [] }));
                                                     }}
-                                                />
+                                                    className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
+                                                >
+                                                    <option value="">Select language</option>
+                                                    {LANGUAGE_LIST.map(l => (
+                                                        <option key={l.code} value={l.name}>{l.name}</option>
+                                                    ))}
+                                                </select>
                                             </div>
                                         </div>
                                         <div className="mt-3 flex justify-end gap-2">
