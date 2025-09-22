@@ -960,6 +960,13 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
         return sortConfig.direction === 'ascending' ? '↑' : '↓';
     };
 
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    const countryLabels = COUNTRIES.map(c => `${c.name} (${c.iso})`);
+    const parseIso = (label: string) => (label.match(/\(([A-Z]{2})\)$/)?.[1] || '').trim();
+    const marketNamesFromLabels = (labels: string[]) => labels.map(l => l.replace(/ \([A-Z]{2}\)$/, ''));
+    const allLangOptions = Array.from(new Set(COUNTRIES.flatMap(c => getMarketWithLangs(c as any).browserLangs)));
+
     const headers = [
         { key: 'channel', label: 'Channel' },
         { key: 'campaignName', label: 'Campaign Name' },
@@ -967,6 +974,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
         { key: 'market', label: 'Market' },
         { key: 'browserLangs', label: 'Browser Langs' },
         { key: 'languages', label: 'Ad Langs' },
+        { key: 'actions', label: 'Actions' },
     ];
 
     return (
