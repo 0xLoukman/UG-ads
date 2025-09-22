@@ -244,45 +244,83 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
 
 // ===== Preview Component =====
 const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
+    const isPMax = campaign.channel === 'Google' && (/pmax|performance\s*max|hotel/i.test(campaign.campaignType));
     const isSearchLike = campaign.channel === 'Google' && (/brand|search/i.test(campaign.campaignType));
     const google = campaign.googleAds;
 
-    const firstAd = (google as any)?.ads?.[0];
-    const asset = google?.assetGroups?.[0];
+    const ads: any[] = ((google as any)?.ads || []);
+    const ags: any[] = (google?.assetGroups || []);
+
+    const [index, setIndex] = React.useState(0);
+    useEffect(() => { setIndex(0); }, [campaign.id]);
+
+    const total = isPMax ? Math.max(1, ags.length) : Math.max(1, ads.length);
+    const prev = () => setIndex(i => (i - 1 + total) % total);
+    const next = () => setIndex(i => (i + 1) % total);
+
+    const activeAd = !isPMax ? ads[index] || ads[0] : null;
+    const activeAg = isPMax ? ags[index] || ags[0] : null;
 
     const urlHost = (() => {
-        const url = (firstAd?.finalUrl || asset?.finalUrl || '').trim();
+        const url = (activeAd?.finalUrl || activeAg?.finalUrl || '').trim();
         try { return url ? new URL(url).host + (new URL(url).pathname.replace(/\/$/, '')) : campaign.market?.name?.toLowerCase().replace(/\s+/g,'') + '.example.com'; } catch { return url || 'example.com'; }
     })();
 
-    return (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+    const ICONS = {
+        youtube: 'https://www.svgrepo.com/show/475656/youtube-color.svg',
+        gmail: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6b4b8f5cdd384281b538596266a1c7ef?format=webp&width=64',
+        search: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F916990820c0a409c89f8b1652e65da7b?format=webp&width=64',
+        feed: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fa73e5c0289df4a8584180c61ecc86e20?format=webp&width=64',
+        display: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Ff31f7e3448cd45708d82848dc587f62e?format=webp&width=64',
+    } as const;
+
+    const Tabs = () => {
+        if (isSearchLike) {
+            return (
+                <div className="p-3 border-b border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-600">
+                    <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src={ICONS.search} alt="Search"/><span>Search</span></div>
+                </div>
+            );
+        }
+        // PMax / Hotel → show all
+        return (
             <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600">
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/475656/youtube-color.svg" alt="YouTube"/><span>Youtube</span></div>
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/475647/gmail-color.svg" alt="Gmail"/><span>Gmail</span></div>
-                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src="https://www.svgrepo.com/show/378732/google-color.svg" alt="Search"/><span>Search</span></div>
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/376340/google-discover.svg" alt="Feed"/><span>Feed</span></div>
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src="https://www.svgrepo.com/show/511490/monitor.svg" alt="Display"/><span>Display</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.youtube} alt="YouTube"/><span>Youtube</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.gmail} alt="Gmail"/><span>Gmail</span></div>
+                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1"><img className="h-5" src={ICONS.search} alt="Search"/><span>Search</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.feed} alt="Feed"/><span>Feed</span></div>
+                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.display} alt="Display"/><span>Display</span></div>
             </div>
-            <div className="p-6">
+        );
+    };
+
+    return (
+        <div className="bg-white border border-gray-200 rounded-sm shadow-sm relative">
+            <Tabs />
+            <div className="p-6 relative">
+                <button aria-label="Previous" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button aria-label="Next" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
                 <div className="mx-auto max-w-md bg-gray-50 rounded-2xl p-4 border border-gray-200">
                     <div className="bg-white rounded-xl p-4 border border-gray-200">
                         <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
                         <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
                             {isSearchLike ? (
                                 <>
-                                    {(firstAd?.headlines?.[0] || asset?.headlines?.[0] || 'Your headline here')}
-                                    {firstAd?.headlines?.[1] || asset?.headlines?.[1] ? ' | ' + (firstAd?.headlines?.[1] || asset?.headlines?.[1]) : ''}
+                                    {(activeAd?.headlines?.[0] || activeAg?.headlines?.[0] || 'Your headline here')}
+                                    {(activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) ? ' | ' + (activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) : ''}
                                 </>
-                            ) : (asset?.headlines?.[0] || 'Performance Max preview')}
+                            ) : (activeAg?.headlines?.[0] || activeAd?.headlines?.[0] || 'Performance Max preview')}
                         </div>
                         <div className="text-[12px] text-gray-700 mt-1">
-                            {(firstAd?.descriptions?.[0] || asset?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
+                            {(activeAd?.descriptions?.[0] || activeAg?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
                         </div>
                         <div className="mt-3 space-y-2">
                             <div className="h-6 bg-gray-100 rounded-md" />
                             <div className="h-6 bg-gray-100 rounded-md" />
                         </div>
+                        {total > 1 && (
+                            <div className="mt-3 text-center text-[11px] text-gray-500">Variation {index + 1} of {total}</div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -1306,8 +1344,8 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 </button>
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="grid grid-cols-12 gap-4 items-start">
-                <aside className="col-span-3 sticky top-24 max-h-[70vh] overflow-auto">
+            <div className="grid grid-cols-12 gap-0 items-start bg-white border border-gray-200 rounded-lg overflow-hidden">
+                <aside className="col-span-3 sticky top-24 max-h-[70vh] overflow-auto border-r border-gray-200 p-3">
                     <nav className="flex flex-col space-y-1">
                         {campaigns.map(c => (
                             <button
@@ -1324,7 +1362,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         ))}
                     </nav>
                 </aside>
-                <main className="col-span-5">
+                <main className="col-span-5 border-r border-gray-200 p-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
                             {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
@@ -1333,7 +1371,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                         </div>
                     )}
                 </main>
-                <section className="col-span-4 sticky top-24">
+                <section className="col-span-4 sticky top-24 p-4">
                     {selectedCampaign && <CampaignPreview campaign={selectedCampaign} />}
                 </section>
             </div>
