@@ -1074,8 +1074,17 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                                 }} />
                                             </div>
                                             <div>
-                                                <label className="block text-xs text-gray-600 mb-1">Ad Languages</label>
-                                                <input value={s.languages.join(', ')} onChange={(e)=> { const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean); onUpdate(s.id, prev => ({...prev, languages: list })); }} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                                <MultiSelectDropdown
+                                                    label="Ad Languages"
+                                                    options={LANGUAGE_LIST.map(l => l.name)}
+                                                    selectedOptions={s.languages.map(langNameFromCode)}
+                                                    onToggle={(name) => {
+                                                        const set = new Set(s.languages.map(langNameFromCode));
+                                                        set.has(name) ? set.delete(name) : set.add(name);
+                                                        const codes = Array.from(set).map(langCodeFromName);
+                                                        onUpdate(s.id, prev => ({...prev, languages: codes }));
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                         <div className="mt-3 flex justify-end gap-2">
