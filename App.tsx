@@ -227,17 +227,17 @@ const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: 
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
-            <div className="flex items-center justify-between p-3 border-b border-gray-200">
-                <div className="flex-grow mr-4">
+        <div className="bg-white border-b border-gray-200 mb-3">
+            <div className="flex items-center justify-between p-2.5">
+                <div className="flex-grow mr-3">
                     <EditableField value={title} onSave={onUpdateTitle} />
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5">
                     <IconButton onClick={onDelete} icon={<TrashIcon />} className="text-red-500 hover:bg-red-100" />
                     <IconButton onClick={() => setIsOpen(!isOpen)} icon={<ChevronDownIcon className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} />} className="text-gray-500 hover:bg-gray-200" />
                 </div>
             </div>
-            {isOpen && <div className="p-4 space-y-4">{children}</div>}
+            {isOpen && <div className="px-2.5 pb-3 space-y-3">{children}</div>}
         </div>
     );
 };
@@ -295,33 +295,31 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
     };
 
     return (
-        <div className="bg-white border border-gray-200 rounded-sm shadow-sm relative" role="region" aria-label="Ad preview">
+        <div className="bg-white relative" role="region" aria-label="Ad preview">
             <Tabs />
             <div className="p-6 relative" aria-live="polite">
                 <button aria-label="Previous variation" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <button aria-label="Next variation" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
-                <div className="mx-auto max-w-md bg-gray-50 rounded-2xl p-4 border border-gray-200">
-                    <div className="bg-white rounded-xl p-4 border border-gray-200">
-                        <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
-                        <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
-                            {isSearchLike ? (
-                                <>
-                                    {(activeAd?.headlines?.[0] || activeAg?.headlines?.[0] || 'Your headline here')}
-                                    {(activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) ? ' | ' + (activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) : ''}
-                                </>
-                            ) : (activeAg?.headlines?.[0] || activeAd?.headlines?.[0] || 'Performance Max preview')}
-                        </div>
-                        <div className="text-[12px] text-gray-700 mt-1">
-                            {(activeAd?.descriptions?.[0] || activeAg?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
-                        </div>
-                        <div className="mt-3 space-y-2">
-                            <div className="h-6 bg-gray-100 rounded-md" />
-                            <div className="h-6 bg-gray-100 rounded-md" />
-                        </div>
-                        {total > 1 && (
-                            <div className="mt-3 text-center text-[11px] text-gray-500">Variation {index + 1} of {total}</div>
-                        )}
+                <div className="mx-auto max-w-md rounded-xl border border-gray-200 p-4 bg-white">
+                    <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
+                    <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
+                        {isSearchLike ? (
+                            <>
+                                {(activeAd?.headlines?.[0] || activeAg?.headlines?.[0] || 'Your headline here')}
+                                {(activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) ? ' | ' + (activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) : ''}
+                            </>
+                        ) : (activeAg?.headlines?.[0] || activeAd?.headlines?.[0] || 'Performance Max preview')}
                     </div>
+                    <div className="text-[12px] text-gray-700 mt-1">
+                        {(activeAd?.descriptions?.[0] || activeAg?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                        <div className="h-6 bg-gray-100 rounded-md" />
+                        <div className="h-6 bg-gray-100 rounded-md" />
+                    </div>
+                    {total > 1 && (
+                        <div className="mt-3 text-center text-[11px] text-gray-500">Variation {index + 1} of {total}</div>
+                    )}
                 </div>
             </div>
         </div>
@@ -1344,7 +1342,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 </button>
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="grid grid-cols-12 gap-0 items-start bg-white border border-gray-200 rounded-lg overflow-hidden w-full">
+            <div className="grid grid-cols-12 gap-0 items-start bg-white overflow-hidden w-full">
                 <aside className="col-span-3 self-start max-h-[80vh] overflow-auto border-r border-gray-200 p-3">
                     <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
                     <nav className="flex flex-col space-y-1" aria-label="Campaign list">
