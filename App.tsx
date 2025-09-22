@@ -80,10 +80,16 @@ const deleteIn = (obj: any, path: (string | number)[]): any => {
 };
 
 
+const channelIconSrc: Record<string, string> = {
+    Google: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F533ea53c28d34716a117391b4d019fab?format=webp&width=800',
+    Meta: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6d64048564434594b3d94470b48f7f90?format=webp&width=800',
+    TikTok: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F7f6f42d403b0493d9a24bfa1923d7754?format=webp&width=800',
+    Bing: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F217a72f512e44b679bcb89421e851a42?format=webp&width=800',
+};
 const channelIcons: Record<Channel, React.ReactNode> = {
-    Google: <GoogleIcon />,
-    Meta: <MetaIcon />,
-    TikTok: <TiktokIcon />,
+    Google: <img src={channelIconSrc.Google} className="w-5 h-5" alt="Google Ads" />,
+    Meta: <img src={channelIconSrc.Meta} className="w-5 h-5" alt="Meta" />,
+    TikTok: <img src={channelIconSrc.TikTok} className="w-5 h-5" alt="TikTok" />,
 };
 
 // ===== UI COMPONENTS =====
@@ -1054,9 +1060,7 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
     return (
         <div className="relative" ref={ref}>
             <button onClick={() => setOpen(v=>!v)} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
-                {selected === 'Google' && <GoogleIcon />}
-                {selected === 'Meta' && <MetaIcon />}
-                {selected === 'TikTok' && <TiktokIcon />}
+                <img src={channelIconSrc[selected]} className="w-4 h-4" alt={selected} />
                 {selected === 'Google' ? 'Adwords' : selected}
                 <svg className="w-2 h-2 fill-current" viewBox="0 0 7 5"><path d="M3.5 5L0.468911 0.5L6.53109 0.5L3.5 5Z"/></svg>
             </button>
@@ -1072,7 +1076,7 @@ const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: 
                                 className={`w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                             >
                                 <span className="inline-flex items-center gap-2">
-                                    <span className="text-gray-500">{channelIcons[opt as Channel] || '🧪'}</span>
+                                    <img src={channelIconSrc[opt as string]} className="w-4 h-4" alt={`${opt}`} />
                                     <span>{opt === 'Google' ? 'Adwords' : opt}</span>
                                     {isDisabled && <span className="ml-2 text-[10px] text-gray-500">Coming soon</span>}
                                 </span>
