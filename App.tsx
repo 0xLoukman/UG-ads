@@ -289,7 +289,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
                 <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.gmail} width="20" height="20" decoding="async" alt="Gmail"/><span>Gmail</span></div>
                 <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
                 <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.feed} width="20" height="20" decoding="async" alt="Feed"/><span>Feed</span></div>
-                <div className="flex flex-col items-center gap-1"><img className="h-5" src={ICONS.display} alt="Display"/><span>Display</span></div>
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.display} width="20" height="20" decoding="async" alt="Display"/><span>Display</span></div>
             </div>
         );
     };
