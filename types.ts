@@ -12,6 +12,9 @@ export interface AssetGroup {
   headlines: string[];
   longHeadlines: string[];
   descriptions: string[];
+  images?: string[];
+  logos?: string[];
+  videos?: string[];
 }
 
 export interface Ad {
