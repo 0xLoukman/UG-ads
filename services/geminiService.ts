@@ -338,8 +338,8 @@ export const generateCampaignDetails = async (summaries: CampaignSummary[], brie
 
 // ===== ON-DEMAND CREATIVE GENERATION =====
 
-export type AssetType = 
-    'headline' | 'description' | 'long headline' | 'ad group name' | 'asset group name' | // Google
+export type AssetType =
+    'headline' | 'description' | 'long headline' | 'ad group name' | 'asset group name' | 'keyword' | // Google
     'primary text' | 'meta headline' | 'meta description' | 'ad set name' | // Meta
     'ad text' | 'tiktok ad group name'; // TikTok
 
