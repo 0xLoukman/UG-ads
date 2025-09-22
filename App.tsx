@@ -684,7 +684,7 @@ type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
 
 const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
     const [brief, setBrief] = useState("");
-    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Meta']);
+    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
 
@@ -916,7 +916,7 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
 };
 
 
-const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summaries: CampaignSummary[], onSelect: (id: string) => void, onConfirm: () => void, onBack: () => void }) => {
+const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate }: { summaries: CampaignSummary[], onSelect: (id: string) => void, onConfirm: () => void, onBack: () => void, onUpdate: (id: string, updater: (s: CampaignSummary) => CampaignSummary) => void }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
     const sortedSummaries = useMemo(() => {
@@ -995,13 +995,60 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summ
                     </thead>
                     <tbody>
                         {sortedSummaries.map(s => (
-                            <tr key={s.id} className="bg-white border-b hover:bg-gray-50">
+                            <tr key={s.id} className="bg-white border-b hover:bg-gray-50 align-top">
                                 <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{channelIcons[s.channel]}</span><span>{s.channel}</span></td>
-                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
-                                <td className="px-6 py-4">{s.campaignType}</td>
-                                <td className="px-6 py-4">{s.market.name} ({s.market.iso})</td>
-                                <td className="px-6 py-4">{s.market.browserLangs.join(', ')}</td>
-                                <td className="px-6 py-4">{s.languages.join(', ')}</td>
+                                <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                    <input
+                                        value={s.campaignName}
+                                        onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))}
+                                        className="w-full text-sm border border-gray-200 rounded-md px-2 py-1"
+                                    />
+                                </td>
+                                <td className="px-6 py-3">
+                                    <input
+                                        list={`types-${s.id}`}
+                                        value={s.campaignType}
+                                        onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))}
+                                        className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1"
+                                    />
+                                    <datalist id={`types-${s.id}`}>
+                                        {ALL_CAMPAIGN_TYPES.map(t => (<option key={t} value={t} />))}
+                                    </datalist>
+                                </td>
+                                <td className="px-6 py-3">
+                                    <select
+                                        value={s.market.iso}
+                                        onChange={(e)=> {
+                                            const iso = e.target.value;
+                                            const country = { name: findMarket(iso)?.name || iso, iso } as Omit<Market,'browserLangs'>;
+                                            const nextMarket = getMarketWithLangs(country);
+                                            onUpdate(s.id, prev => ({...prev, market: nextMarket}));
+                                        }}
+                                        className="text-sm border border-gray-200 rounded-md px-2 py-1"
+                                    >
+                                        {COUNTRIES.map(c => (<option key={c.iso} value={c.iso}>{c.name} ({c.iso})</option>))}
+                                    </select>
+                                </td>
+                                <td className="px-6 py-3">
+                                    <input
+                                        value={s.market.browserLangs.join(', ')}
+                                        onChange={(e)=> {
+                                            const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean);
+                                            onUpdate(s.id, prev => ({...prev, market: { ...prev.market, browserLangs: list }}));
+                                        }}
+                                        className="w-48 text-sm border border-gray-200 rounded-md px-2 py-1"
+                                    />
+                                </td>
+                                <td className="px-6 py-3">
+                                    <input
+                                        value={s.languages.join(', ')}
+                                        onChange={(e)=> {
+                                            const list = e.target.value.split(',').map(x=>x.trim()).filter(Boolean);
+                                            onUpdate(s.id, prev => ({...prev, languages: list }));
+                                        }}
+                                        className="w-40 text-sm border border-gray-200 rounded-md px-2 py-1"
+                                    />
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -1159,7 +1206,7 @@ const App: React.FC = () => {
             case 'input':
                 return <InputView onGenerate={handleGenerateSummary} />;
             case 'summary':
-                return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} />;
+                return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
                 return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} />;
             default:
