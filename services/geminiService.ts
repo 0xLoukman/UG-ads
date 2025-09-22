@@ -254,13 +254,14 @@ CRITICAL RULES:
 1.  Analyze the 'channel' for EACH campaign summary provided.
 2.  If 'channel' is 'Google':
     - If 'campaignType' is 'PMax', 'Hotel Ads', or 'Performance Max', you MUST generate a 'googleAds.assetGroups' array.
-    - If 'campaignType' is 'Search' or 'Brand Search', you MUST generate a 'googleAds.adGroups' array.
+    - If 'campaignType' is 'Search', 'Brand Search', or contains the word 'Brand' (e.g., 'Brand', 'Brand-Exact', 'Brand Search (Exact/Phrase)'), you MUST generate a 'googleAds.adGroups' array with at least one ad group and at least one ad per group.
 3.  If 'channel' is 'Meta', you MUST generate a 'meta.adSets' array, with each ad set containing ads with 'primaryText', 'headline', and 'description'.
 4.  If 'channel' is 'TikTok', you MUST generate a 'tikTok.adGroups' array, with each ad group containing ads with 'adText'.
 5.  DO NOT generate structures for the wrong channel. For a 'Meta' campaign, 'googleAds' and 'tikTok' properties must be null/omitted.
 6.  For ALL structures, generate compelling and relevant creative assets based on the original brief. Translate them into the single language specified in the 'languages' field for each campaign.
-7.  Use the provided JSON schema to structure your response. Ensure all required fields, including unique IDs for all campaigns and their nested creative elements, are present.
-8.  The final output must be an array of full campaign objects, preserving the original 'id' for each campaign.`;
+7.  For Google Search ads, optionally include a 'keywords' array of brand terms where relevant.
+8.  Use the provided JSON schema to structure your response. Ensure all required fields, including unique IDs for all campaigns and their nested creative elements, are present.
+9.  The final output must be an array of full campaign objects, preserving the original 'id' for each campaign.`;
 
 export const generateCampaignDetails = async (summaries: CampaignSummary[], brief: string): Promise<FullCampaign[]> => {
     const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(summaries, null, 2)}"""`;
