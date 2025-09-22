@@ -698,27 +698,7 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
 
                             <div className="flex items-center gap-2">
                                 <div className="relative">
-                                    <button
-                                        onClick={() => {
-                                            const currentChannel = selectedChannels[0] || 'Google';
-                                            if (currentChannel === 'Google') {
-                                                setSelectedChannels(['Meta']);
-                                            } else if (currentChannel === 'Meta') {
-                                                setSelectedChannels(['TikTok']);
-                                            } else {
-                                                setSelectedChannels(['Google']);
-                                            }
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
-                                    >
-                                        {selectedChannels.includes('Google') && <GoogleIcon />}
-                                        {selectedChannels.includes('Meta') && <MetaIcon />}
-                                        {selectedChannels.includes('TikTok') && <TiktokIcon />}
-                                        {selectedChannels.includes('Google') ? 'Adwords' : selectedChannels.includes('Meta') ? 'Meta' : 'TikTok'}
-                                        <svg className="w-2 h-2 fill-current" viewBox="0 0 7 5">
-                                            <path d="M3.5 5L0.468911 0.5L6.53109 0.5L3.5 5Z"/>
-                                        </svg>
-                                    </button>
+                                    <ChannelDropdown selected={selectedChannels[0] || 'Google'} onSelect={(c) => setSelectedChannels([c])} />
                                 </div>
 
                                 <button
