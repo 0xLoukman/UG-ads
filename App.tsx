@@ -531,7 +531,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group����.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1597,6 +1597,33 @@ const CreativeGeneratorView = () => {
                             <div className="flex items-center gap-2 flex-wrap">
                                 {logo && <img src={logo} className="h-8 w-auto object-contain border rounded" alt="logo" />}
                                 <label htmlFor="creative-logo" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Upload logo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Template</div>
+                            <div className="text-xs text-gray-500 mb-2">Choose a layout</div>
+                            <div className="flex flex-wrap gap-2">
+                                {([
+                                    { id:'overlay', label:'Photo overlay' },
+                                    { id:'logo-badge', label:'Logo on white' },
+                                    { id:'text-panel', label:'Text on white' },
+                                    { id:'split', label:'Split panel' },
+                                ] as const).map(t => (
+                                    <button key={t.id} onClick={()=> setTemplate(t.id)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Accent color</div>
+                            <div className="text-xs text-gray-500 mb-2">Used for buttons and accents</div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {['#0ea5e9','#2563eb','#10b981','#f59e0b','#ef4444','#111827'].map(c => (
+                                    <button key={c} aria-label={`Use ${c}`} onClick={()=> setAccent(c)} className={`w-6 h-6 rounded-full border ${accent===c ? 'ring-2 ring-offset-1 ring-blue-500' : ''}`} style={{background:c}} />
+                                ))}
+                                <input type="color" value={accent} onChange={(e)=> setAccent(e.target.value)} className="w-8 h-6 border rounded" />
                             </div>
                         </div>
                     </div>
