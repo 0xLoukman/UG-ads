@@ -1648,15 +1648,48 @@ const CreativeGeneratorView = () => {
                             <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
                                 <div className="relative" style={{width: s.w, height: s.h}}>
                                     {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
-                                    <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />
-                                    {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
-                                    <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
-                                        <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
-                                        <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
-                                        <div>
-                                            <button className="mt-1 px-2 py-1 rounded-full bg-black text-white font-bold" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                    {template !== 'text-panel' && template !== 'split' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+
+                                    {template === 'logo-badge' && logo && (
+                                        <div className="absolute top-2 left-2 bg-white rounded-md shadow px-2 py-1">
+                                            <img src={logo} className="h-5 w-auto object-contain" alt="logo" />
                                         </div>
-                                    </div>
+                                    )}
+                                    {template === 'overlay' && logo && (<img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />)}
+
+                                    {template === 'text-panel' && (
+                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
+                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-80" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                        </div>
+                                    )}
+
+                                    {template === 'split' && (
+                                        <>
+                                            <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900" style={{width: Math.round(s.w*0.42)}}>
+                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                <div className="opacity-80" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                <div>
+                                                    <button className="mt-1 px-2 py-1 rounded-md text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                                {logo && <img src={logo} className="absolute bottom-2 left-2 h-5 w-auto object-contain" alt="logo" />}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {(template === 'overlay' || template === 'logo-badge') && (
+                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="mt-2 flex justify-end">
