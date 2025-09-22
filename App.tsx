@@ -1333,7 +1333,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 </button>
             </div>
             <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200">
+            <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200 bg-white">
                 <div className="col-span-3 px-3 py-2 border-r border-gray-200">Campaigns</div>
                 <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
                 <div className="col-span-4 px-4 py-2">Preview</div>
