@@ -1568,6 +1568,12 @@ const CreativeGeneratorView = () => {
         } else if (template === 'split') {
             const panelW = Math.round(w*0.42);
             html = `${baseHead}<div class=\"banner\"><div class=\"bg\"></div><div style=\"position:absolute;left:0;top:0;bottom:0;width:${panelW}px;background:rgba(255,255,255,.95);border-right:1px solid #e5e7eb;padding:12px;color:#111\"><h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(22, Math.round(h*0.14)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.85;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:${accent};color:#fff;padding:6px 10px;border-radius:6px;font-weight:700;font-size:${Math.max(9, Math.min(13, Math.round(h*0.09)))}px;text-decoration:none\">${c.cta}</a>${lg ? `<img style=\"position:absolute;bottom:8px;left:12px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\" alt=\"logo\"/>` : ''}</div></div></body></html>`;
+        } else if (template === 'arch') {
+            const archR = Math.max(40, Math.round(h*0.35));
+            const photoW = Math.round(w*0.62);
+            html = `${baseHead}<div class=\"banner\"><div style=\"position:absolute;inset:0;background:linear-gradient(135deg, ${accent}, #1e3a8a)\"></div><div style=\"position:absolute;right:0;top:0;height:100%;width:${photoW}px;\"><div style=\"position:absolute;right:0;top:0;height:100%;width:100%;overflow:hidden;border-top-left-radius:${archR}px;border-top-right-radius:${archR}px\">${bg ? `<img style=\"position:absolute;inset:0;width:100%;height:100%;object-fit:cover\" src=\"${bg}\"/>` : ''}</div></div><div style=\"position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding-left:12px;padding-right:${Math.round(w*0.4)}px;color:#fff\">${lg ? `<img style=\"height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px;margin-bottom:6px\" src=\"${lg}\"/>` : ''}<h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(24, Math.round(h*0.16)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.95;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:#fff;color:#111;padding:6px 10px;border-radius:999px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none\">${c.cta}</a></div></div></body></html>`;
+        } else if (template === 'center-hero') {
+            html = `${baseHead}<div class=\"banner\">${bg ? `<div class=\"bg\"></div>` : ''}<div style=\"position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),rgba(0,0,0,.55))\"></div><div style=\"position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;font-family:Georgia,Times,serif\"><div style=\"letter-spacing:.02em;font-size:${Math.max(14, Math.min(28, Math.round(h*0.18)))}px;font-weight:800\">${c.heading}</div><div style=\"margin-top:4px;opacity:.95;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px\">${c.subtext}</div><a href=\"#\" style=\"margin-top:8px;display:inline-block;color:#fff;border:2px solid ${accent};padding:6px 10px;border-radius:6px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none\">${c.cta}</a></div>${lg ? `<img style=\"position:absolute;top:8px;right:8px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\"/>` : ''}</div></body></html>`;
         } else {
             html = `<!doctype html><html><head><meta charset=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><style>*{box-sizing:border-box}body{margin:0}.banner{position:relative;width:${w}px;height:${h}px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden;border:1px solid #e5e7eb;border-radius:8px}.bg{position:absolute;inset:0;background-image:url('${bg}');background-size:cover;background-position:center;filter:saturate(1.05)}.overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.35))}</style></head><body><div class=\"banner\"><div class=\"bg\"></div><div class=\"overlay\"></div>${template==='logo-badge' && lg ? `<div style=\"position:absolute;top:8px;left:8px;background:#fff;border-radius:6px;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,.15)\"><img style=\"height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\"/></div>` : (lg ? `<img style=\"position:absolute;top:8px;right:8px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\" alt=\"logo\"/>` : '')}<div style=\"position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)\"><h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(24, Math.round(h*0.16)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.95;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:${accent};color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none\">${c.cta}</a></div></div></body></html>`;
         }
@@ -1626,6 +1632,8 @@ const CreativeGeneratorView = () => {
                                     { id:'stripe', label:'Accent stripe' },
                                     { id:'glass', label:'Glass panel' },
                                     { id:'outline', label:'Outline CTA' },
+                                    { id:'arch', label:'Arch window' },
+                                    { id:'center-hero', label:'Centered hero' },
                                 ] as const).map(t => (
                                     <button key={t.id} onClick={()=> setTemplate(t.id as any)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
                                 ))}
@@ -1670,7 +1678,7 @@ const CreativeGeneratorView = () => {
                                 <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
                                     <div className="relative" style={{width: s.w, height: s.h}}>
                                         {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
-                                        {template !== 'text-panel' && template !== 'split' && template !== 'outline' && template !== 'stripe' && template !== 'glass' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+                                        {template !== 'text-panel' && template !== 'split' && template !== 'outline' && template !== 'stripe' && template !== 'glass' && template !== 'arch' && template !== 'center-hero' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
 
                                         {template === 'logo-badge' && logo && (
                                             <div className="absolute top-2 left-2 bg-white rounded-md shadow px-2 py-1">
@@ -1732,6 +1740,38 @@ const CreativeGeneratorView = () => {
                                                 </div>
                                                 {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
                                             </div>
+                                        )}
+
+                                        {template === 'arch' && (
+                                            <>
+                                                <div className="absolute inset-0" style={{background: `linear-gradient(135deg, ${accent}, #1e3a8a)`}} />
+                                                <div className="absolute right-0 top-0 h-full" style={{width: Math.round(s.w*0.62)}}>
+                                                    <div className="absolute right-0 top-0 h-full overflow-hidden" style={{width:'100%', borderTopLeftRadius: Math.round(s.w*0.35), borderTopRightRadius: Math.round(s.w*0.35)}}>
+                                                        {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                                    </div>
+                                                </div>
+                                                <div className="absolute inset-0 flex flex-col justify-center pl-3 pr-[40%] text-white">
+                                                    {logo && <img src={logo} className="h-5 w-auto object-contain mb-1" alt="logo" />}
+                                                    <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                    <div className="opacity-95 mt-1" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                    <div>
+                                                        <button className="mt-2 px-2 py-1 rounded-full bg-white text-gray-900 font-bold" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {template === 'center-hero' && (
+                                            <>
+                                                {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                                <div className="absolute inset-0" style={{background:'linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55))'}} />
+                                                <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center" style={{fontFamily:'Georgia, Times, serif'}}>
+                                                    <div className="tracking-wide" style={{fontSize: Math.max(14, Math.min(28, Math.round(s.h*0.18))), fontWeight:800}}>{copy?.heading || 'Feels Like Home'}</div>
+                                                    <div className="mt-1 opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Book direct for perks'}</div>
+                                                    <button className="mt-2 px-2 py-1 rounded-md font-bold" style={{border:`2px solid ${accent}`, background:'transparent', color:'#fff', fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                                {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                            </>
                                         )}
 
                                         {(template === 'overlay' || template === 'logo-badge') && (
