@@ -1640,78 +1640,118 @@ const CreativeGeneratorView = () => {
                             </div>
                         </div>
                     </div>
-                </div>
-                <div>
-                    <div className="text-sm font-medium text-gray-800 mb-2">Copy</div>
-                    <div className="text-xs text-gray-500 mb-2">Preview and tweak generated text</div>
-                    <div className="space-y-2">
-                        <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
-                        <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
-                        <input value={copy?.cta || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), cta: e.target.value })} placeholder="Button label" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+
+                    <div className="mt-3">
+                        <div className="text-sm font-medium text-gray-800 mb-2">Copy</div>
+                        <div className="text-xs text-gray-500 mb-2">Preview and tweak generated text</div>
+                        <div className="space-y-2">
+                            <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                            <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                            <input value={copy?.cta || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), cta: e.target.value })} placeholder="Button label" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        </div>
                     </div>
                 </div>
-            </div>
+                <div>
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-800">Preview</div>
+                        <div className="flex items-center gap-1">
+                            {SIZES.map(s => (
+                                <button key={s.key} onClick={()=> setSizeKey(s.key as any)} className={`px-2 py-1.5 text-xs rounded-md border ${sizeKey===s.key ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{s.key}</button>
+                            ))}
+                        </div>
+                    </div>
+                    {(() => {
+                        const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
+                        return (
+                            <div className="border border-gray-200 rounded-lg p-3">
+                                <div className="text-xs text-gray-600 mb-2">{s.label}</div>
+                                <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                                    <div className="relative" style={{width: s.w, height: s.h}}>
+                                        {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                        {template !== 'text-panel' && template !== 'split' && template !== 'outline' && template !== 'stripe' && template !== 'glass' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
 
-            <div className="mt-4">
-                <div className="text-sm font-medium text-gray-800 mb-2">Banners</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {SIZES.map(s => (
-                        <div key={s.key} className="border border-gray-200 rounded-lg p-3">
-                            <div className="text-xs text-gray-600 mb-2">{s.label}</div>
-                            <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
-                                <div className="relative" style={{width: s.w, height: s.h}}>
-                                    {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
-                                    {template !== 'text-panel' && template !== 'split' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
-
-                                    {template === 'logo-badge' && logo && (
-                                        <div className="absolute top-2 left-2 bg-white rounded-md shadow px-2 py-1">
-                                            <img src={logo} className="h-5 w-auto object-contain" alt="logo" />
-                                        </div>
-                                    )}
-                                    {template === 'overlay' && logo && (<img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />)}
-
-                                    {template === 'text-panel' && (
-                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
-                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
-                                            <div className="opacity-80" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
-                                            <div>
-                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                        {template === 'logo-badge' && logo && (
+                                            <div className="absolute top-2 left-2 bg-white rounded-md shadow px-2 py-1">
+                                                <img src={logo} className="h-5 w-auto object-contain" alt="logo" />
                                             </div>
-                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
-                                        </div>
-                                    )}
+                                        )}
+                                        {template === 'overlay' && logo && (<img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />)}
 
-                                    {template === 'split' && (
-                                        <>
-                                            <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900" style={{width: Math.round(s.w*0.42)}}>
-                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
-                                                <div className="opacity-80" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                        {template === 'text-panel' && (
+                                            <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
+                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                <div className="opacity-80" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
                                                 <div>
+                                                    <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                                {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                            </div>
+                                        )}
+
+                                        {template === 'split' && (
+                                            <>
+                                                <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900" style={{width: Math.round(s.w*0.42)}}>
+                                                    <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                    <div className="opacity-80" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                    <div>
+                                                        <button className="mt-1 px-2 py-1 rounded-md text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
+                                                    </div>
+                                                    {logo && <img src={logo} className="absolute bottom-2 left-2 h-5 w-auto object-contain" alt="logo" />}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {template === 'stripe' && (
+                                            <div className="absolute inset-x-0 bottom-0" style={{background: accent}}>
+                                                <div className="p-2 text-white">
+                                                    <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                    <div className="opacity-95" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                    <button className="mt-1 px-2 py-1 rounded-full bg-white text-gray-900 font-bold" style={{fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {template === 'glass' && (
+                                            <div className="absolute inset-x-2 bottom-2 rounded-md border border-white/40" style={{background:'rgba(255,255,255,0.35)', backdropFilter:'blur(6px)'}}>
+                                                <div className="p-2 text-gray-900">
+                                                    <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                    <div className="opacity-80" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
                                                     <button className="mt-1 px-2 py-1 rounded-md text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
                                                 </div>
-                                                {logo && <img src={logo} className="absolute bottom-2 left-2 h-5 w-auto object-contain" alt="logo" />}
                                             </div>
-                                        </>
-                                    )}
+                                        )}
 
-                                    {(template === 'overlay' || template === 'logo-badge') && (
-                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
-                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
-                                            <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
-                                            <div>
-                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                        {template === 'outline' && (
+                                            <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                <div>
+                                                    <button className="mt-1 px-2 py-1 rounded-full font-bold border" style={{ borderColor: accent, color: '#fff', fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                                {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
+
+                                        {(template === 'overlay' || template === 'logo-badge') && (
+                                            <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                <div>
+                                                    <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="mt-2 flex justify-end">
+                                    {s && <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>}
                                 </div>
                             </div>
-                            <div className="mt-2 flex justify-end">
-                                <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })()}
                 </div>
             </div>
+
         </div>
     );
 };
