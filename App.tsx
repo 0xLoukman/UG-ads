@@ -1620,8 +1620,11 @@ const CreativeGeneratorView = () => {
                                     { id:'logo-badge', label:'Logo on white' },
                                     { id:'text-panel', label:'Text on white' },
                                     { id:'split', label:'Split panel' },
+                                    { id:'stripe', label:'Accent stripe' },
+                                    { id:'glass', label:'Glass panel' },
+                                    { id:'outline', label:'Outline CTA' },
                                 ] as const).map(t => (
-                                    <button key={t.id} onClick={()=> setTemplate(t.id)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
+                                    <button key={t.id} onClick={()=> setTemplate(t.id as any)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
                                 ))}
                             </div>
                         </div>
