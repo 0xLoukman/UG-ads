@@ -1586,7 +1586,7 @@ const CreativeGeneratorView = () => {
                 </div>
                 <button onClick={generate} disabled={isLoading} className="px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                     <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                     <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
