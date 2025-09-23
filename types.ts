@@ -1,4 +1,3 @@
-
 export interface Market {
   name: string;
   iso: string;
@@ -13,6 +12,9 @@ export interface AssetGroup {
   headlines: string[];
   longHeadlines: string[];
   descriptions: string[];
+  images?: string[];
+  logos?: string[];
+  videos?: string[];
 }
 
 export interface Ad {
@@ -20,12 +22,17 @@ export interface Ad {
     finalUrl: string;
     headlines: string[];
     descriptions: string[];
+    keywords?: string[];
+    assignedAdGroupId?: string | null; // legacy single-assignment
+    assignedExternal?: { campaignName: string; adGroupName: string } | null; // legacy single external
+    assignedTargets?: Array<{ source: 'plan' | 'external'; campaignId?: string; adGroupId?: string; campaignName?: string; adGroupName?: string }>; // preferred multi-assign
 }
 
 export interface AdGroup {
     id: string;
     name: string;
     ads: Ad[];
+    assignedCampaignName?: string | null;
 }
 
 // ===== META =====
@@ -73,6 +80,7 @@ export interface FullCampaign extends CampaignSummary {
     hotelPropertyFeed?: string;
     assetGroups?: AssetGroup[];
     adGroups?: AdGroup[];
+    ads?: Ad[];
   };
   meta?: {
     adSets: MetaAdSet[];

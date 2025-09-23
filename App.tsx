@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market } from "./types";
-import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType } from "./services/geminiService";
+import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd, generateBannerCopy } from "./services/geminiService";
 
-type View = 'input' | 'summary' | 'details';
+type View = 'input' | 'summary' | 'details' | 'review';
 type SortConfig = { key: keyof CampaignSummary | 'browserLangs'; direction: 'ascending' | 'descending' } | null;
 type InputMode = 'prompt' | 'manual';
 
@@ -48,7 +48,7 @@ const PlusIcon = ({className = "w-4 h-4"}) => <svg className={className} viewBox
 const TrashIcon = ({className = "w-4 h-4"}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>;
 const EditIcon = ({className="w-4 h-4"}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>;
 const BackIcon = ({className="w-4 h-4"}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>;
-const ChevronDownIcon = ({className="w-4 h-4"}) => <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
+const ChevronDownIcon = ({className="w-4 h-4"}) => <svg width="16" height="16" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>;
 
 const setIn = (obj: any, path: (string | number)[], value: any): any => {
     const newObj = JSON.parse(JSON.stringify(obj));
@@ -80,10 +80,16 @@ const deleteIn = (obj: any, path: (string | number)[]): any => {
 };
 
 
+const channelIconSrc: Record<string, string> = {
+    Google: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F533ea53c28d34716a117391b4d019fab?format=webp&width=800',
+    Meta: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6d64048564434594b3d94470b48f7f90?format=webp&width=800',
+    TikTok: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F7f6f42d403b0493d9a24bfa1923d7754?format=webp&width=800',
+    Bing: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F217a72f512e44b679bcb89421e851a42?format=webp&width=800',
+};
 const channelIcons: Record<Channel, React.ReactNode> = {
-    Google: <GoogleIcon />,
-    Meta: <MetaIcon />,
-    TikTok: <TiktokIcon />,
+    Google: <img src={channelIconSrc.Google} className="h-5 w-auto object-contain" alt="Google Ads" />,
+    Meta: <img src={channelIconSrc.Meta} className="h-5 w-auto object-contain" alt="Meta" />,
+    TikTok: <img src={channelIconSrc.TikTok} className="h-5 w-auto object-contain" alt="TikTok" />,
 };
 
 // ===== UI COMPONENTS =====
@@ -92,10 +98,8 @@ const Header = () => (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 p-4 border-b border-gray-200">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
-                <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-lg">
-                    <SparklesIcon className="w-6 h-6 text-white"/>
-                </div>
-                <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Campaign Generator</h1>
+                <img src="https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F1003138594934a01b42521ec1d693a8d" alt="Logo" className="h-8 w-auto object-contain" />
+                <div className="text-xs text-gray-500">AI Campaign generator</div>
             </div>
         </div>
     </header>
@@ -112,6 +116,7 @@ const EditableField = ({ value, onSave, onGenerate, onRewrite, fieldType }: { va
     const [isEditing, setIsEditing] = useState(false);
     const [currentValue, setCurrentValue] = useState(value);
     const [isGenerating, setIsGenerating] = useState(false);
+    useEffect(() => { setCurrentValue(value); }, [value]);
 
     const handleSave = () => {
         onSave(currentValue);
@@ -130,6 +135,24 @@ const EditableField = ({ value, onSave, onGenerate, onRewrite, fieldType }: { va
         }
     };
     
+    if (fieldType === 'url') {
+        return (
+            <div className="w-full">
+                <label className="block text-xs text-gray-600 mb-1">Final URL</label>
+                <input
+                    type="url"
+                    value={currentValue}
+                    onChange={(e) => setCurrentValue(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                    placeholder="https://example.com"
+                    className="w-full text-sm border border-gray-200 rounded-md px-2 py-1"
+                    autoFocus
+                />
+            </div>
+        );
+    }
+
     if (isEditing) {
         return (
             <div className="flex items-center w-full">
@@ -198,33 +221,249 @@ const EditableList = ({ title, items, onUpdate, onAdd, onDelete, onGenerate, onR
     );
 };
 
+const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; }) => {
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+    const remaining = Math.max(0, max - (items?.length || 0));
+    return (
+        <div className="py-3 border-t border-gray-100">
+            <div className="text-sm font-medium text-gray-800">{label}</div>
+            <div className="text-xs text-gray-500 mb-2">{hint}</div>
+            <div className="flex items-center gap-3 flex-wrap">
+                {items?.map((src, i) => (
+                    <div key={i} className="relative">
+                        <img src={src} alt={`${label} ${i+1}`} className="w-16 h-16 object-cover rounded-md border" />
+                        <button aria-label={`Remove ${label} ${i+1}`} onClick={() => onRemove(i)} className="absolute -top-2 -right-2 bg-white border rounded-full w-6 h-6 flex items-center justify-center text-red-500 hover:bg-red-50">×</button>
+                    </div>
+                ))}
+                <input ref={inputRef} className="hidden" type="file" accept={accept} multiple onChange={(e) => { if(e.target.files) { onAddFiles(e.target.files); e.currentTarget.value = ''; } }} />
+                {remaining > 0 && (
+                    <button onClick={() => inputRef.current?.click()} className="text-blue-600 text-sm font-semibold flex items-center gap-1">
+                        <span className="text-base leading-none">＋</span>
+                        <span>{label.toUpperCase()}</span>
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const FieldSection = ({ title, hint, children }: { title: string; hint: string; children: React.ReactNode }) => (
+    <div className="py-3 border-t border-gray-100">
+        <div className="text-sm font-medium text-gray-800">{title}</div>
+        <div className="text-xs text-gray-500 mb-2">{hint}</div>
+        {children}
+    </div>
+);
+
+const AssignPillsPicker = ({ value, onChange, planCombos }: { value: Array<{ source: 'plan' | 'external'; adGroupId?: string; campaignName?: string; adGroupName?: string }>; onChange: (v: any[]) => void; planCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[]; }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => { const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); }; document.addEventListener('mousedown', onDoc); return () => document.removeEventListener('mousedown', onDoc); }, []);
+
+    const mockExisting = [
+        { campaignName: '[UG]-Brand-USA', adGroups: ['Brand Exact', 'Brand Phrase'] },
+        { campaignName: '[UG]-Remarketing-ALL', adGroups: ['All Visitors 30d', 'Cart Abandoners 14d'] },
+        { campaignName: '[UG]-Hotel-EN', adGroups: ['Hotel Brand EN', 'Generic Hotel EN'] },
+        { campaignName: '[UG]-PMax-Core', adGroups: ['Asset Group A', 'Asset Group B'] },
+    ];
+
+    const isSelectedPlan = (id: string) => value?.some(v => v.source==='plan' && v.adGroupId===id);
+    const togglePlan = (id: string) => {
+        const set = new Set(value?.filter(Boolean).map(v => JSON.stringify(v)));
+        const key = JSON.stringify({ source:'plan', adGroupId:id });
+        if (set.has(key)) set.delete(key); else set.add(key);
+        onChange(Array.from(set).map(s => JSON.parse(s as string)));
+    };
+
+    const isSelectedExt = (cName: string, gName: string) => value?.some(v => v.source==='external' && v.campaignName===cName && v.adGroupName===gName);
+    const toggleExt = (cName: string, gName: string) => {
+        const set = new Set(value?.filter(Boolean).map(v => JSON.stringify(v)));
+        const key = JSON.stringify({ source:'external', campaignName:cName, adGroupName:gName });
+        if (set.has(key)) set.delete(key); else set.add(key);
+        onChange(Array.from(set).map(s => JSON.parse(s as string)));
+    };
+
+    return (
+        <div className="flex items-center gap-2 flex-wrap" ref={ref}>
+            {(value || []).map((v, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
+                    {v.source==='plan' ? 'Plan' : 'Existing'} {v.source==='plan' ? (planCombos.find(p=>p.adGroupId===v.adGroupId)?.adGroupName || '') : (v.adGroupName || '')}
+                    <button onClick={() => { v.source==='plan' ? togglePlan(v.adGroupId!) : toggleExt(v.campaignName!, v.adGroupName!); }} className="text-gray-500 hover:text-black">×</button>
+                </span>
+            ))}
+            <div className="relative">
+                <button onClick={() => setOpen(o=>!o)} className="px-2 py-1.5 text-xs rounded-md border">Assign</button>
+                {open && (
+                    <div className="absolute z-20 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                        <div className="text-[11px] text-gray-500 px-1 py-1">Current plan</div>
+                        <div className="max-h-40 overflow-auto">
+                            {planCombos.map(p => (
+                                <label key={p.adGroupId} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                    <input type="checkbox" className="h-3.5 w-3.5" checked={isSelectedPlan(p.adGroupId)} onChange={()=>togglePlan(p.adGroupId)} />
+                                    <span className="truncate">{p.campaignName} • {p.adGroupName}</span>
+                                </label>
+                            ))}
+                        </div>
+                        <div className="text-[11px] text-gray-500 px-1 py-1 border-t mt-1">Existing</div>
+                        <div className="max-h-40 overflow-auto">
+                            {mockExisting.map(ex => (
+                                <div key={ex.campaignName} className="px-1 py-1">
+                                    <div className="text-[11px] text-gray-500 px-1">{ex.campaignName}</div>
+                                    {ex.adGroups.map(g => (
+                                        <label key={g} className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50 cursor-pointer text-sm">
+                                            <input type="checkbox" className="h-3.5 w-3.5" checked={isSelectedExt(ex.campaignName, g)} onChange={()=>toggleExt(ex.campaignName, g)} />
+                                            <span className="truncate">{g}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 const CollapsibleCard = ({ title, onUpdateTitle, onDelete, children }: { title: string, onUpdateTitle: (newTitle: string) => void, onDelete: () => void, children: React.ReactNode }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-4">
-            <div className="flex items-center justify-between p-3 border-b border-gray-200">
-                <div className="flex-grow mr-4">
+        <div className="border-t border-b border-gray-200">
+            <div className={`flex items-center justify-between px-4 py-3 ${isOpen ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                <div className="flex-grow mr-3">
                     <EditableField value={title} onSave={onUpdateTitle} />
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1.5">
                     <IconButton onClick={onDelete} icon={<TrashIcon />} className="text-red-500 hover:bg-red-100" />
                     <IconButton onClick={() => setIsOpen(!isOpen)} icon={<ChevronDownIcon className={`transition-transform ${isOpen ? '' : '-rotate-90'}`} />} className="text-gray-500 hover:bg-gray-200" />
                 </div>
             </div>
-            {isOpen && <div className="p-4 space-y-4">{children}</div>}
+            {isOpen && <div className="px-4 pb-3 space-y-3">{children}</div>}
+        </div>
+    );
+};
+
+// ===== Preview Component =====
+const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
+    const isPMax = campaign.channel === 'Google' && (/pmax|performance\s*max|hotel/i.test(campaign.campaignType));
+    const isSearchLike = campaign.channel === 'Google' && (/brand|search/i.test(campaign.campaignType));
+    const google = campaign.googleAds;
+
+    const ads: any[] = ((google as any)?.ads || []);
+    const ags: any[] = (google?.assetGroups || []);
+
+    const [index, setIndex] = React.useState(0);
+    useEffect(() => { setIndex(0); }, [campaign.id]);
+
+    const total = isPMax ? Math.max(1, ags.length) : Math.max(1, ads.length);
+    const prev = () => setIndex(i => (i - 1 + total) % total);
+    const next = () => setIndex(i => (i + 1) % total);
+
+    const activeAd = !isPMax ? ads[index] || ads[0] : null;
+    const activeAg = isPMax ? ags[index] || ags[0] : null;
+
+    const urlHost = (() => {
+        const url = (activeAd?.finalUrl || activeAg?.finalUrl || '').trim();
+        try { return url ? new URL(url).host + (new URL(url).pathname.replace(/\/$/, '')) : campaign.market?.name?.toLowerCase().replace(/\s+/g,'') + '.example.com'; } catch { return url || 'example.com'; }
+    })();
+
+    const ICONS = {
+        youtube: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Ffbae06c51cba4bbea5cd052e5783c200?format=webp&width=64',
+        gmail: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fdb918b8748404fcb953edc0cb74f09bd?format=webp&width=64',
+        search: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F8f9ab081ad3348488441612a62167de8?format=webp&width=64',
+        feed: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2Fe105de11ebfb46e1a1bb055962787132?format=webp&width=64',
+        display: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F38ac8ca1583a4c4588674017cd5d7a67?format=webp&width=64',
+    } as const;
+
+    const Tabs = () => {
+        if (isSearchLike) {
+            return (
+                <div className="p-3 border-b border-gray-100 flex items-center justify-center gap-4 text-xs text-gray-600" role="tablist" aria-label="Preview surfaces">
+                    <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
+                </div>
+            );
+        }
+        // PMax / Hotel → show all
+        return (
+            <div className="p-3 border-b border-gray-100 flex items-center justify-around text-xs text-gray-600" role="tablist" aria-label="Preview surfaces">
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.youtube} width="20" height="20" decoding="async" alt="YouTube"/><span>YouTube</span></div>
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.gmail} width="20" height="20" decoding="async" alt="Gmail"/><span>Gmail</span></div>
+                <div className="flex flex-col items-center gap-1 border-b-2 border-gray-800 pb-1" role="tab" aria-selected="true"><img className="h-5 w-auto" src={ICONS.search} width="20" height="20" decoding="async" alt="Search"/><span>Search</span></div>
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.feed} width="20" height="20" decoding="async" alt="Feed"/><span>Feed</span></div>
+                <div className="flex flex-col items-center gap-1" role="tab" aria-selected="false"><img className="h-5 w-auto" src={ICONS.display} width="20" height="20" decoding="async" alt="Display"/><span>Display</span></div>
+            </div>
+        );
+    };
+
+    return (
+        <div className="bg-white relative" role="region" aria-label="Ad preview">
+            <Tabs />
+            <div className="p-6 relative" aria-live="polite">
+                <button aria-label="Previous variation" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button aria-label="Next variation" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
+                <div className="mx-auto max-w-md rounded-xl border border-gray-200 p-4 bg-white">
+                    <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
+                    <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
+                        {isSearchLike ? (
+                            <>
+                                {(activeAd?.headlines?.[0] || activeAg?.headlines?.[0] || 'Your headline here')}
+                                {(activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) ? ' | ' + (activeAd?.headlines?.[1] || activeAg?.headlines?.[1]) : ''}
+                            </>
+                        ) : (activeAg?.headlines?.[0] || activeAd?.headlines?.[0] || 'Performance Max preview')}
+                    </div>
+                    <div className="text-[12px] text-gray-700 mt-1">
+                        {(activeAd?.descriptions?.[0] || activeAg?.descriptions?.[0] || 'Preview of your ad copy will appear here based on your generated assets.')}
+                    </div>
+                    <div className="mt-3 space-y-2">
+                        <div className="h-6 bg-gray-100 rounded-md" />
+                        <div className="h-6 bg-gray-100 rounded-md" />
+                    </div>
+                    {total > 1 && (
+                        <div className="mt-3 text-center text-[11px] text-gray-500">Variation {index + 1} of {total}</div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };
 
 // ===== Channel-Specific Detail Components =====
 
-const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite }: { campaign: FullCampaign, brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string> }) => {
+const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string> }) => {
     const { googleAds } = campaign;
     if (!googleAds) return null;
 
+    const [creatingGroup, setCreatingGroup] = useState(false);
+    const [creatingAd, setCreatingAd] = useState(false);
+    const [expandedAdId, setExpandedAdId] = useState<string | null>(null);
+    const isPMax = /pmax|performance\s*max|hotel/i.test(campaign.campaignType);
+
+    const currentPlanCombos = useMemo(() => {
+        const combos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[] = [];
+        (allCampaigns || []).forEach(c => {
+            if (c.channel !== 'Google') return;
+            const groups = c.googleAds?.adGroups || [];
+            groups.forEach(g => combos.push({ campaignId: c.id, campaignName: c.campaignName, adGroupId: g.id, adGroupName: g.name }));
+        });
+        return combos;
+    }, [allCampaigns]);
+
+    const addAdGroup = async () => {
+        setCreatingGroup(true);
+        try {
+            const group = await generateGoogleAdGroup(brief, campaign);
+            onAdd(['googleAds', 'adGroups'], group);
+        } finally { setCreatingGroup(false); }
+    };
+
     return (
         <>
+            {googleAds.assetGroups && googleAds.assetGroups.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-2">
+                    <h3 className="text-sm font-semibold text-gray-700">Asset Groups (PMax)</h3>
+                </div>
+            )}
             {googleAds.assetGroups?.map((ag, agIndex) => (
                 <CollapsibleCard
                     key={ag.id}
@@ -232,12 +471,69 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'assetGroups', agIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'assetGroups', agIndex])}
                 >
-                    <EditableField value={ag.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'assetGroups', agIndex, 'finalUrl'], newValue)} />
+                    <EditableField value={ag.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'assetGroups', agIndex, 'finalUrl'], newValue)} fieldType="url" />
+
+                    <UploadSection
+                        label="Images"
+                        hint="Add up to 15 images"
+                        accept="image/*"
+                        max={15}
+                        items={ag.images || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 15).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.images || []), ...urls ].slice(0, 15);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'images'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.images || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); }}
+                    />
+
+                    <UploadSection
+                        label="Logos"
+                        hint="Add up to 5 logos"
+                        accept="image/*"
+                        max={5}
+                        items={ag.logos || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 5).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.logos || []), ...urls ].slice(0, 5);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.logos || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next); }}
+                    />
+
+                    <UploadSection
+                        label="Videos"
+                        hint="Add up to 5 videos"
+                        accept="video/*"
+                        max={5}
+                        items={ag.videos || []}
+                        onAddFiles={(files) => {
+                            const urls = Array.from(files).slice(0, 5).map(f => URL.createObjectURL(f));
+                            const next = [ ...(ag.videos || []), ...urls ].slice(0, 5);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'videos'], next);
+                        }}
+                        onRemove={(i) => { const next = (ag.videos || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'videos'], next); }}
+                    />
+
                     <EditableList title="Headlines" items={ag.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
                     <EditableList title="Long Headlines" items={ag.longHeadlines} assetType="long headline" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'longHeadlines'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'longHeadlines', i])} onGenerate={(e) => onGenerate('long headline', e)} onRewrite={(e, r) => onRewrite('long headline', e, r)} />
                     <EditableList title="Descriptions" items={ag.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'assetGroups', agIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'assetGroups', agIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'assetGroups', agIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
                 </CollapsibleCard>
             ))}
+
+            { !isPMax && (
+            <>
+            <div className="flex items-center justify-between px-4 py-2">
+                <h3 className="text-sm font-semibold text-gray-700">Ad Groups (Search/Brand)</h3>
+                <button onClick={addAdGroup} disabled={creatingGroup} className="px-3 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400 flex items-center gap-1">
+                    {creatingGroup ? <SpinnerIcon className="w-4 h-4 text-white"/> : <PlusIcon className="w-4 h-4"/>}
+                    Add Ad Group
+                </button>
+            </div>
+            {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
+            )}
+
             {googleAds.adGroups?.map((adg, adgIndex) => (
                 <CollapsibleCard
                     key={adg.id}
@@ -245,15 +541,106 @@ const GoogleCampaignDetails = ({ campaign, brief, onUpdate, onAdd, onDelete, onG
                     onUpdateTitle={(newTitle) => onUpdate(['googleAds', 'adGroups', adgIndex, 'name'], newTitle)}
                     onDelete={() => onDelete(['googleAds', 'adGroups', adgIndex])}
                 >
-                    {adg.ads.map((ad, adIndex) => (
-                        <div key={ad.id} className="border-t border-gray-200 mt-4 pt-4 first:mt-0 first:pt-0 first:border-0">
-                            <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'finalUrl'], newValue)} />
-                            <EditableList title="Headlines" items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
-                            <EditableList title="Descriptions" items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'adGroups', adgIndex, 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+                    <FieldSection title="Assign to campaign" hint="Select the campaign this ad group belongs to">
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={(adg as any).assignedCampaignName || campaign.campaignName}
+                                onChange={(e) => onUpdate(['googleAds','adGroups', adgIndex, 'assignedCampaignName'], e.target.value)}
+                                className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
+                            >
+                                <option value="">Unassigned</option>
+                                <option value={campaign.campaignName}>{campaign.campaignName}</option>
+                            </select>
+                            <div className="ml-auto text-xs text-gray-500">Assigned Ads: {(googleAds as any).ads ? ((googleAds as any).ads as any[]).filter(a => (a.assignedTargets || []).some((t:any)=> t.source==='plan' && t.adGroupId===adg.id) || a.assignedAdGroupId === adg.id).length : 0}</div>
                         </div>
-                    ))}
+                    </FieldSection>
                 </CollapsibleCard>
             ))}
+
+            <div className="flex items-center justify-between px-4 py-2">
+                <h3 className="text-sm font-semibold text-gray-700">Ads</h3>
+                <button
+                    onClick={async () => {
+                        try {
+                            setCreatingAd(true);
+                            const ad = await generateGoogleSearchAd(brief, campaign);
+                            const firstGroupId = googleAds.adGroups?.[0]?.id || null;
+                            (ad as any).assignedTargets = firstGroupId ? [{ source: 'plan', adGroupId: firstGroupId }] : [];
+                            const existing: any[] = (googleAds as any).ads || [];
+                            onUpdate(['googleAds', 'ads'], [ad, ...existing]);
+                            setExpandedAdId(ad.id);
+                        } finally {
+                            setCreatingAd(false);
+                        }
+                    }}
+                    disabled={creatingAd}
+                    className="px-3 py-1.5 text-xs rounded-md bg-gray-900 text-white hover:bg-gray-800 disabled:bg-gray-400 flex items-center gap-2"
+                >
+                    {creatingAd ? <SpinnerIcon className="w-4 h-4 text-white"/> : null}
+                    Create Ad
+                </button>
+            </div>
+            {(!(googleAds as any).ads || (googleAds as any).ads.length === 0) && (
+                <div className="text-xs text-gray-500 mb-2">No ads yet — click “Create Ad”.</div>
+            )}
+
+            {((googleAds as any).ads || []).map((ad: any, adIndex: number) => (
+                <CollapsibleCard
+                    key={ad.id}
+                    title={ad.headlines?.[0] || ad.finalUrl || `Ad ${adIndex + 1}`}
+                    onUpdateTitle={(newTitle) => onUpdate(['googleAds','ads', adIndex, 'headlines', 0], newTitle)}
+                    onDelete={() => onDelete(['googleAds','ads', adIndex])}
+                >
+                    <FieldSection title="Assign" hint="Select campaigns and ad groups">
+                        <AssignPillsPicker
+                            value={ad.assignedTargets || []}
+                            onChange={(next) => onUpdate(['googleAds','ads', adIndex, 'assignedTargets'], next)}
+                            planCombos={currentPlanCombos}
+                        />
+                    </FieldSection>
+                    {ad.assignedExternal && (
+                        <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div>
+                                <label className="block text-xs text-gray-600 mb-1">Existing Campaign Name</label>
+                                <input value={ad.assignedExternal.campaignName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'campaignName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. [UG]-Brand-USA" />
+                            </div>
+                            <div>
+                                <label className="block text-xs text-gray-600 mb-1">Existing Ad Group Name</label>
+                                <input value={ad.assignedExternal.adGroupName} onChange={(e)=> onUpdate(['googleAds','ads', adIndex, 'assignedExternal', 'adGroupName'], e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1" placeholder="e.g. Brand-Exact" />
+                            </div>
+                        </div>
+                    )}
+                    <FieldSection title="Final URL" hint="Set the destination page for this ad">
+                        <EditableField value={ad.finalUrl} onSave={(newValue) => onUpdate(['googleAds', 'ads', adIndex, 'finalUrl'], newValue)} fieldType="url" />
+                    </FieldSection>
+                    <FieldSection title="Headlines" hint="Add up to 15 headlines">
+                        <EditableList title={`Headlines (${ad.headlines?.length || 0}/15)`} items={ad.headlines} assetType="headline" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'headlines', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'headlines'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'headlines', i])} onGenerate={(e) => onGenerate('headline', e)} onRewrite={(e, r) => onRewrite('headline', e, r)} />
+                    </FieldSection>
+                    <FieldSection title="Descriptions" hint="Add up to 4 descriptions">
+                        <EditableList title={`Descriptions (${ad.descriptions?.length || 0}/4)`} items={ad.descriptions} assetType="description" onUpdate={(i, v) => onUpdate(['googleAds', 'ads', adIndex, 'descriptions', i], v)} onAdd={(v) => onAdd(['googleAds', 'ads', adIndex, 'descriptions'], v)} onDelete={(i) => onDelete(['googleAds', 'ads', adIndex, 'descriptions', i])} onGenerate={(e) => onGenerate('description', e)} onRewrite={(e, r) => onRewrite('description', e, r)} />
+                    </FieldSection>
+                    <FieldSection title={`Keywords (${(ad.keywords?.length || 0)})`} hint="Add relevant search terms">
+                        {(() => {
+                            const kws = ad.keywords || [];
+                            const updateKeywords = (arr: string[]) => onUpdate(['googleAds','ads', adIndex, 'keywords'], arr);
+                            return (
+                                <div>
+                                    <ul className="space-y-1">
+                                        {kws.map((kw: string, i: number) => (
+                                            <li key={i} className="flex items-center space-x-2 group bg-gray-50 p-1 rounded-md">
+                                                <EditableField value={kw} onSave={(v) => { const next = [...kws]; next[i] = v; updateKeywords(next); }} fieldType="keyword" />
+                                                <IconButton onClick={() => { const next = kws.filter((_: any, idx: number)=> idx!==i); updateKeywords(next); }} icon={<TrashIcon className="w-3 h-3"/>} className="text-red-500 hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <IconButton onClick={async () => { const newKw = await onGenerate('keyword', kws); updateKeywords([...(kws as string[]), newKw]); }} icon={<PlusIcon className="w-4 h-4"/>} className="mt-2 text-gray-600 hover:bg-gray-200 w-full justify-start">Add keyword</IconButton>
+                                </div>
+                            )
+                        })()}
+                    </FieldSection>
+                </CollapsibleCard>
+            ))}
+            </>) }
         </>
     );
 };
@@ -327,7 +714,7 @@ const ChannelButton = ({ channel, icon, selected, onClick }: { channel: Channel,
     )
 }
 
-const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMarkets }: { label: string, selectedMarkets: Market[], onAdd: (market: Market) => void, onRemove: (market: Market) => void, allSelectedMarkets: Market[] }) => {
+const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMarkets, onClear }: { label: string, selectedMarkets: Market[], onAdd: (market: Market) => void, onRemove: (market: Market) => void, allSelectedMarkets: Market[], onClear?: () => void }) => {
     const [query, setQuery] = useState('');
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -357,7 +744,12 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
 
     return (
         <div ref={containerRef}>
-            <label className="text-sm font-medium text-gray-700">{label}</label>
+            <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">{label}</label>
+                {onClear && selectedMarkets.length > 0 && (
+                    <button onClick={onClear} className="text-xs text-gray-500 hover:text-gray-700">Clear</button>
+                )}
+            </div>
             <div className="relative mt-1">
                 <div className="w-full p-2 border border-gray-200 rounded-lg flex flex-wrap gap-2 min-h-[42px]">
                     {selectedMarkets.map(market => (
@@ -373,17 +765,25 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         onFocus={() => setIsOpen(true)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && filteredCountries[0]) handleSelect(filteredCountries[0]);
+                            if (e.key === 'Escape') setIsOpen(false);
+                        }}
                         placeholder="Search for a country..."
                         className="flex-grow p-0 border-none focus:ring-0"
                     />
                 </div>
-                {isOpen && filteredCountries.length > 0 && (
+                {isOpen && (
                     <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-                        {filteredCountries.map(c => (
-                            <li key={c.iso} onClick={() => handleSelect(c)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">
-                                {c.name}
-                            </li>
-                        ))}
+                        {filteredCountries.length === 0 ? (
+                            <li className="px-4 py-3 text-sm text-gray-500">No countries match "{query}"</li>
+                        ) : (
+                            filteredCountries.map(c => (
+                                <li key={c.iso} onClick={() => handleSelect(c)} className="px-4 py-2 cursor-pointer hover:bg-gray-100">
+                                    {c.name}
+                                </li>
+                            ))
+                        )}
                     </ul>
                 )}
             </div>
@@ -393,6 +793,7 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
 
 const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { label: string, options: string[], selectedOptions: string[], onToggle: (option: string) => void }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [query, setQuery] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -405,52 +806,255 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const filtered = useMemo(() => {
+        const q = query.toLowerCase();
+        return options.filter(o => o.toLowerCase().includes(q));
+    }, [options, query]);
+
+    const visibleSelected = selectedOptions.slice(0, 2);
+    const extraCount = Math.max(0, selectedOptions.length - visibleSelected.length);
+
     return (
-        <div ref={containerRef}>
+        <div ref={containerRef} className="max-w-md">
              <label className="text-sm font-medium text-gray-700">{label}</label>
              <div className="relative mt-1">
-                <button onClick={() => setIsOpen(!isOpen)} className="w-full p-2 border border-gray-200 rounded-lg flex justify-between items-center text-left min-h-[42px]">
-                    <div className="flex flex-wrap gap-1.5">
-                        {selectedOptions.length > 0 
-                            ? selectedOptions.map(option => (
-                                <span key={option} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full">
-                                    {option}
-                                </span>
-                            ))
-                            : <span className="text-gray-500">Select campaign types...</span>}
+                <button onClick={() => setIsOpen(!isOpen)} className="w-full h-10 px-2 border border-gray-200 rounded-lg flex justify-between items-center text-left">
+                    <div className="flex flex-wrap gap-1.5 items-center">
+                        {selectedOptions.length > 0 ? (
+                            <>
+                                {visibleSelected.map(option => (
+                                    <span key={option} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                        {option}
+                                    </span>
+                                ))}
+                                {extraCount > 0 && (
+                                    <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">+{extraCount}</span>
+                                )}
+                            </>
+                        ) : (
+                            <span className="text-gray-500 text-sm">Select campaign types...</span>
+                        )}
                     </div>
-                    <ChevronDownIcon className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDownIcon className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && (
-                     <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-y-auto">
-                        {options.map(option => (
-                            <li key={option} onClick={() => onToggle(option)} className="px-4 py-2 cursor-pointer hover:bg-gray-100 flex items-center justify-between">
-                               <span>{option}</span>
-                               {selectedOptions.includes(option) && (
-                                   <svg className="w-5 h-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                   </svg>
-                               )}
-                            </li>
-                        ))}
-                    </ul>
+                    <div className="absolute z-[1000] mt-1 w-[300px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-lg">
+                        <div className="p-2 border-b border-gray-100">
+                            <input
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                placeholder="Search types"
+                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md"
+                            />
+                        </div>
+                        <div className="max-h-48 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {filtered.length === 0 ? (
+                                <div className="col-span-2 text-xs text-gray-500 px-2 py-1.5">No matches</div>
+                            ) : (
+                                filtered.map(option => {
+                                    const active = selectedOptions.includes(option);
+                                    return (
+                                        <button
+                                            type="button"
+                                            key={option}
+                                            onClick={() => onToggle(option)}
+                                            className={`flex items-center justify-between w-full text-sm px-2 py-1.5 rounded-md border ${active ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-white border-gray-200 text-gray-700'} hover:bg-gray-50`}
+                                        >
+                                            <span className="truncate">{option}</span>
+                                            {active && (
+                                                <svg className="w-4 h-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                            )}
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 p-2 border-t border-gray-100">
+                            <button onClick={() => options.forEach(o => !selectedOptions.includes(o) && onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">Select All</button>
+                            <button onClick={() => selectedOptions.forEach(o => onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Clear</button>
+                            <button onClick={() => setIsOpen(false)} className="ml-auto text-xs px-2 py-1 rounded-full bg-black text-white hover:bg-gray-800">Done</button>
+                        </div>
+                    </div>
                 )}
              </div>
         </div>
     )
 }
 
-const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
-    const [inputMode, setInputMode] = useState<InputMode>('prompt');
-    const [brief, setBrief] = useState("");
-    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Meta']);
+// ===== Guided Prompt =====
+type GuidedPromptRequirement = {
+    id: string;
+    label: string;
+    instruction: string;
+    detect: (text: string) => boolean;
+    suggestions?: string[];
+    format?: (choice: string) => string;
+};
 
-    // State for Manual Mode
-    const [manualPrimaryMarkets, setManualPrimaryMarkets] = useState<Market[]>([]);
-    const [manualSecondaryMarkets, setManualSecondaryMarkets] = useState<Market[]>([]);
-    const [manualCampaignTypes, setManualCampaignTypes] = useState<string[]>([]);
-    
-    const allSelectedMarkets = useMemo(() => [...manualPrimaryMarkets, ...manualSecondaryMarkets], [manualPrimaryMarkets, manualSecondaryMarkets]);
+const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string; onChange: (text: string) => void; schema: GuidedPromptRequirement[]; placeholder?: string; }) => {
+    const status = useMemo(() => schema.map(req => ({ id: req.id, label: req.label, done: req.detect(value) })), [schema, value]);
+    const missing = useMemo(() => status.filter(s => !s.done).map(s => schema.find(r => r.id === s.id)!).filter(Boolean), [status, schema]);
+
+    const has = useCallback((id: string) => {
+        const req = schema.find(r => r.id === id);
+        return req ? req.detect(value) : false;
+    }, [schema, value]);
+
+    const topText = useMemo(() => {
+        const raw = (value || '').trim();
+        if (missing.length === 0) return "Looks great! Any extra details about the hotel or creative angle will help us craft even better campaigns — but this is enough to kick things off 🚀";
+        if (raw.length === 0 || missing.length === schema.length) {
+            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ✍️';
+        }
+        const mkt = has('market');
+        const typ = has('type');
+        if (!mkt && typ) return 'Nice direction! Which markets do you want to target? 🌍';
+        if (mkt && !typ) return 'That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
+        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
+        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
+        return 'You\'re doing great — add any extra details you think matter, or proceed when ready ✅';
+    }, [value, missing, schema, has]);
+
+    return (
+        <div>
+            <div className="mb-2 text-xs bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-gray-700">
+                {topText}
+            </div>
+            <textarea
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                className="w-full h-20 p-3 border-0 rounded-lg outline-none focus:outline-none focus:ring-0 resize-none text-gray-800 placeholder-gray-500 text-base"
+                placeholder={placeholder || 'Enter a task'}
+            />
+        </div>
+    );
+};
+
+// ===== Markets data and helpers =====
+const MARKETS: { code: string; name: string }[] = [
+  { code: "FR", name: "France" },
+  { code: "DE", name: "Germany" },
+  { code: "ES", name: "Spain" },
+  { code: "IT", name: "Italy" },
+  { code: "PT", name: "Portugal" },
+  { code: "NL", name: "Netherlands" },
+  { code: "BE", name: "Belgium" },
+  { code: "DK", name: "Denmark" },
+  { code: "SE", name: "Sweden" },
+  { code: "NO", name: "Norway" },
+  { code: "FI", name: "Finland" },
+  { code: "AE", name: "UAE" },
+  { code: "SA", name: "Saudi Arabia" },
+  { code: "QA", name: "Qatar" },
+  { code: "GB", name: "UK" },
+  { code: "IE", name: "Ireland" },
+  { code: "CH", name: "Switzerland" },
+  { code: "AT", name: "Austria" }
+];
+const findMarket = (c: string) => MARKETS.find(m => m.code === c);
+const LANGUAGE_LIST: { code: string; name: string }[] = [
+  { code: 'en', name: 'English' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'nl', name: 'Dutch' },
+  { code: 'sv', name: 'Swedish' },
+  { code: 'no', name: 'Norwegian' },
+  { code: 'da', name: 'Danish' },
+  { code: 'fi', name: 'Finnish' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'zh', name: 'Chinese' }
+];
+const langNameFromCode = (code: string) => LANGUAGE_LIST.find(l => l.code === code)?.name || code;
+const langCodeFromName = (name: string) => LANGUAGE_LIST.find(l => l.name === name)?.code || name;
+const suggestClusterName = (codes: string[]) => {
+  const names = codes.map(c => findMarket(c)?.name || c);
+  if (names.length <= 3) return names.join(" · ");
+  return `${names[0]} +${names.length - 1}`;
+};
+const dedupeCodes = (codes: string[], assignedSet: Set<string>) => Array.from(new Set(codes)).filter(c => !assignedSet.has(c));
+const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
+  const count = picked.length;
+  const anyNew = picked.some(c => !assignedSet.has(c));
+  return {
+    showAddMarket: count === 1 && anyNew,
+    showAddMarkets: count >= 2 && anyNew,
+    showAddCluster: count >= 2 && anyNew,
+  };
+};
+
+type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
+
+const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
+    const [brief, setBrief] = useState("");
+    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
+    const [showMarkets, setShowMarkets] = useState(false);
+    const [showUpload, setShowUpload] = useState(false);
+
+    // Markets dropdown state
+    const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
+    const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
+    const [q, setQ] = useState('');
+    const [picked, setPicked] = useState<string[]>([]);
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const onDocClick = (e: MouseEvent) => {
+            if (!showMarkets) return;
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+                setShowMarkets(false);
+                setQ('');
+                setPicked([]);
+            }
+        };
+        document.addEventListener('mousedown', onDocClick);
+        return () => document.removeEventListener('mousedown', onDocClick);
+    }, [showMarkets]);
+    const visibleMarkets = useMemo(() => {
+        const base = MARKETS.filter(m => !assigned.has(m.code) || picked.includes(m.code));
+        if (!q.trim()) return base;
+        const s = q.trim().toLowerCase();
+        return base.filter(m => m.name.toLowerCase().includes(s) || m.code.toLowerCase().includes(s));
+    }, [q, assigned, picked]);
+    const togglePick = (code: string) => setPicked(p => p.includes(code) ? p.filter(x => x !== code) : [...p, code]);
+    const addMarketSingles = (codes: string[]) => {
+        const add = dedupeCodes(codes, assigned);
+        if (!add.length) return;
+        setMarketItems(it => [...it, ...add.map(c => ({ type: 'single', name: findMarket(c)?.name || c, codes: [c] }))]);
+    };
+    const addMarketCluster = (codes: string[]) => {
+        const add = dedupeCodes(codes, assigned);
+        if (add.length < 2) return;
+        const name = suggestClusterName(add);
+        setMarketItems(it => [...it, { type: 'cluster', name, codes: add }]);
+    };
+    const removeItem = (index: number) => setMarketItems(it => it.filter((_, i) => i !== index));
+
+    // Attachments
+    const [attachments, setAttachments] = useState<{name:string; size:number}[]>([]);
+    const onFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+        setAttachments(files.map(f => ({ name: f.name, size: f.size })));
+    };
+    const removeAttachment = (index: number) => setAttachments(att => att.filter((_, i) => i !== index));
+    const uploadInputRef = useRef<HTMLInputElement | null>(null);
+    const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([]);
+
+    const detectKey = () => {
+        try {
+            return Boolean(
+                (import.meta as any)?.env?.VITE_GEMINI_API_KEY ||
+                (import.meta as any)?.env?.GEMINI_API_KEY ||
+                (window as any)?.__GEMINI_API_KEY__ ||
+                localStorage.getItem('GEMINI_API_KEY') ||
+                localStorage.getItem('gemini_api_key')
+            );
+        } catch { return false; }
+    };
+    const [hasKey, setHasKey] = useState<boolean>(detectKey());
+    const [keyInput, setKeyInput] = useState<string>('');
 
     const handleToggleChannel = (channel: Channel) => {
         setSelectedChannels(prev =>
@@ -460,102 +1064,190 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
         );
     };
 
+    const guidedSchema: GuidedPromptRequirement[] = useMemo(() => {
+        const countryNames = COUNTRIES.map(c => c.name);
+        const countryIsos = COUNTRIES.map(c => c.iso);
+        return [
+            {
+                id: 'market',
+                label: 'Market',
+                instruction: 'Add the markets you want to target',
+                detect: (text: string) => {
+                    const t = text.toLowerCase();
+                    const byName = countryNames.some(n => t.includes(n.toLowerCase()));
+                    const byIso = countryIsos.some(iso => new RegExp(`\\b${iso.toLowerCase()}\\b`).test(t));
+                    return byName || byIso || /market\s*:/.test(t);
+                },
+            },
+            {
+                id: 'type',
+                label: 'Campaign Type',
+                instruction: 'Specify which campaign type you want to create',
+                detect: (text: string) => {
+                    const t = text.toLowerCase();
+                    return ALL_CAMPAIGN_TYPES.some(ct => t.includes(ct.toLowerCase())) || /campaign\s*type\s*:/.test(t);
+                },
+            },
+            {
+                id: 'hotel',
+                label: 'Hotel Details',
+                instruction: 'Tell us about the hotel (name, location, stars, USPs)',
+                detect: (text: string) => /hotel|resort|property|rooms|stars|amenities|spa|pool|boutique|located|location|nearby/i.test(text),
+            },
+            {
+                id: 'angle',
+                label: 'Creative Direction',
+                instruction: 'Share your angle/creative direction',
+                detect: (text: string) => /angle|creative direction|theme|season(al)?|luxury|family|deal|romance|business|wellness|eco/i.test(text),
+            },
+        ];
+    }, []);
+
     const handleGenerate = () => {
-        if (!brief.trim()) return;
-        
-        if (inputMode === 'manual') {
-            onGenerate(brief, selectedChannels, { 
-                primaryMarkets: manualPrimaryMarkets, 
-                secondaryMarkets: manualSecondaryMarkets, 
-                campaignTypes: manualCampaignTypes 
-            });
-        } else {
-            onGenerate(brief, selectedChannels);
+        if (!brief.trim() || !hasKey) return;
+        const singles = marketItems.filter(i => i.type === 'single');
+        const clusters = marketItems.filter(i => i.type === 'cluster');
+        const primaryMarkets: Market[] = singles.map(i => {
+            const code = i.codes[0];
+            const country = { name: findMarket(code)?.name || code, iso: code } as Omit<Market,'browserLangs'>;
+            return getMarketWithLangs(country);
+        });
+        let secondaryMarkets: Market[] = [];
+        if (clusters.length) {
+            const allCodes = Array.from(new Set(clusters.flatMap(c => c.codes)));
+            const name = allCodes.map(c => findMarket(c)?.name || c).join(', ');
+            const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
+            secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
         }
+        const manual = (primaryMarkets.length || secondaryMarkets.length) ? { primaryMarkets, secondaryMarkets, campaignTypes: [] as string[] } : undefined;
+        onGenerate(brief, selectedChannels, manual);
     };
-    
-    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || (inputMode === 'manual' && (allSelectedMarkets.length === 0 || manualCampaignTypes.length === 0));
+
+    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey;
 
     return (
-        <div className="flex justify-center items-start pt-8 sm:pt-16">
-            <div className="w-full max-w-3xl space-y-6">
-                <h2 className="text-3xl font-bold text-gray-800 text-center tracking-tight">What campaign you would like to launch</h2>
-                <div className="bg-white border border-gray-200 rounded-2xl p-2 shadow-sm">
-                    {/* Mode Toggle */}
-                    <div className="flex justify-center p-2">
-                        <div className="bg-gray-100 p-1 rounded-full flex space-x-1">
-                            <button onClick={() => setInputMode('prompt')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${inputMode === 'prompt' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                                AI Prompt
-                            </button>
-                            <button onClick={() => setInputMode('manual')} className={`px-4 py-1.5 text-sm font-semibold rounded-full transition-colors ${inputMode === 'manual' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                                Manual Setup
-                            </button>
-                        </div>
-                    </div>
-                    
-                    {inputMode === 'prompt' ? (
-                        <textarea
-                            value={brief}
-                            onChange={(e) => setBrief(e.target.value)}
-                            className="w-full h-32 p-3 border-0 rounded-lg focus:ring-0 resize-none text-gray-700 placeholder-gray-400"
-                            placeholder="Enter all the details about the campaign you would like to create, including markets, campaign types, and creative direction..."
-                        />
-                    ) : (
-                         <div className="p-3 space-y-4">
-                            <div>
-                                 <label className="text-sm font-medium text-gray-700">Creative Brief</label>
-                                 <textarea
-                                    value={brief}
-                                    onChange={(e) => setBrief(e.target.value)}
-                                    className="w-full h-24 mt-1 p-3 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-700 placeholder-gray-400"
-                                    placeholder="Describe your product, target audience, and key messaging..."
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                               <MarketSelector 
-                                    label="Primary Markets (separate campaigns)"
-                                    selectedMarkets={manualPrimaryMarkets}
-                                    onAdd={(market) => setManualPrimaryMarkets(prev => [...prev, market])}
-                                    onRemove={(market) => setManualPrimaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                    allSelectedMarkets={allSelectedMarkets}
-                                />
-                                <MarketSelector 
-                                    label="Secondary Markets (clustered campaign)"
-                                    selectedMarkets={manualSecondaryMarkets}
-                                    onAdd={(market) => setManualSecondaryMarkets(prev => [...prev, market])}
-                                    onRemove={(market) => setManualSecondaryMarkets(prev => prev.filter(m => m.iso !== market.iso))}
-                                    allSelectedMarkets={allSelectedMarkets}
-                                />
-                            </div>
-                             <MultiSelectDropdown
-                                label="Campaign Types"
-                                options={ALL_CAMPAIGN_TYPES}
-                                selectedOptions={manualCampaignTypes}
-                                onToggle={(option) => {
-                                    setManualCampaignTypes(prev => 
-                                        prev.includes(option) 
-                                            ? prev.filter(t => t !== option)
-                                            : [...prev, option]
-                                    )
-                                }}
-                            />
-                         </div>
-                    )}
+        <div className="flex justify-center items-start pt-16 sm:pt-24">
+            <div className="w-full max-w-2xl space-y-6">
+                <div className="text-center">
+                    <h2 className="text-lg font-medium text-gray-800 mb-6">What campaign you would like to launch</h2>
+                </div>
 
-                    <div className="flex justify-between items-center mt-2 p-2">
-                        <div className="flex items-center space-x-2">
-                            <ChannelButton channel="TikTok" icon={<TiktokIcon />} selected={selectedChannels.includes('TikTok')} onClick={handleToggleChannel} />
-                            <ChannelButton channel="Google" icon={<GoogleIcon />} selected={selectedChannels.includes('Google')} onClick={handleToggleChannel} />
-                            <ChannelButton channel="Meta" icon={<MetaIcon />} selected={selectedChannels.includes('Meta')} onClick={handleToggleChannel} />
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                    <div className="p-4 pb-3">
+                        <div className="mb-4">
+                            <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
                         </div>
-                        <button 
-                            onClick={handleGenerate} 
-                            disabled={isGenerateDisabled}
-                            className="flex items-center justify-center space-x-2 bg-black text-white font-semibold py-2 px-5 rounded-full hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <SparklesIcon className="w-4 h-4" />
-                            <span>Create campaign</span>
-                        </button>
+
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 relative" ref={dropdownRef}>
+                                <button
+                                    onClick={() => setShowMarkets(v=>!v)}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 19 20" fill="none">
+                                        <path d="M6.33913 10.6787H11.7386C11.6566 12.503 11.2521 14.1831 10.678 15.4135C10.3555 16.1065 10.0076 16.5958 9.68518 16.8956C9.36839 17.1926 9.1506 17.2407 9.03746 17.2407C8.92433 17.2407 8.70654 17.1926 8.38975 16.8956C8.06731 16.5958 7.71941 16.1036 7.39697 15.4135C6.82279 14.1831 6.41832 12.503 6.3363 10.6787H6.33913ZM11.7415 9.32103H6.34196C6.42115 7.49668 6.82562 5.81658 7.39979 4.58621C7.72224 3.89607 8.07014 3.40392 8.39258 3.1041C8.70937 2.80712 8.92716 2.75903 9.04029 2.75903C9.15343 2.75903 9.37122 2.80712 9.68801 3.1041C10.0104 3.40392 10.3583 3.89607 10.6808 4.58621C11.255 5.81658 11.6594 7.49668 11.7415 9.32103ZM13.0991 9.32103C13.0001 6.89988 12.375 4.65126 11.4614 3.17481C14.0664 4.09689 15.9841 6.46995 16.25 9.32103H13.0991ZM16.25 10.6787C15.9841 13.5298 14.0664 15.9028 11.4614 16.8249C12.375 15.3484 13.0001 13.0998 13.0991 10.6787H16.25ZM4.98147 10.6787C5.08047 13.0998 5.70556 15.3484 6.61914 16.8249C4.01415 15.9 2.09646 13.5298 1.83059 10.6787H4.98147ZM1.83059 9.32103C2.09646 6.46995 4.01415 4.09689 6.61914 3.17481C5.70556 4.65126 5.08047 6.89988 4.98147 9.32103H1.83059Z" fill="currentColor"/>
+                                    </svg>
+                                    Markets
+                                </button>
+                                {showMarkets && (
+                                    <div className="absolute left-0 top-12 w-80 rounded-2xl border bg-white shadow-xl p-3 z-30">
+                                        <div className="text-sm font-medium mb-2">Add markets</div>
+                                        <input autoFocus value={q} onChange={(e)=>setQ(e.target.value)} placeholder="Search countries…" className="w-full rounded-xl border px-3 py-2 text-sm mb-2" />
+                                        <div className="max-h-64 overflow-auto space-y-1 pr-1">
+                                            {visibleMarkets.length > 0 ? (
+                                                visibleMarkets.map(m => (
+                                                    <label key={m.code} className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                        <input type="checkbox" className="h-4 w-4" checked={picked.includes(m.code)} onChange={() => togglePick(m.code)} />
+                                                        <span className="flex-1">{m.name}</span>
+                                                    </label>
+                                                ))
+                                            ) : (
+                                                <div className="text-xs text-gray-400 p-2">No results</div>
+                                            )}
+                                        </div>
+                                        {(() => { const acts = actionsForSelection(picked, assigned); return (
+                                            <>
+                                                {acts.showAddMarket && (
+                                                    <div className="mt-3"><button onClick={() => { addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white w-full">Add market</button></div>
+                                                )}
+                                                {(acts.showAddMarkets || acts.showAddCluster) && (
+                                                    <div className="mt-3 flex gap-2">
+                                                        <button onClick={() => { if (acts.showAddMarkets) addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddMarkets} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white flex-1 disabled:opacity-40">Add markets</button>
+                                                        <button onClick={() => { if (acts.showAddCluster) addMarketCluster(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddCluster} className="px-3 py-2 text-sm rounded-xl border flex-1 disabled:opacity-40">Add cluster</button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );})()}
+                                    </div>
+                                )}
+
+                                <input ref={uploadInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
+                                <button onClick={() => uploadInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                                        <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
+                                    </svg>
+                                    Upload
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <div className="relative">
+                                    <ChannelDropdown selected={selectedChannels[0] || 'Google'} onSelect={(c) => setSelectedChannels([c])} />
+                                </div>
+
+                                <button
+                                    onClick={handleGenerate}
+                                    disabled={isGenerateDisabled}
+                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <SparklesIcon className="w-4 h-4" />
+                                    Create campaign
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 flex items-start gap-3 flex-wrap">
+                            <div className="shrink-0 text-xs text-gray-500 mt-1">Countries</div>
+                            <div className="flex items-center gap-2 flex-1 flex-wrap">
+                                {marketItems.length === 0 && (
+                                    <span className="text-xs text-gray-400">Use 🌍 to add markets or clusters</span>
+                                )}
+                                {marketItems.map((c, i) => (
+                                    <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
+                                        {c.type === 'single' ? '🌐' : '🗂️'} {c.name}
+                                        <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">×</button>
+                                    </span>
+                                ))}
+                            </div>
+                            {attachments.map((f, i) => (
+                                <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
+                                    📎 {f.name}
+                                    <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
+                                </span>
+                            ))}
+                        </div>
+
+                        {!hasKey && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                                <details className="text-xs text-gray-500">
+                                    <summary className="cursor-pointer list-none underline underline-offset-2 decoration-dotted">Set Gemini key</summary>
+                                    <div className="mt-2 flex gap-2">
+                                        <input
+                                            type="password"
+                                            value={keyInput}
+                                            onChange={(e) => setKeyInput(e.target.value)}
+                                            placeholder="Paste Gemini API key"
+                                            className="px-2 py-1 text-xs border border-gray-200 rounded-md"
+                                        />
+                                        <button
+                                            onClick={() => { if (keyInput.trim()) { try { localStorage.setItem('GEMINI_API_KEY', keyInput.trim()); setHasKey(true); } catch {} } }}
+                                            className="px-2 py-1 text-xs rounded-md bg-black text-white hover:bg-gray-800"
+                                        >Save</button>
+                                    </div>
+                                    <p className="mt-1 text-[10px] text-gray-500">Stored locally in your browser.</p>
+                                </details>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -564,7 +1256,7 @@ const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Chan
 };
 
 
-const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summaries: CampaignSummary[], onSelect: (id: string) => void, onConfirm: () => void, onBack: () => void }) => {
+const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate }: { summaries: CampaignSummary[], onSelect: (id: string) => void, onConfirm: () => void, onBack: () => void, onUpdate: (id: string, updater: (s: CampaignSummary) => CampaignSummary) => void }) => {
     const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
     const sortedSummaries = useMemo(() => {
@@ -611,6 +1303,13 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summ
         return sortConfig.direction === 'ascending' ? '↑' : '↓';
     };
 
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    const countryLabels = COUNTRIES.map(c => `${c.name} (${c.iso})`);
+    const parseIso = (label: string) => (label.match(/\(([A-Z]{2})\)$/)?.[1] || '').trim();
+    const marketNamesFromLabels = (labels: string[]) => labels.map(l => l.replace(/ \([A-Z]{2}\)$/, ''));
+    const allLangOptions = Array.from(new Set(COUNTRIES.flatMap(c => getMarketWithLangs(c as any).browserLangs)));
+
     const headers = [
         { key: 'channel', label: 'Channel' },
         { key: 'campaignName', label: 'Campaign Name' },
@@ -618,20 +1317,13 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summ
         { key: 'market', label: 'Market' },
         { key: 'browserLangs', label: 'Browser Langs' },
         { key: 'languages', label: 'Ad Langs' },
+        { key: 'actions', label: 'Actions' },
     ];
 
     return (
-        <div className="space-y-4">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-800">2. Review and confirm campaign plan</h2>
-                 <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-                    <BackIcon />
-                    <span>Back to brief</span>
-                </button>
-            </div>
-            <p className="text-gray-600">Here is the high-level campaign structure generated from your brief. Review the campaigns below and click "Generate Details" to proceed.</p>
-            <div className="overflow-x-auto border border-gray-200 rounded-lg">
-                <table className="w-full text-sm text-left text-gray-600">
+        <div className="space-y-0">
+            <div className={`border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible`}>
+                <table className="w-full text-sm text-left text-gray-600 relative">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                             {headers.map(h => (
@@ -642,28 +1334,104 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack }: { summ
                         </tr>
                     </thead>
                     <tbody>
-                        {sortedSummaries.map(s => (
-                            <tr key={s.id} className="bg-white border-b hover:bg-gray-50">
+                        {sortedSummaries.map(s => {
+                            const isEditing = editingId === s.id;
+                            const marketLabelList = (s.market.iso === 'WW' ? s.market.name.split(',').map(n => n.trim()) : [s.market.name]).map(name => `${name} (${COUNTRIES.find(c=>c.name===name)?.iso || s.market.iso})`);
+                            return (
+                            <React.Fragment key={s.id}>
+                            <tr className="bg-white border-b hover:bg-gray-50">
                                 <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{channelIcons[s.channel]}</span><span>{s.channel}</span></td>
-                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
-                                <td className="px-6 py-4">{s.campaignType}</td>
-                                <td className="px-6 py-4">{s.market.name} ({s.market.iso})</td>
-                                <td className="px-6 py-4">{s.market.browserLangs.join(', ')}</td>
-                                <td className="px-6 py-4">{s.languages.join(', ')}</td>
+                                <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
+                                <td className="px-6 py-3">{s.campaignType}</td>
+                                <td className="px-6 py-3">{s.market.name} ({s.market.iso})</td>
+                                <td className="px-6 py-3">{s.market.browserLangs.join(', ')}</td>
+                                <td className="px-6 py-3">{s.languages.map(langNameFromCode).join(', ')}</td>
+                                <td className="px-6 py-3 text-right"><button onClick={() => setEditingId(s.id)} className="text-xs px-2 py-1 rounded-md border border-gray-200">Edit</button></td>
                             </tr>
-                        ))}
+                            {isEditing && (
+                                <tr className="bg-gray-50 border-b" key={`${s.id}-edit`}>
+                                    <td colSpan={headers.length} className="px-6 py-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            <div>
+                                                <label className="block text-xs text-gray-600 mb-1">Campaign Name</label>
+                                                <input value={s.campaignName} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs text-gray-600 mb-1">Campaign Type</label>
+                                                <select value={s.campaignType} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
+                                                    <option value="Brand">Brand</option>
+                                                    <option value="PMax">PMax</option>
+                                                    <option value="Remarketing">Remarketing</option>
+                                                    <option value="Hotel Ads">Hotel Ads</option>
+                                                </select>
+                                            </div>
+                                            <div className="sm:col-span-2">
+                                                <MultiSelectDropdown label="Markets" options={countryLabels} selectedOptions={marketLabelList} onToggle={(label) => {
+                                                    const currentSet = new Set<string>(marketLabelList);
+                                                    if (currentSet.has(label)) currentSet.delete(label); else currentSet.add(label);
+                                                    const arr = Array.from(currentSet);
+                                                    const isos = arr.map(parseIso).filter(Boolean);
+                                                    const names = marketNamesFromLabels(arr);
+                                                    const langs = Array.from(new Set(isos.flatMap(iso => getMarketWithLangs({ name: findMarket(iso)?.name || iso, iso } as any).browserLangs)));
+                                                    const nextMarket: Market = arr.length > 1 ? { name: names.join(', '), iso: 'WW', browserLangs: langs } : getMarketWithLangs({ name: names[0] || s.market.name, iso: isos[0] || s.market.iso } as any);
+                                                    onUpdate(s.id, prev => ({...prev, market: nextMarket }));
+                                                }} />
+                                            </div>
+                                            <div>
+                                                <MultiSelectDropdown label="Browser Langs" options={allLangOptions} selectedOptions={s.market.browserLangs} onToggle={(opt) => {
+                                                    const set = new Set(s.market.browserLangs);
+                                                    set.has(opt) ? set.delete(opt) : set.add(opt);
+                                                    onUpdate(s.id, prev => ({...prev, market: { ...prev.market, browserLangs: Array.from(set) }}));
+                                                }} />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-700">Ad Language</label>
+                                                <select
+                                                    value={s.languages[0] ? langNameFromCode(s.languages[0]) : ''}
+                                                    onChange={(e) => {
+                                                        const selected = e.target.value;
+                                                        const code = langCodeFromName(selected);
+                                                        onUpdate(s.id, prev => ({ ...prev, languages: selected ? [code] : [] }));
+                                                    }}
+                                                    className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
+                                                >
+                                                    <option value="">Select language</option>
+                                                    {LANGUAGE_LIST.map(l => (
+                                                        <option key={l.code} value={l.name}>{l.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 flex justify-end gap-2">
+                                            <button onClick={() => setEditingId(null)} className="text-xs px-3 py-1.5 rounded-md bg-black text-white">Done</button>
+                                            <button onClick={() => setEditingId(null)} className="text-xs px-3 py-1.5 rounded-md bg-gray-100">Cancel</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            )}
+                            </React.Fragment>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>
-             <button onClick={onConfirm} className="w-full flex items-center justify-center bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors">
-                <SparklesIcon className="w-5 h-5 mr-2" />
-                Generate Details
-            </button>
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+                <div className="w-full px-4 md:px-8 py-3 flex items-center justify-between">
+                    <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm hover:bg-gray-200">
+                        <BackIcon className="w-4 h-4" />
+                        Back
+                    </button>
+                    <button onClick={onConfirm} className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                        <SparklesIcon className="w-4 h-4" />
+                        Generate details
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
 
-const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void }) => {
+const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void }) => {
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(campaigns[0]?.id || null);
     const selectedCampaign = useMemo(() => campaigns.find(c => c.id === selectedCampaignId), [campaigns, selectedCampaignId]);
 
@@ -698,18 +1466,16 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
     };
 
     return (
-        <div className="space-y-4">
-             <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold text-gray-800">3. Fine-tune your campaigns</h2>
-                 <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900">
-                    <BackIcon />
-                    <span>Back to summary</span>
-                </button>
+        <div className="space-y-0">
+             <div className="grid grid-cols-12 w-full text-xs text-gray-600 border-b border-gray-200 bg-white">
+                <div className="col-span-3 px-3 py-2 border-r border-gray-200">Campaigns</div>
+                <div className="col-span-5 px-4 py-2 border-r border-gray-200">Details</div>
+                <div className="col-span-4 px-4 py-2">Preview</div>
             </div>
-            <p className="text-gray-600">All creative assets have been generated. You can now edit, delete, or generate new assets for each campaign.</p>
-            <div className="flex items-start space-x-6">
-                <aside className="w-1/4 sticky top-24">
-                    <nav className="flex flex-col space-y-1">
+            <div className="grid grid-cols-12 gap-0 bg-white w-full h-[calc(100vh-180px)] mt-0">
+                <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
+                    <div className="flex items-center justify-between mb-2"><div className="text-sm font-semibold text-gray-700">Campaigns</div><button aria-label="Create new campaign" onClick={() => { const id = self.crypto.randomUUID(); const newC: FullCampaign = { id, channel: 'Google', campaignName: 'New Campaign', campaignType: 'Brand Search', market: { name: 'United States', iso: 'US', browserLangs: ['en-US'] }, languages: ['en'], googleAds: { assetGroups: [], adGroups: [], ads: [] } as any }; setCampaigns(prev => [...prev, newC]); setSelectedCampaignId(id); }} className="text-xs px-2 py-1 rounded-md bg-black text-white hover:bg-gray-800">New</button></div>
+                    <nav className="flex flex-col space-y-1" aria-label="Campaign list">
                         {campaigns.map(c => (
                             <button
                                 key={c.id}
@@ -725,15 +1491,273 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack }: { campaigns: Fu
                         ))}
                     </nav>
                 </aside>
-                <main className="w-3/4">
+                <main className="col-span-5 h-full overflow-auto border-r border-gray-200 px-0 py-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
-                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
+                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                             {selectedCampaign.channel === 'Meta' && <MetaCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                             {selectedCampaign.channel === 'TikTok' && <TikTokCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                         </div>
                     )}
                 </main>
+                <section className="col-span-4 h-full overflow-auto p-4">
+                    {selectedCampaign && <CampaignPreview campaign={selectedCampaign} />}
+                </section>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+                <div className="w-full px-4 md:px-8 py-3 flex items-center justify-between">
+                    <button onClick={onBack} className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 text-sm hover:bg-gray-200">
+                        <BackIcon className="w-4 h-4" />
+                        Back
+                    </button>
+                    <button onClick={onReview} className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">
+                        <SparklesIcon className="w-4 h-4" />
+                        Review & publish
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ===== Creative Generator View =====
+const CreativeGeneratorView = () => {
+    const [prompt, setPrompt] = useState('');
+    const [images, setImages] = useState<string[]>([]);
+    const [logo, setLogo] = useState<string | null>(null);
+    const [copy, setCopy] = useState<{ heading: string; subtext: string; cta: string } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [template, setTemplate] = useState<'overlay' | 'logo-badge' | 'text-panel' | 'split'>('overlay');
+    const [accent, setAccent] = useState('#0ea5e9');
+
+    const SIZES = [
+        { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+    ] as const;
+
+    const onFiles = async (fileList: FileList | null, set: (arr: string[]) => void, appendTo?: string[]) => {
+        if (!fileList) return;
+        const arr = await Promise.all(Array.from(fileList).map(f => new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); })));
+        const next = [...(appendTo || []), ...arr];
+        set(next);
+    };
+
+    const generate = async () => {
+        setIsLoading(true);
+        try {
+            const c = await generateBannerCopy(prompt);
+            setCopy(c);
+        } finally { setIsLoading(false); }
+    };
+
+    const downloadHtml = (w: number, h: number) => {
+        const bg = images[0] || '';
+        const lg = logo || images[1] || '';
+        const c = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
+        let html = '';
+        const baseHead = `<!doctype html><html><head><meta charset=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><style>*{box-sizing:border-box}body{margin:0}.banner{position:relative;width:${w}px;height:${h}px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden;border:1px solid #e5e7eb;border-radius:8px}.bg{position:absolute;inset:0;background-image:url('${bg}');background-size:cover;background-position:center;filter:saturate(1.05)}</style></head><body>`;
+        if (template === 'text-panel') {
+            html = `${baseHead}<div class=\"banner\"><div class=\"bg\"></div><div class=\"panel\" style=\"position:absolute;left:0;right:0;bottom:0;background:rgba(255,255,255,.95);border-top:1px solid #e5e7eb;padding:12px;color:#111\"><h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(24, Math.round(h*0.16)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.85;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:${accent};color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none\">${c.cta}</a></div>${lg ? `<img style=\"position:absolute;top:8px;right:8px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\" alt=\"logo\"/>` : ''}</div></body></html>`;
+        } else if (template === 'split') {
+            const panelW = Math.round(w*0.42);
+            html = `${baseHead}<div class=\"banner\"><div class=\"bg\"></div><div style=\"position:absolute;left:0;top:0;bottom:0;width:${panelW}px;background:rgba(255,255,255,.95);border-right:1px solid #e5e7eb;padding:12px;color:#111\"><h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(22, Math.round(h*0.14)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.85;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:${accent};color:#fff;padding:6px 10px;border-radius:6px;font-weight:700;font-size:${Math.max(9, Math.min(13, Math.round(h*0.09)))}px;text-decoration:none\">${c.cta}</a>${lg ? `<img style=\"position:absolute;bottom:8px;left:12px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\" alt=\"logo\"/>` : ''}</div></div></body></html>`;
+        } else {
+            html = `<!doctype html><html><head><meta charset=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><style>*{box-sizing:border-box}body{margin:0}.banner{position:relative;width:${w}px;height:${h}px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden;border:1px solid #e5e7eb;border-radius:8px}.bg{position:absolute;inset:0;background-image:url('${bg}');background-size:cover;background-position:center;filter:saturate(1.05)}.overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4),rgba(0,0,0,.35))}</style></head><body><div class=\"banner\"><div class=\"bg\"></div><div class=\"overlay\"></div>${template==='logo-badge' && lg ? `<div style=\"position:absolute;top:8px;left:8px;background:#fff;border-radius:6px;padding:6px;box-shadow:0 2px 6px rgba(0,0,0,.15)\"><img style=\"height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\"/></div>` : (lg ? `<img style=\"position:absolute;top:8px;right:8px;height:${Math.max(14, Math.min(24, Math.round(h*0.18)))}px\" src=\"${lg}\" alt=\"logo\"/>` : '')}<div style=\"position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;padding:12px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6)\"><h3 style=\"margin:0 0 4px 0;font-weight:800;line-height:1.1;font-size:${Math.max(12, Math.min(24, Math.round(h*0.16)))}px\">${c.heading}</h3><p style=\"margin:0 0 10px 0;opacity:.95;font-size:${Math.max(10, Math.min(16, Math.round(h*0.11)))}px\">${c.subtext}</p><a href=\"#\" style=\"display:inline-block;background:${accent};color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;font-size:${Math.max(9, Math.min(14, Math.round(h*0.1)))}px;text-decoration:none\">${c.cta}</a></div></div></body></html>`;
+        }
+        const blob = new Blob([html], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `banner-${w}x${h}.html`;
+        a.click();
+        setTimeout(()=> URL.revokeObjectURL(a.href), 1000);
+    };
+
+    return (
+        <div className="space-y-4 pb-16">
+            <div className="flex items-center justify-between">
+                <div>
+                    <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
+                    <div className="text-xs text-gray-500">Upload brand assets and generate HTML5 banners</div>
+                </div>
+                <button onClick={generate} disabled={isLoading} className="px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-2">
+                    <label className="block text-xs text-gray-600 mb-1">Prompt</label>
+                    <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Images</div>
+                            <div className="text-xs text-gray-500 mb-2">Upload 1–5 photos (used as background)</div>
+                            <input id="creative-images" type="file" className="hidden" accept="image/*" multiple onChange={(e)=> onFiles(e.target.files, setImages, images)} />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
+                                <label htmlFor="creative-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Logo</div>
+                            <div className="text-xs text-gray-500 mb-2">SVG or PNG logo for branding</div>
+                            <input id="creative-logo" type="file" className="hidden" accept="image/*" onChange={async (e)=> { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => setLogo(r.result as string); r.readAsDataURL(f); }} />
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {logo && <img src={logo} className="h-8 w-auto object-contain border rounded" alt="logo" />}
+                                <label htmlFor="creative-logo" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Upload logo</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Template</div>
+                            <div className="text-xs text-gray-500 mb-2">Choose a layout</div>
+                            <div className="flex flex-wrap gap-2">
+                                {([
+                                    { id:'overlay', label:'Photo overlay' },
+                                    { id:'logo-badge', label:'Logo on white' },
+                                    { id:'text-panel', label:'Text on white' },
+                                    { id:'split', label:'Split panel' },
+                                ] as const).map(t => (
+                                    <button key={t.id} onClick={()=> setTemplate(t.id)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm font-medium text-gray-800">Accent color</div>
+                            <div className="text-xs text-gray-500 mb-2">Used for buttons and accents</div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                                {['#0ea5e9','#2563eb','#10b981','#f59e0b','#ef4444','#111827'].map(c => (
+                                    <button key={c} aria-label={`Use ${c}`} onClick={()=> setAccent(c)} className={`w-6 h-6 rounded-full border ${accent===c ? 'ring-2 ring-offset-1 ring-blue-500' : ''}`} style={{background:c}} />
+                                ))}
+                                <input type="color" value={accent} onChange={(e)=> setAccent(e.target.value)} className="w-8 h-6 border rounded" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div className="text-sm font-medium text-gray-800 mb-2">Copy</div>
+                    <div className="text-xs text-gray-500 mb-2">Preview and tweak generated text</div>
+                    <div className="space-y-2">
+                        <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        <input value={copy?.cta || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), cta: e.target.value })} placeholder="Button label" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="mt-4">
+                <div className="text-sm font-medium text-gray-800 mb-2">Banners</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {SIZES.map(s => (
+                        <div key={s.key} className="border border-gray-200 rounded-lg p-3">
+                            <div className="text-xs text-gray-600 mb-2">{s.label}</div>
+                            <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                                <div className="relative" style={{width: s.w, height: s.h}}>
+                                    {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                    {template !== 'text-panel' && template !== 'split' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+
+                                    {template === 'logo-badge' && logo && (
+                                        <div className="absolute top-2 left-2 bg-white rounded-md shadow px-2 py-1">
+                                            <img src={logo} className="h-5 w-auto object-contain" alt="logo" />
+                                        </div>
+                                    )}
+                                    {template === 'overlay' && logo && (<img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />)}
+
+                                    {template === 'text-panel' && (
+                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
+                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-80" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                        </div>
+                                    )}
+
+                                    {template === 'split' && (
+                                        <>
+                                            <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900" style={{width: Math.round(s.w*0.42)}}>
+                                                <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                                <div className="opacity-80" style={{fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                <div>
+                                                    <button className="mt-1 px-2 py-1 rounded-md text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
+                                                </div>
+                                                {logo && <img src={logo} className="absolute bottom-2 left-2 h-5 w-auto object-contain" alt="logo" />}
+                                            </div>
+                                        </>
+                                    )}
+
+                                    {(template === 'overlay' || template === 'logo-badge') && (
+                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                            <div className="font-extrabold leading-tight" style={{fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-95" style={{fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-2 flex justify-end">
+                                <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ===== Review View =====
+const ReviewView = ({ campaigns, onBack }: { campaigns: FullCampaign[]; onBack: () => void }) => {
+    return (
+        <div className="space-y-4 pb-6">
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold text-gray-800">4. Review & publish</h2>
+                <button onClick={onBack} className="flex items-center space-x-2 text-sm font-medium text-gray-600 hover:text-gray-900"><BackIcon /><span>Back to edit</span></button>
+            </div>
+            <p className="text-gray-600">Double-check each campaign before launching.</p>
+            <div className="space-y-3">
+                {campaigns.map(c => (
+                    <div key={c.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="text-sm font-semibold text-gray-800">{c.campaignName}</div>
+                                <div className="text-xs text-gray-500">{c.channel} • {c.campaignType} • {c.market.name} • Lang: {c.languages.join(', ')}</div>
+                            </div>
+                            <div className="text-xs text-gray-500">Assets: {(c.googleAds?.assetGroups?.length || 0) + (c.googleAds?.adGroups?.length || 0)}</div>
+                        </div>
+                        {c.channel === 'Google' && (
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-gray-700">
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Asset Groups</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(c.googleAds?.assetGroups || []).map(ag => (<li key={ag.id}>{ag.name}</li>))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Ad Groups</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(c.googleAds?.adGroups || []).map(g => (<li key={g.id}>{g.name}</li>))}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div className="font-semibold text-gray-600 mb-1">Ads</div>
+                                    <ul className="list-disc ml-4 space-y-0.5">
+                                        {(((c as any).googleAds || {}).ads || []).map((ad:any) => (<li key={ad.id}>{(ad.headlines?.[0] || ad.finalUrl || 'Ad')}</li>))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                ))}
+            </div>
+            <div className="flex justify-end">
+                <button className="px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800">Publish</button>
             </div>
         </div>
     );
@@ -748,6 +1772,7 @@ const App: React.FC = () => {
     const [brief, setBrief] = useState("");
     const [summaries, setSummaries] = useState<CampaignSummary[]>([]);
     const [campaigns, setCampaigns] = useState<FullCampaign[]>([]);
+    const [topTab, setTopTab] = useState<'campaign' | 'creative'>('campaign');
 
     const handleGenerateSummary = async (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => {
         setIsLoading(true);
@@ -807,9 +1832,11 @@ const App: React.FC = () => {
             case 'input':
                 return <InputView onGenerate={handleGenerateSummary} />;
             case 'summary':
-                return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} />;
+                return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
-                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} />;
+                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} />;
+            case 'review':
+                return <ReviewView campaigns={campaigns} onBack={() => setView('details')} />;
             default:
                 return null;
         }
@@ -818,7 +1845,13 @@ const App: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
             <Header />
-            <main className="max-w-6xl mx-auto p-4 md:p-8">
+            <main className={view==='details' ? 'w-full p-0 md:p-0' : 'max-w-6xl mx-auto p-4 md:p-8'}>
+                <div className="mb-4 border-b border-gray-200">
+                    <nav className="flex gap-2">
+                        <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
+                        <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
+                    </nav>
+                </div>
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-start" role="alert">
                         <ErrorIcon/>
@@ -831,8 +1864,147 @@ const App: React.FC = () => {
                         </span>
                     </div>
                 )}
-                {renderContent()}
+                {topTab === 'creative' ? (
+                    <CreativeGeneratorView />
+                ) : (
+                    renderContent()
+                )}
             </main>
+        </div>
+    );
+};
+
+// Channel dropdown component
+const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: (c: Channel) => void }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+        document.addEventListener('mousedown', onDoc);
+        return () => document.removeEventListener('mousedown', onDoc);
+    }, []);
+    const options: Array<Channel | 'Bing'> = ['Google','Meta','TikTok','Bing'];
+    return (
+        <div className="relative" ref={ref}>
+            <button onClick={() => setOpen(v=>!v)} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                <img src={channelIconSrc[selected]} className="w-4 h-4" alt={selected} />
+                {selected === 'Google' ? 'Adwords' : selected}
+                <svg className="w-2 h-2 fill-current" viewBox="0 0 7 5"><path d="M3.5 5L0.468911 0.5L6.53109 0.5L3.5 5Z"/></svg>
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg p-1">
+                    {options.map(opt => {
+                        const isDisabled = opt !== 'Google';
+                        return (
+                            <button
+                                key={opt}
+                                disabled={isDisabled}
+                                onClick={() => { if (!isDisabled) { onSelect('Google'); setOpen(false); } }}
+                                className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50 ${opt===selected ? 'bg-blue-50 text-blue-800' : ''} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                            >
+                                <span className="inline-flex items-center gap-2">
+                                    <img src={channelIconSrc[opt as string]} className="w-4 h-4" alt={`${opt}`} />
+                                    <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                                </span>
+                                {isDisabled && <span className="ml-2 text-[10px] text-gray-500 whitespace-nowrap">Coming soon</span>}
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    )
+}
+
+// Advanced assignment dropdown component
+const AdvancedAssignDropdown = ({ ad, googleAdGroups, currentCombos, onAssignPlan, onAssignExternal, onUnassign }: { ad: any, googleAdGroups: {id:string; name:string}[], currentCombos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[], onAssignPlan: (adGroupId:string)=>void, onAssignExternal: (campaignName:string, adGroupName:string)=>void, onUnassign: ()=>void }) => {
+    const [open, setOpen] = useState(false);
+    // Mock existing campaigns/ad groups from Google Ads account
+    const mockExisting = [
+        { campaignName: '[UG]-Brand-USA', adGroups: ['Brand Exact', 'Brand Phrase'] },
+        { campaignName: '[UG]-Remarketing-ALL', adGroups: ['All Visitors 30d', 'Cart Abandoners 14d'] },
+        { campaignName: '[UG]-Hotel-EN', adGroups: ['Hotel Brand EN', 'Generic Hotel EN'] },
+        { campaignName: '[UG]-PMax-Core', adGroups: ['Asset Group A', 'Asset Group B'] },
+    ];
+
+    const assignedCount = (ad.assignedTargets?.length || 0) + (ad.assignedAdGroupId ? 1 : 0) + (ad.assignedExternal ? 1 : 0);
+
+    const hasExternal = (cName: string, gName: string) => (ad.assignedTargets || []).some((t:any)=> t.source==='external' && t.campaignName===cName && t.adGroupName===gName);
+    const toggleExternal = (cName: string, gName: string) => {
+        if (hasExternal(cName, gName)) {
+            const remain = (ad.assignedTargets || []).filter((t:any)=> !(t.source==='external' && t.campaignName===cName && t.adGroupName===gName));
+            onUnassign();
+            remain.filter((x:any)=> x.source==='plan' && x.adGroupId).forEach((x:any)=> onAssignPlan(x.adGroupId));
+            remain.filter((x:any)=> x.source==='external').forEach((x:any)=> onAssignExternal(x.campaignName, x.adGroupName));
+        } else {
+            onAssignExternal(cName, gName);
+        }
+    };
+
+    const isCheckedPlan = (id: string) => {
+        if (ad.assignedAdGroupId === id) return true;
+        return (ad.assignedTargets || []).some((t: any) => t.source === 'plan' && t.adGroupId === id);
+    };
+    const togglePlan = (id: string) => {
+        if (isCheckedPlan(id)) {
+            // remove from assignedTargets or legacy field
+            const remain = (ad.assignedTargets || []).filter((t: any) => !(t.source === 'plan' && t.adGroupId === id));
+            if (ad.assignedAdGroupId === id) onUnassign();
+            else onAssignExternal('', ''); // no-op to trigger state path existence
+            // Update via onAssignPlan with null is not available; use onUnassign + re-add others via onAssignExternal path handled above.
+        } else {
+            onAssignPlan(id);
+        }
+    };
+
+    const currentPlanGroups = [
+        ...googleAdGroups.map(g => ({ scope: 'this' as const, id: g.id, label: `This campaign / ${g.name}` })),
+        ...currentCombos.filter(c => !googleAdGroups.some(g => g.id === c.adGroupId)).map(c => ({ scope: 'other' as const, id: c.adGroupId, label: `${c.campaignName} / ${c.adGroupName}` })),
+    ];
+
+    return (
+        <div className="relative inline-block">
+            <button onClick={() => setOpen(v=>!v)} className="text-xs px-2 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50">
+                Assign{assignedCount ? ` (${assignedCount})` : ''}
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-1 w-[340px] bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
+                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Current plan</div>
+                    <div className="max-h-40 overflow-auto mb-2 space-y-1">
+                        {currentPlanGroups.length === 0 && (
+                            <div className="text-xs text-gray-400">No ad groups available</div>
+                        )}
+                        {currentPlanGroups.map(item => (
+                            <label key={item.id} className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 cursor-pointer">
+                                <input type="checkbox" className="h-3.5 w-3.5" checked={isCheckedPlan(item.id)} onChange={() => togglePlan(item.id)} />
+                                <span>{item.label}</span>
+                            </label>
+                        ))}
+                    </div>
+                    <div className="border-t border-gray-100 pt-2 mt-2" />
+                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Existing account</div>
+                    <div className="max-h-48 overflow-auto space-y-2 pr-1">
+                        {mockExisting.map((mc, i) => (
+                            <div key={i} className="border border-gray-100 rounded-md">
+                                <div className="px-2 py-1 text-xs font-semibold text-gray-700">{mc.campaignName}</div>
+                                <div className="px-2 pb-2 space-y-1">
+                                    {mc.adGroups.map((g, j) => (
+                                        <label key={j} className="flex items-center gap-2 text-sm px-2 py-1 rounded-md hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" className="h-3.5 w-3.5" checked={hasExternal(mc.campaignName, g)} onChange={()=> toggleExternal(mc.campaignName, g)} />
+                                            <span>{g}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex items-center justify-between gap-2 mt-2">
+                        <button onClick={() => { onUnassign(); }} className="text-xs text-gray-600 hover:text-gray-900">Unassign all</button>
+                        <button onClick={() => setOpen(false)} className="text-xs px-2 py-1 rounded-md bg-black text-white">Done</button>
+                    </div>
+                    <div className="flex justify-end mt-2"><button onClick={()=> setOpen(false)} className="text-xs px-2 py-1 rounded-md border">Done</button></div>
+                </div>
+            )}
         </div>
     );
 };

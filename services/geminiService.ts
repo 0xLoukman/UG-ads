@@ -1,341 +1,208 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { FullCampaign, CampaignSummary, Channel, Market } from '../types';
+import { GoogleGenAI, Type } from '@google/genai';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
-}
+// ===== API KEY HANDLING =====
+const getApiKey = (): string | null => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const fromLs = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('gemini_api_key');
+      if (fromLs && fromLs.trim()) return fromLs.trim();
+    }
+    const globalKey = (globalThis as any)?.__GEMINI_API_KEY__;
+    if (typeof globalKey === 'string' && globalKey.trim()) return globalKey.trim();
+  } catch {}
+  const viteEnv = (import.meta as any)?.env || {};
+  const key = viteEnv.VITE_GEMINI_API_KEY || viteEnv.GEMINI_API_KEY || (process as any)?.env?.GEMINI_API_KEY || (process as any)?.env?.API_KEY;
+  return key || null;
+};
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+let aiClient: GoogleGenAI | null = null;
+const ensureClient = (): GoogleGenAI => {
+  const key = getApiKey();
+  if (!key) throw new Error('Missing Gemini API key. Add VITE_GEMINI_API_KEY in Settings or paste your key in the app.');
+  if (!aiClient) aiClient = new GoogleGenAI({ apiKey: key });
+  return aiClient;
+};
+export const hasGeminiKey = (): boolean => !!getApiKey();
 
 // ===== SHARED SCHEMAS =====
 const marketSchema = {
-    type: Type.OBJECT,
-    properties: {
-        name: { type: Type.STRING, description: "Full name of the country or a comma-separated list for multi-country campaigns, e.g., 'United States' or 'France, Germany, Spain'." },
-        iso: { type: Type.STRING, description: "Two-letter ISO 3166-1 alpha-2 country code, e.g., 'US', or 'WW' for multi-country campaigns." },
-        browserLangs: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of the browser language targets for this market, e.g., ['en-US', 'en-GB']" },
-    },
-    required: ["name", "iso", "browserLangs"]
+  type: Type.OBJECT,
+  properties: {
+    name: { type: Type.STRING },
+    iso: { type: Type.STRING },
+    browserLangs: { type: Type.ARRAY, items: { type: Type.STRING } },
+  },
+  required: ['name', 'iso', 'browserLangs'],
 };
-
 
 // ===== SUMMARY GENERATION (STEP 1) =====
-
 const summarySchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this campaign object, can be a random string." },
-        channel: { type: Type.STRING, enum: ["Google", "Meta", "TikTok"], description: "The advertising channel for the campaign."},
-        campaignName: { type: Type.STRING, description: "A structured campaign name, e.g., '[US]-Hotel-PMax-EN' or '[FR]-Conversions-Brand-FR'." },
-        campaignType: { type: Type.STRING, description: "The specific type of the campaign, e.g., for Google: 'PMax', 'Brand Search'; for Meta: 'Conversions', 'Awareness'; for TikTok: 'Video Views'." },
-        market: { ...marketSchema, description: "The market this specific campaign is targeting." },
-        languages: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list containing exactly one ISO 639-1 language code for the ad copy, e.g., ['en']" }
-    },
-    required: ["id", "channel", "campaignName", "campaignType", "market", "languages"]
+  type: Type.OBJECT,
+  properties: {
+    id: { type: Type.STRING },
+    channel: { type: Type.STRING, enum: ['Google', 'Meta', 'TikTok'] },
+    campaignName: { type: Type.STRING },
+    campaignType: { type: Type.STRING },
+    market: { ...marketSchema },
+    languages: { type: Type.ARRAY, items: { type: Type.STRING } },
+  },
+  required: ['channel', 'campaignName', 'campaignType', 'market', 'languages'],
 };
+const summaryPlanSchema = { type: Type.ARRAY, items: summarySchema };
+const SUMMARY_SYSTEM_INSTRUCTION = `You are an expert marketing strategist. Create a structured high-level campaign plan as JSON. Follow any manual parameters exactly. One language per campaign. No creative copy, only structure. Output must match the JSON schema.`;
 
-const summaryPlanSchema = {
-    type: Type.ARRAY,
-    items: summarySchema
-};
-
-const SUMMARY_SYSTEM_INSTRUCTION = `You are an expert marketing campaign strategist. Your task is to take a user's campaign brief and generate a high-level, structured campaign plan in JSON format.
-
-RULES:
-- If 'Manual Parameters' are provided, you MUST adhere to them strictly.
-    - For each 'Primary Market', you MUST create a separate campaign for each specified 'Campaign Type'.
-    - For all 'Secondary Markets' combined, you MUST create a single, clustered campaign for each 'Campaign Type'. This campaign's 'market.name' should be a comma-separated list of the secondary market names, and its 'market.iso' MUST be 'WW'.
-    - The 'Creative Brief' should only be used for creative inspiration and to understand the product/service. Do not infer markets or campaign types from it.
-- If 'Primary Channels' are specified, you MUST create campaigns ONLY for those channels.
-- If 'Manual Parameters' are not provided, infer the markets, campaign types, and channels from the 'Creative Brief' text.
-- For each primary market identified in the brief, create a separate campaign object for each channel.
-- Group all secondary or broad regional markets (e.g., "rest of Europe") into a single campaign for each channel.
-- For multi-country campaigns:
-    - 'market.name' MUST be a comma-separated list of country names (e.g., "France, Germany, Spain").
-    - 'market.iso' MUST be 'WW'.
-    - 'market.browserLangs' must contain language targets for ALL countries in the group (e.g., ['fr-FR', 'de-DE', 'es-ES']).
-- For each campaign type mentioned (e.g., 'PMax', 'Brand Search' for Google; 'Conversions' for Meta; 'Video Views' for TikTok), create a separate campaign object.
-- For each campaign, you MUST select only ONE primary ad language. The 'languages' field must be an array with exactly one ISO 639-1 language code, e.g., ['en'].
-- A brief for 2 primary markets and 2 campaign types on Google should result in 4 Google campaign objects.
-- Assign the correct 'channel' ('Google', 'Meta', 'TikTok') to each campaign.
-- DO NOT generate creative assets like headlines or descriptions. Only generate the plan structure.
-- Ensure the output strictly conforms to the provided JSON schema for an array of campaign summary objects.`;
-
-
-export const generateCampaignSummary = async (brief: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }): Promise<CampaignSummary[]> => {
-    let finalPrompt = '';
-
-    // If the user provides manual parameters, construct a more structured prompt.
-    if (manualParams && (manualParams.primaryMarkets.length > 0 || manualParams.secondaryMarkets.length > 0)) {
-         finalPrompt = `
-Primary Channels: ${channels.join(', ')}
-
-Manual Parameters:
-- Primary Markets (create separate campaigns for each): ${manualParams.primaryMarkets.map(m => m.name).join(', ')}
-- Secondary Markets (cluster into one campaign): ${manualParams.secondaryMarkets.map(m => m.name).join(', ')}
-- Campaign Types: ${manualParams.campaignTypes.join(', ')}
-
-Creative Brief:
-${brief}
-        `;
-    } else {
-        // Otherwise, use the original "all-in-one" prompt format.
-        finalPrompt = `
-Primary Channels: ${channels.join(', ')}.
-
-Creative Brief:
-${brief}
-        `;
-    }
-    
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: finalPrompt,
-            config: {
-                systemInstruction: SUMMARY_SYSTEM_INSTRUCTION,
-                responseMimeType: "application/json",
-                responseSchema: summaryPlanSchema,
-            },
-        });
-        const jsonText = response.text.trim();
-        if (!jsonText) throw new Error("Received an empty response from the AI.");
-        const summaries = JSON.parse(jsonText) as Omit<CampaignSummary, 'id'>[];
-        return summaries.map(s => ({...s, id: self.crypto.randomUUID() }));
-    } catch (error) {
-        console.error("Error generating campaign summary with Gemini:", error);
-        throw new Error(error instanceof Error ? `Failed to generate summary: ${error.message}` : "An unknown error occurred.");
-    }
+export const generateCampaignSummary = async (
+  brief: string,
+  channels: Channel[],
+  manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[] }
+): Promise<CampaignSummary[]> => {
+  const manual = !!(manualParams && (manualParams.primaryMarkets.length || manualParams.secondaryMarkets.length));
+  const finalPrompt = manual
+    ? `Primary Channels: ${channels.join(', ')}\n\nManual Parameters:\n- Primary Markets: ${manualParams!.primaryMarkets.map(m=>m.name).join(', ')}\n- Secondary Markets: ${manualParams!.secondaryMarkets.map(m=>m.name).join(', ')}\n- Campaign Types: ${manualParams!.campaignTypes.join(', ')}\n\nCreative Brief:\n${brief}`
+    : `Primary Channels: ${channels.join(', ')}.\n\nCreative Brief:\n${brief}`;
+  const response = await ensureClient().models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: finalPrompt,
+    config: { systemInstruction: SUMMARY_SYSTEM_INSTRUCTION, responseMimeType: 'application/json', responseSchema: summaryPlanSchema },
+  });
+  const text = (response.text || '').trim();
+  if (!text) throw new Error('Empty response');
+  const arr = JSON.parse(text) as Omit<CampaignSummary, 'id'>[];
+  return arr.map(s => ({ ...s, id: self.crypto.randomUUID() }));
 };
 
 // ===== DETAILS GENERATION (STEP 2) =====
-
-// --- Google Schemas ---
 const googleAdSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad object." },
-        finalUrl: { type: Type.STRING, description: "The final URL for this specific ad." },
-        headlines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 3 to 5 compelling headlines, each under 30 characters." },
-        descriptions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 2 to 4 detailed descriptions, each under 90 characters." },
-    },
-    required: ["id", "finalUrl", "headlines", "descriptions"]
+  type: Type.OBJECT,
+  properties: {
+    id: { type: Type.STRING },
+    finalUrl: { type: Type.STRING },
+    headlines: { type: Type.ARRAY, items: { type: Type.STRING } },
+    descriptions: { type: Type.ARRAY, items: { type: Type.STRING } },
+    keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+    assignedAdGroupId: { type: Type.STRING },
+    assignedTargets: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { source: { type: Type.STRING, enum: ['plan','external'] }, campaignId: { type: Type.STRING }, adGroupId: { type: Type.STRING }, campaignName: { type: Type.STRING }, adGroupName: { type: Type.STRING } } } },
+  },
+  required: ['finalUrl', 'headlines', 'descriptions'],
 };
-const googleAdGroupSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad group object." },
-        name: { type: Type.STRING, description: "A descriptive name for the ad group, e.g., 'Brand-Keywords-Exact'." },
-        ads: { type: Type.ARRAY, items: googleAdSchema, description: "A list of one or more fully populated ads for this ad group." }
-    },
-    required: ["id", "name", "ads"]
-};
-const googleAssetGroupSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this asset group object." },
-        name: { type: Type.STRING, description: "A creative and relevant name for the asset group, e.g., 'Summer Promotions' or 'Luxury Stays'." },
-        finalUrl: { type: Type.STRING, description: "The final URL for the ads in this group." },
-        headlines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 3 to 5 compelling headlines, each under 30 characters." },
-        longHeadlines: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 1 to 3 compelling long headlines, each under 90 characters." },
-        descriptions: { type: Type.ARRAY, items: { type: Type.STRING }, description: "List of 2 to 4 detailed descriptions, each under 90 characters." },
-    },
-    required: ["id", "name", "finalUrl", "headlines", "longHeadlines", "descriptions"]
-};
-
-// --- Meta Schemas ---
-const metaAdSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad object." },
-        primaryText: { type: Type.STRING, description: "Compelling primary text for the Meta ad." },
-        headline: { type: Type.STRING, description: "A concise headline for the Meta ad." },
-        description: { type: Type.STRING, description: "A brief description for the Meta ad." },
-    },
-    required: ["id", "primaryText", "headline", "description"]
-};
-const metaAdSetSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad set object." },
-        name: { type: Type.STRING, description: "A descriptive name for the ad set, e.g., 'US-Interests-Travel'." },
-        ads: { type: Type.ARRAY, items: metaAdSchema, description: "A list of one or more fully populated ads for this ad set." }
-    },
-    required: ["id", "name", "ads"]
-};
-
-// --- TikTok Schemas ---
-const tikTokAdSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad object." },
-        adText: { type: Type.STRING, description: "Engaging and concise ad text suitable for TikTok." },
-    },
-    required: ["id", "adText"]
-};
-const tikTokAdGroupSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "A unique identifier for this ad group object." },
-        name: { type: Type.STRING, description: "A descriptive name for the TikTok ad group, e.g., 'Summer-Campaign-V1'." },
-        ads: { type: Type.ARRAY, items: tikTokAdSchema, description: "A list of one or more fully populated ads for this ad group." }
-    },
-    required: ["id", "name", "ads"]
-};
-
+const googleAdGroupSchema = { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ads: { type: Type.ARRAY, items: googleAdSchema } }, required: ['name', 'ads'] };
+const googleAssetGroupSchema = { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, finalUrl: { type: Type.STRING }, headlines: { type: Type.ARRAY, items: { type: Type.STRING } }, longHeadlines: { type: Type.ARRAY, items: { type: Type.STRING } }, descriptions: { type: Type.ARRAY, items: { type: Type.STRING } } }, required: ['name','finalUrl','headlines','longHeadlines','descriptions'] };
 
 const fullCampaignSchema = {
-    type: Type.OBJECT,
-    properties: {
-        id: { type: Type.STRING, description: "The unique identifier passed from the campaign summary." },
-        channel: { type: Type.STRING, enum: ["Google", "Meta", "TikTok"], description: "The advertising channel passed from the summary."},
-        campaignName: { type: Type.STRING, description: "The campaign name passed from the summary." },
-        campaignType: { type: Type.STRING, description: "The campaign type passed from the summary." },
-        market: { ...marketSchema, description: "The market passed from the summary." },
-        languages: { type: Type.ARRAY, items: { type: Type.STRING }, description: "A list containing exactly one ISO 639-1 language code for the ad copy, passed from the summary." },
-        googleAds: {
-            type: Type.OBJECT,
-            description: "Google Ads specific assets. Populate ONLY if channel is 'Google'.",
-            properties: {
-                hotelPropertyFeed: { type: Type.STRING, description: "If the campaign is for a hotel, provide a placeholder name for the Hotel Property Feed, e.g., 'HotelName_ACC'. Null otherwise." },
-                assetGroups: { type: Type.ARRAY, items: googleAssetGroupSchema, description: "For PMax or Hotel campaigns ONLY. A list containing at least one fully populated asset group." },
-                adGroups: { type: Type.ARRAY, items: googleAdGroupSchema, description: "For Search campaigns ONLY. A list containing at least one fully populated ad group." }
-            }
-        },
-        meta: {
-            type: Type.OBJECT,
-            description: "Meta ads specific assets. Populate ONLY if channel is 'Meta'.",
-            properties: {
-                adSets: { type: Type.ARRAY, items: metaAdSetSchema, description: "A list of one or more fully populated ad sets." }
-            },
-            required: ["adSets"]
-        },
-        tikTok: {
-            type: Type.OBJECT,
-            description: "TikTok ads specific assets. Populate ONLY if channel is 'TikTok'.",
-            properties: {
-                adGroups: { type: Type.ARRAY, items: tikTokAdGroupSchema, description: "A list of one or more fully populated ad groups." }
-            },
-            required: ["adGroups"]
-        },
-    },
-    required: ["id", "channel", "campaignName", "campaignType", "market", "languages"]
+  type: Type.OBJECT,
+  properties: {
+    id: { type: Type.STRING },
+    channel: { type: Type.STRING, enum: ['Google','Meta','TikTok'] },
+    campaignName: { type: Type.STRING },
+    campaignType: { type: Type.STRING },
+    market: { ...marketSchema },
+    languages: { type: Type.ARRAY, items: { type: Type.STRING } },
+    googleAds: { type: Type.OBJECT, properties: { hotelPropertyFeed: { type: Type.STRING }, assetGroups: { type: Type.ARRAY, items: googleAssetGroupSchema }, adGroups: { type: Type.ARRAY, items: googleAdGroupSchema }, ads: { type: Type.ARRAY, items: googleAdSchema } } },
+    meta: { type: Type.OBJECT, properties: { adSets: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ads: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, primaryText: { type: Type.STRING }, headline: { type: Type.STRING }, description: { type: Type.STRING } }, required: ['primaryText','headline','description'] } } }, required: ['name','ads'] } } } },
+    tikTok: { type: Type.OBJECT, properties: { adGroups: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ads: { type: Type.ARRAY, items: { type: Type.OBJECT, properties: { id: { type: Type.STRING }, adText: { type: Type.STRING } }, required: ['adText'] } } }, required: ['name','ads'] } } } },
+  },
+  required: ['channel','campaignName','campaignType','market','languages'],
 };
-
 const fullPlanSchema = { type: Type.ARRAY, items: fullCampaignSchema };
-
-const DETAILS_SYSTEM_INSTRUCTION = `You are an expert marketing campaign strategist. Your task is to take a high-level campaign plan and a user's original brief, and generate the full, detailed creative assets for each campaign.
-
-CRITICAL RULES:
-1.  Analyze the 'channel' for EACH campaign summary provided.
-2.  If 'channel' is 'Google':
-    - If 'campaignType' is 'PMax', 'Hotel Ads', or 'Performance Max', you MUST generate a 'googleAds.assetGroups' array.
-    - If 'campaignType' is 'Search' or 'Brand Search', you MUST generate a 'googleAds.adGroups' array.
-3.  If 'channel' is 'Meta', you MUST generate a 'meta.adSets' array, with each ad set containing ads with 'primaryText', 'headline', and 'description'.
-4.  If 'channel' is 'TikTok', you MUST generate a 'tikTok.adGroups' array, with each ad group containing ads with 'adText'.
-5.  DO NOT generate structures for the wrong channel. For a 'Meta' campaign, 'googleAds' and 'tikTok' properties must be null/omitted.
-6.  For ALL structures, generate compelling and relevant creative assets based on the original brief. Translate them into the single language specified in the 'languages' field for each campaign.
-7.  Use the provided JSON schema to structure your response. Ensure all required fields, including unique IDs for all campaigns and their nested creative elements, are present.
-8.  The final output must be an array of full campaign objects, preserving the original 'id' for each campaign.`;
+const DETAILS_SYSTEM_INSTRUCTION = `Expand the campaign plan and original brief into fully detailed creative assets following channel-specific rules. Use required structures and IDs. Output must match schema.`;
 
 export const generateCampaignDetails = async (summaries: CampaignSummary[], brief: string): Promise<FullCampaign[]> => {
-    const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(summaries, null, 2)}"""`;
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-            config: {
-                systemInstruction: DETAILS_SYSTEM_INSTRUCTION,
-                responseMimeType: "application/json",
-                responseSchema: fullPlanSchema,
-            },
-        });
-        
-        const jsonText = response.text.trim();
-        if (!jsonText) throw new Error("Received an empty response from the AI.");
-        
-        const campaigns = JSON.parse(jsonText) as FullCampaign[];
-        return campaigns.map(c => ({
-            ...c,
-            googleAds: c.googleAds ? {
-                ...c.googleAds,
-                assetGroups: c.googleAds.assetGroups?.map(ag => ({ ...ag, id: ag.id || self.crypto.randomUUID() })),
-                adGroups: c.googleAds.adGroups?.map(adg => ({
-                    ...adg,
-                    id: adg.id || self.crypto.randomUUID(),
-                    ads: adg.ads?.map(ad => ({ ...ad, id: ad.id || self.crypto.randomUUID() }))
-                }))
-            } : undefined,
-            meta: c.meta ? {
-                ...c.meta,
-                adSets: c.meta.adSets.map(as => ({
-                    ...as,
-                    id: as.id || self.crypto.randomUUID(),
-                    ads: as.ads.map(ad => ({...ad, id: ad.id || self.crypto.randomUUID()}))
-                }))
-            } : undefined,
-            tikTok: c.tikTok ? {
-                ...c.tikTok,
-                adGroups: c.tikTok.adGroups.map(adg => ({
-                    ...adg,
-                    id: adg.id || self.crypto.randomUUID(),
-                    ads: adg.ads.map(ad => ({...ad, id: ad.id || self.crypto.randomUUID()}))
-                }))
-            } : undefined
-        }));
-
-    } catch (error) {
-        console.error("Error generating campaign details with Gemini:", error);
-        throw new Error(error instanceof Error ? `Failed to generate details: ${error.message}` : "An unknown error occurred.");
+  const normalized = summaries.map(s => (s.channel === 'Google' && /brand/i.test(s.campaignType) && !/pmax|performance\s*max|hotel/i.test(s.campaignType)) ? { ...s, campaignType: 'Brand Search' } : s);
+  const prompt = `Original Brief: """${brief}"""\n\nCampaign Summaries to complete: """${JSON.stringify(normalized, null, 2)}"""`;
+  const response = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { systemInstruction: DETAILS_SYSTEM_INSTRUCTION, responseMimeType: 'application/json', responseSchema: fullPlanSchema } });
+  const text = (response.text || '').trim();
+  if (!text) throw new Error('Empty response');
+  let campaigns = JSON.parse(text) as FullCampaign[];
+  // Ensure IDs exist
+  campaigns = campaigns.map(c => ({
+    ...c,
+    googleAds: c.googleAds ? {
+      ...c.googleAds,
+      assetGroups: c.googleAds.assetGroups?.map(ag => ({ ...ag, id: ag.id || self.crypto.randomUUID() })),
+      adGroups: c.googleAds.adGroups?.map(g => ({ ...g, id: g.id || self.crypto.randomUUID(), ads: g.ads?.map(a => ({ ...a, id: a.id || self.crypto.randomUUID() })) })),
+    } : undefined,
+  }));
+  // Lift nested ads when campaign-level ads missing
+  campaigns = campaigns.map(c => {
+    if (c.channel !== 'Google' || !c.googleAds) return c;
+    const groups = c.googleAds.adGroups || [];
+    const existingAds: any[] = (c as any).googleAds?.ads || [];
+    if (existingAds.length === 0 && groups.some(g => (g.ads || []).length > 0)) {
+      const flat = groups.flatMap(g => (g.ads || []).map(ad => ({ ...ad, assignedAdGroupId: g.id })));
+      return { ...c, googleAds: { ...c.googleAds, ads: flat, adGroups: groups.map(g => ({ ...g, ads: [] })) } } as FullCampaign;
     }
+    return c;
+  });
+  // Normalize legacy assignment fields
+  campaigns = campaigns.map(c => {
+    if (c.channel !== 'Google' || !c.googleAds) return c;
+    const ads: any[] = ((c as any).googleAds || {}).ads || [];
+    const normAds = ads.map(ad => {
+      let targets = ad.assignedTargets || [];
+      if (ad.assignedAdGroupId && !targets.some((t:any)=> t.source==='plan' && t.adGroupId===ad.assignedAdGroupId)) {
+        targets = [...targets, { source:'plan', adGroupId: ad.assignedAdGroupId }];
+      }
+      if (ad.assignedExternal && !targets.some((t:any)=> t.source==='external' && t.campaignName===ad.assignedExternal.campaignName && t.adGroupName===ad.assignedExternal.adGroupName)) {
+        targets = [...targets, { source:'external', campaignName: ad.assignedExternal.campaignName, adGroupName: ad.assignedExternal.adGroupName }];
+      }
+      return { ...ad, assignedTargets: targets };
+    });
+    return { ...c, googleAds: { ...(c.googleAds as any), ads: normAds } } as FullCampaign;
+  });
+  return campaigns;
 };
 
+// ===== Guided hint =====
+export const generateGuidedHint = async (brief: string, present: { market: boolean; type: boolean; hotel: boolean; angle: boolean }): Promise<string> => {
+  const sys = `You are a friendly UX guide helping users craft a marketing campaign prompt. Output ONE short hint (<=140 chars).`;
+  const prompt = `Brief:\n"""${brief.slice(0,1000)}"""\n\nDetected:\n- market: ${present.market}\n- type: ${present.type}\n- hotel: ${present.hotel}\n- angle: ${present.angle}`;
+  try {
+    const res = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { systemInstruction: sys } });
+    const text = (res.text || '').trim();
+    return text || 'Tell us more about your campaign — start anywhere and I\'ll guide you ✍️';
+  } catch {
+    return 'Hint unavailable right now — using manual guidance instead.';
+  }
+};
 
-// ===== ON-DEMAND CREATIVE GENERATION =====
+// ===== Asset generation helpers =====
+export type AssetType = 'headline' | 'description' | 'long headline' | 'ad group name' | 'asset group name' | 'keyword' | 'primary text' | 'meta headline' | 'meta description' | 'ad set name' | 'ad text' | 'tiktok ad group name';
 
-export type AssetType = 
-    'headline' | 'description' | 'long headline' | 'ad group name' | 'asset group name' | // Google
-    'primary text' | 'meta headline' | 'meta description' | 'ad set name' | // Meta
-    'ad text' | 'tiktok ad group name'; // TikTok
+export const generateCreativeAsset = async (brief: string, campaign: FullCampaign, assetType: AssetType, existingAssets?: string[], assetToRewrite?: string): Promise<string> => {
+  let instruction = `Generate one new ${assetType} for a ${campaign.channel} campaign.`;
+  if (assetToRewrite) instruction = `Rewrite the following ${assetType} for a ${campaign.channel} campaign: "${assetToRewrite}"`;
+  const prompt = `Original Brief: "${brief}"\nChannel: "${campaign.channel}"\nCampaign Name: "${campaign.campaignName}"\nCampaign Type: "${campaign.campaignType}"\nMarket: "${campaign.market.name}"\nLanguage: "${campaign.languages.join(', ')}"\n${existingAssets ? `Existing ${assetType}s: "${existingAssets.join('", ')}"` : ''}\n\nTask: ${instruction}\nReturn only the generated text.`;
+  const res = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+  return (res.text || '').trim().replace(/^"|"$/g, '') || 'New asset';
+};
 
+export const generateGoogleAdGroup = async (brief: string, summary: CampaignSummary) => {
+  const schema = { type: Type.OBJECT, properties: { id: { type: Type.STRING }, name: { type: Type.STRING }, ads: { type: Type.ARRAY, items: googleAdSchema } }, required: ['name','ads'] };
+  const sys = 'Create one Google Search ad group with at least one ad based on the brief and summary.';
+  const prompt = `Brief: "${brief}"\nSummary: ${JSON.stringify(summary)}`;
+  const res = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { systemInstruction: sys, responseMimeType: 'application/json', responseSchema: schema } });
+  const txt = (res.text || '').trim();
+  const obj = JSON.parse(txt);
+  return { ...obj, id: obj.id || self.crypto.randomUUID() };
+};
 
-export const generateCreativeAsset = async (
-    brief: string,
-    campaign: FullCampaign,
-    assetType: AssetType,
-    existingAssets?: string[],
-    assetToRewrite?: string
-): Promise<string> => {
-    
-    let instruction = `Generate one new, unique, and compelling ${assetType} for a ${campaign.channel} campaign.`;
-    if (assetToRewrite) {
-        instruction = `Rewrite the following ${assetType} for a ${campaign.channel} campaign: "${assetToRewrite}"`;
-    }
+export const generateGoogleSearchAd = async (brief: string, summary: CampaignSummary) => {
+  const schema = googleAdSchema;
+  const sys = 'Create one Google Search ad (headlines, descriptions, finalUrl) based on the brief and summary.';
+  const prompt = `Brief: "${brief}"\nSummary: ${JSON.stringify(summary)}`;
+  const res = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents: prompt, config: { systemInstruction: sys, responseMimeType: 'application/json', responseSchema: schema } });
+  const txt = (res.text || '').trim();
+  const ad = JSON.parse(txt);
+  return { ...ad, id: ad.id || self.crypto.randomUUID() };
+};
 
-    const prompt = `
-    Original Brief: "${brief}"
-    Channel: "${campaign.channel}"
-    Campaign Name: "${campaign.campaignName}"
-    Campaign Type: "${campaign.campaignType}"
-    Market: "${campaign.market.name}"
-    Language: "${campaign.languages.join(', ')}"
-    ${existingAssets ? `Existing ${assetType}s (do not repeat these): "${existingAssets.join('", "')}"` : ''}
-
-    Task: ${instruction}
-    
-    The response should be a single string containing only the generated asset, with no extra formatting or quotation marks.
-    `;
-
-    try {
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
-        const text = response.text.trim().replace(/"/g, ''); // Clean up response
-        if (!text) throw new Error("AI returned an empty creative asset.");
-        return text;
-    } catch (error) {
-        console.error("Error generating creative asset:", error);
-        throw new Error(error instanceof Error ? `Failed to generate creative asset: ${error.message}` : "An unknown error occurred.");
-    }
-}
+// ===== Banner copy for Creative Generator =====
+export const generateBannerCopy = async (prompt: string): Promise<{ heading: string; subtext: string; cta: string }> => {
+  const schema = { type: Type.OBJECT, properties: { heading: { type: Type.STRING }, subtext: { type: Type.STRING }, cta: { type: Type.STRING } }, required: ['heading','subtext','cta'] };
+  const sys = 'You are a senior display ad copywriter. Create concise copy for banners from a brief. No emojis. Return JSON matching schema.';
+  const contents = `Brief for banners:\n"""${prompt.slice(0, 2000)}"""`;
+  const res = await ensureClient().models.generateContent({ model: 'gemini-2.5-flash', contents, config: { systemInstruction: sys, responseMimeType: 'application/json', responseSchema: schema } });
+  const txt = (res.text || '').trim();
+  try { return JSON.parse(txt); } catch { return { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' }; }
+};
