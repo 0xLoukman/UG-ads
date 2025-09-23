@@ -1553,6 +1553,7 @@ const CreativeGeneratorView = () => {
         try {
             const c = await generateBannerCopy(prompt);
             setCopy(c);
+            setStage('edit');
         } finally { setIsLoading(false); }
     };
 
@@ -1585,9 +1586,9 @@ const CreativeGeneratorView = () => {
                     <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
                     <div className="text-xs text-gray-500">Upload brand assets and generate HTML5 banners</div>
                 </div>
-                <button onClick={generate} disabled={isLoading} className="px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
+                <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid gap-4 ${stage==='setup' ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
                 <div>
                     <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                     <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
@@ -1612,7 +1613,7 @@ const CreativeGeneratorView = () => {
                         </div>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className={`mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 ${stage==='setup' ? 'hidden' : ''}`}>
                         <div>
                             <div className="text-sm font-medium text-gray-800">Template</div>
                             <div className="text-xs text-gray-500 mb-2">Choose a layout</div>
@@ -1642,9 +1643,9 @@ const CreativeGeneratorView = () => {
                         </div>
                     </div>
 
-                    <div className="mt-3">
+                    <div className={`mt-3 ${stage==='setup' ? 'hidden' : ''}`}>
                         <div className="text-sm font-medium text-gray-800 mb-2">Copy</div>
-                        <div className="text-xs text-gray-500 mb-2">Preview and tweak generated text</div>
+                        <div className="text-xs text-gray-500 mb-2">Edit banner text</div>
                         <div className="space-y-2">
                             <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
                             <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
@@ -1652,7 +1653,7 @@ const CreativeGeneratorView = () => {
                         </div>
                     </div>
                 </div>
-                <div>
+                <div className={stage==='setup' ? 'hidden' : ''}>
                     <div className="flex items-center justify-between mb-2">
                         <div className="text-sm font-medium text-gray-800">Preview</div>
                         <div className="flex items-center gap-1">
