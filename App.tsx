@@ -1528,6 +1528,7 @@ const CreativeGeneratorView = () => {
     const [logo, setLogo] = useState<string | null>(null);
     const [copy, setCopy] = useState<{ heading: string; subtext: string; cta: string } | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [stage, setStage] = useState<'setup' | 'edit'>('setup');
     const [template, setTemplate] = useState<'overlay' | 'logo-badge' | 'text-panel' | 'split'>('overlay');
     const [accent, setAccent] = useState('#0ea5e9');
 
