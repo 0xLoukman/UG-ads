@@ -1538,6 +1538,7 @@ const CreativeGeneratorView = () => {
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
+    const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
     const onFiles = async (fileList: FileList | null, set: (arr: string[]) => void, appendTo?: string[]) => {
         if (!fileList) return;
