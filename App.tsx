@@ -248,6 +248,9 @@ const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove, 
                 {onOpenGenerator && accept.startsWith('image') && (
                     <button onClick={onOpenGenerator} className="text-xs px-2 py-1 rounded-md border">Open generator</button>
                 )}
+                {onChooseBanner && accept.startsWith('image') && (
+                    <button onClick={onChooseBanner} className="text-xs px-2 py-1 rounded-md border">Use banner</button>
+                )}
             </div>
         </div>
     );
