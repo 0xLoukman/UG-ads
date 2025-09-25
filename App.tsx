@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market } from "./types";
+import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market, AssetLibrary, BannerPreset } from "./types";
 import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd, generateBannerCopy } from "./services/geminiService";
 
 type View = 'input' | 'summary' | 'details' | 'review';
@@ -221,7 +221,7 @@ const EditableList = ({ title, items, onUpdate, onAdd, onDelete, onGenerate, onR
     );
 };
 
-const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; }) => {
+const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove, onChooseFromLibrary, onOpenGenerator }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; onChooseFromLibrary?: () => void; onOpenGenerator?: () => void; }) => {
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     const remaining = Math.max(0, max - (items?.length || 0));
     return (
@@ -241,6 +241,12 @@ const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove }
                         <span className="text-base leading-none">＋</span>
                         <span>{label.toUpperCase()}</span>
                     </button>
+                )}
+                {onChooseFromLibrary && (
+                    <button onClick={onChooseFromLibrary} className="text-xs px-2 py-1 rounded-md border">Use library</button>
+                )}
+                {onOpenGenerator && accept.startsWith('image') && (
+                    <button onClick={onOpenGenerator} className="text-xs px-2 py-1 rounded-md border">Open generator</button>
                 )}
             </div>
         </div>
@@ -430,7 +436,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
 
 // ===== Channel-Specific Detail Components =====
 
-const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string> }) => {
+const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite, onPickFromLibrary, onOpenGenerator }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string>, onPickFromLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, onOpenGenerator: () => void }) => {
     const { googleAds } = campaign;
     if (!googleAds) return null;
 
@@ -485,6 +491,8 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                             onUpdate(['googleAds','assetGroups', agIndex, 'images'], next);
                         }}
                         onRemove={(i) => { const next = (ag.images || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); }}
+                        onChooseFromLibrary={() => onPickFromLibrary('images', 15, (urls) => { const next = [ ...(ag.images || []), ...urls ].slice(0, 15); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); })}
+                        onOpenGenerator={onOpenGenerator}
                     />
 
                     <UploadSection
@@ -499,6 +507,8 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                             onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next);
                         }}
                         onRemove={(i) => { const next = (ag.logos || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next); }}
+                        onChooseFromLibrary={() => onPickFromLibrary('logos', 5, (urls) => { const next = [ ...(ag.logos || []), ...urls ].slice(0, 5); onUpdate(['googleAds','assetGroups', agIndex, 'logos'], next); })}
+                        onOpenGenerator={onOpenGenerator}
                     />
 
                     <UploadSection
@@ -1431,7 +1441,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     );
 };
 
-const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void }) => {
+const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLibrary, goToCreative }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void, openLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, goToCreative: () => void }) => {
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(campaigns[0]?.id || null);
     const selectedCampaign = useMemo(() => campaigns.find(c => c.id === selectedCampaignId), [campaigns, selectedCampaignId]);
 
@@ -1494,7 +1504,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
                 <main className="col-span-5 h-full overflow-auto border-r border-gray-200 px-0 py-4">
                     {selectedCampaign && (
                         <div key={selectedCampaign.id}>
-                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
+                            {selectedCampaign.channel === 'Google' && <GoogleCampaignDetails campaign={selectedCampaign} allCampaigns={campaigns} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} onPickFromLibrary={openLibrary} onOpenGenerator={goToCreative} />}
                             {selectedCampaign.channel === 'Meta' && <MetaCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                             {selectedCampaign.channel === 'TikTok' && <TikTokCampaignDetails campaign={selectedCampaign} brief={brief} onUpdate={handleUpdate(selectedCampaign.id)} onAdd={handleAdd(selectedCampaign.id)} onDelete={handleDelete(selectedCampaign.id)} onGenerate={handleGenerate(selectedCampaign)} onRewrite={handleRewrite(selectedCampaign)} />}
                         </div>
@@ -1522,7 +1532,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview }: { cam
 };
 
 // ===== Creative Generator View =====
-const CreativeGeneratorView = () => {
+const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<BannerPreset,'id'|'createdAt'>) => void }) => {
     const [prompt, setPrompt] = useState('');
     const [images, setImages] = useState<string[]>([]);
     const [logo, setLogo] = useState<string | null>(null);
@@ -1785,7 +1795,12 @@ const CreativeGeneratorView = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="mt-2 flex justify-end">
+                                <div className="mt-2 flex justify-end gap-2">
+                                    <button onClick={() => {
+                                        const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
+                                        const name = `Banner ${new Date().toLocaleString()}`;
+                                        onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent });
+                                    }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
                                     {s && <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>}
                                 </div>
                             </div>
@@ -1859,6 +1874,30 @@ const App: React.FC = () => {
     const [summaries, setSummaries] = useState<CampaignSummary[]>([]);
     const [campaigns, setCampaigns] = useState<FullCampaign[]>([]);
     const [topTab, setTopTab] = useState<'campaign' | 'creative'>('campaign');
+    const [assetLibrary, setAssetLibrary] = useState<AssetLibrary>(() => {
+        try {
+            const raw = localStorage.getItem('assetLibrary');
+            if (raw) return JSON.parse(raw);
+        } catch {}
+        return { images: [], logos: [], banners: [] };
+    });
+    const [libraryPicker, setLibraryPicker] = useState<{ open: boolean; type: 'images'|'logos'; max: number; onSelect: (urls: string[]) => void } | null>(null);
+    useEffect(() => { try { localStorage.setItem('assetLibrary', JSON.stringify(assetLibrary)); } catch {} }, [assetLibrary]);
+
+    const openLibrary = (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => {
+        setLibraryPicker({ open: true, type, max, onSelect });
+    };
+
+    const handleSaveBannerPreset = (preset: Omit<BannerPreset,'id'|'createdAt'>) => {
+        const id = self.crypto.randomUUID();
+        const createdAt = Date.now();
+        setAssetLibrary(prev => {
+            const banners = [{ id, createdAt, ...preset }, ...(prev.banners || [])];
+            const images = Array.from(new Set([...(prev.images || []), ...((preset.images)||[])]));
+            const logos = preset.logo ? Array.from(new Set([...(prev.logos || []), preset.logo])) : (prev.logos || []);
+            return { ...prev, images, logos, banners };
+        });
+    };
 
     const handleGenerateSummary = async (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => {
         setIsLoading(true);
@@ -1902,6 +1941,46 @@ const App: React.FC = () => {
         setView('summary');
         setCampaigns([]);
     }
+
+    const LibraryPickerModal = ({ cfg, assets, onClose }: { cfg: { type: 'images'|'logos'; max: number; onSelect: (urls:string[])=>void }, assets: string[], onClose: () => void }) => {
+        const [selected, setSelected] = useState<Set<number>>(new Set());
+        const toggle = (i:number) => {
+            setSelected(prev => {
+                const next = new Set(prev);
+                if (next.has(i)) next.delete(i);
+                else if (next.size < cfg.max) next.add(i);
+                return next;
+            });
+        };
+        const confirm = () => {
+            const urls = Array.from(selected).map(i => assets[i]);
+            cfg.onSelect(urls);
+            onClose();
+        };
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+                <div className="relative bg-white rounded-lg shadow-lg w-[560px] max-w-[92vw] p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-semibold text-gray-800">{cfg.type === 'images' ? 'Select images' : 'Select logos'}</div>
+                        <button onClick={onClose} className="text-sm text-gray-600 hover:text-black">Close</button>
+                    </div>
+                    <div className="text-xs text-gray-500 mb-2">Selected {Array.from(selected).length} / {cfg.max}</div>
+                    <div className="grid grid-cols-5 gap-2 max-h-64 overflow-auto">
+                        {assets.map((src, i) => (
+                            <button key={i} onClick={() => toggle(i)} className={`relative border rounded-md overflow-hidden ${selected.has(i) ? 'ring-2 ring-blue-500' : ''}`}>
+                                <img src={src} alt={`${cfg.type} ${i+1}`} className="w-full h-20 object-cover" />
+                            </button>
+                        ))}
+                    </div>
+                    <div className="mt-3 flex justify-end gap-2">
+                        <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-md border">Cancel</button>
+                        <button onClick={confirm} className="px-3 py-1.5 text-xs rounded-md bg-black text-white">Add selected</button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
 
     const renderContent = () => {
         if (isLoading) {
@@ -1951,9 +2030,16 @@ const App: React.FC = () => {
                     </div>
                 )}
                 {topTab === 'creative' ? (
-                    <CreativeGeneratorView />
+                    <CreativeGeneratorView onSaveBanner={handleSaveBannerPreset} />
                 ) : (
                     renderContent()
+                )}
+                {libraryPicker?.open && (
+                    <LibraryPickerModal
+                        cfg={{ type: libraryPicker.type, max: libraryPicker.max, onSelect: libraryPicker.onSelect }}
+                        assets={libraryPicker.type === 'images' ? (assetLibrary.images || []) : (assetLibrary.logos || [])}
+                        onClose={() => setLibraryPicker(null)}
+                    />
                 )}
             </main>
         </div>
