@@ -439,7 +439,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
 
 // ===== Channel-Specific Detail Components =====
 
-const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite, onPickFromLibrary, onOpenGenerator }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string>, onPickFromLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, onOpenGenerator: () => void }) => {
+const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd, onDelete, onGenerate, onRewrite, onPickFromLibrary, onOpenGenerator, onPickBanner }: { campaign: FullCampaign, allCampaigns: FullCampaign[], brief: string, onUpdate: (path: (string | number)[], value: any) => void, onAdd: (path: (string | number)[], value: any) => void, onDelete: (path: (string | number)[]) => void, onGenerate: (assetType: AssetType, existing: string[]) => Promise<string>, onRewrite: (assetType: AssetType, existing: string[], toRewrite: string) => Promise<string>, onPickFromLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, onOpenGenerator: () => void, onPickBanner: (onSelect: (preset: BannerPreset) => void) => void }) => {
     const { googleAds } = campaign;
     if (!googleAds) return null;
 
