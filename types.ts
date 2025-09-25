@@ -89,3 +89,23 @@ export interface FullCampaign extends CampaignSummary {
     adGroups: TikTokAdGroup[];
   };
 }
+
+export interface BannerCopy { heading: string; subtext: string; cta: string; }
+
+export interface BannerPreset {
+  id: string;
+  name: string;
+  prompt: string;
+  images: string[];
+  logo?: string | null;
+  copy: BannerCopy;
+  template: string;
+  accent: string;
+  createdAt: number;
+}
+
+export interface AssetLibrary {
+  images: string[];
+  logos: string[];
+  banners: BannerPreset[];
+}
