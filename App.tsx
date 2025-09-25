@@ -1555,7 +1555,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLib
 };
 
 // ===== Creative Generator View =====
-const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<BannerPreset,'id'|'createdAt'>) => void }) => {
+const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets }: { onSaveBanner: (preset: Omit<BannerPreset,'id'|'createdAt'>) => void, onPickFromLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, bannerPresets: BannerPreset[] }) => {
     const [prompt, setPrompt] = useState('');
     const [images, setImages] = useState<string[]>([]);
     const [logo, setLogo] = useState<string | null>(null);
@@ -1563,6 +1563,7 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
     const [isLoading, setIsLoading] = useState(false);
     const [stage, setStage] = useState<'setup' | 'edit'>('setup');
     const [template, setTemplate] = useState<'overlay' | 'logo-badge' | 'text-panel' | 'split'>('overlay');
+    const [justSaved, setJustSaved] = useState(false);
     const [accent, setAccent] = useState('#0ea5e9');
 
     const SIZES = [
@@ -1639,6 +1640,7 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
                             <div className="flex items-center gap-2 flex-wrap">
                                 {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
                                 <label htmlFor="creative-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
+                                <button onClick={()=> onPickFromLibrary('images', 5, (urls)=> setImages([...(images||[]), ...urls].slice(0,5)))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
                             </div>
                         </div>
                         <div>
@@ -1648,6 +1650,7 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
                             <div className="flex items-center gap-2 flex-wrap">
                                 {logo && <img src={logo} className="h-8 w-auto object-contain border rounded" alt="logo" />}
                                 <label htmlFor="creative-logo" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Upload logo</label>
+                                <button onClick={()=> onPickFromLibrary('logos', 1, (urls)=> setLogo(urls[0] || null))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
                             </div>
                         </div>
                     </div>
@@ -1823,12 +1826,59 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
                                         const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
                                         const name = `Banner ${new Date().toLocaleString()}`;
                                         onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent });
+                                        setJustSaved(true);
+                                        setTimeout(()=> setJustSaved(false), 1500);
                                     }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
+                                    {justSaved && <span className="text-[11px] text-green-600">Saved</span>}
                                     {s && <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>}
                                 </div>
                             </div>
                         );
                     })()}
+                </div>
+            </div>
+
+            {/* Saved banners strip */}
+            <div className={stage==='setup' ? 'hidden' : ''}>
+                <div className="mt-4">
+                    <div className="text-sm font-medium text-gray-800 mb-2">Saved banners</div>
+                    <div className="flex gap-3 overflow-x-auto pb-2">
+                        {bannerPresets?.length === 0 && (
+                            <div className="text-xs text-gray-500">No saved banners yet.</div>
+                        )}
+                        {bannerPresets?.map(p => (
+                            <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); setImages(p.images || []); setLogo(p.logo || null); setCopy(p.copy || null as any); setTemplate(p.template as any); setAccent(p.accent); setStage('edit'); }} className="border rounded-md bg-white hover:shadow w-[220px] flex-shrink-0 text-left">
+                                <div className="relative h-[120px] bg-gray-50 rounded-t-md overflow-hidden">
+                                    {/* simple template-aware thumb */}
+                                    {p.images?.[0] && <img src={p.images[0]} className="absolute inset-0 w-full h-full object-cover" alt={p.name} />}
+                                    {p.template !== 'text-panel' && p.template !== 'split' && p.template !== 'outline' && p.template !== 'stripe' && p.template !== 'glass' && p.template !== 'arch' && p.template !== 'center-hero' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+                                    {p.template === 'text-panel' && (
+                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
+                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                            <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
+                                        </div>
+                                    )}
+                                    {p.template === 'split' && (
+                                        <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900 w-[46%]">
+                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                            <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
+                                        </div>
+                                    )}
+                                    {(p.template === 'overlay' || p.template === 'logo-badge') && (
+                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                            <div className="opacity-90 text-[11px] truncate">{p.copy?.subtext}</div>
+                                        </div>
+                                    )}
+                                    {p.logo && <img src={p.logo} className="absolute top-2 right-2 h-4 w-auto object-contain" alt="logo" />}
+                                </div>
+                                <div className="p-2">
+                                    <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
+                                    <div className="text-[11px] text-gray-500 truncate">{p.template}</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -1851,7 +1901,7 @@ const ReviewView = ({ campaigns, onBack }: { campaigns: FullCampaign[]; onBack: 
                         <div className="flex items-start justify-between">
                             <div>
                                 <div className="text-sm font-semibold text-gray-800">{c.campaignName}</div>
-                                <div className="text-xs text-gray-500">{c.channel} • {c.campaignType} • {c.market.name} • Lang: {c.languages.join(', ')}</div>
+                                <div className="text-xs text-gray-500">{c.channel} • {c.campaignType} • {c.market.name} �� Lang: {c.languages.join(', ')}</div>
                             </div>
                             <div className="text-xs text-gray-500">Assets: {(c.googleAds?.assetGroups?.length || 0) + (c.googleAds?.adGroups?.length || 0)}</div>
                         </div>
@@ -2057,7 +2107,7 @@ const App: React.FC = () => {
                     </div>
                 )}
                 {topTab === 'creative' ? (
-                    <CreativeGeneratorView onSaveBanner={handleSaveBannerPreset} />
+                    <CreativeGeneratorView onSaveBanner={handleSaveBannerPreset} onPickFromLibrary={openLibrary} bannerPresets={assetLibrary.banners || []} />
                 ) : (
                     renderContent()
                 )}
@@ -2082,9 +2132,28 @@ const App: React.FC = () => {
                                 )}
                                 {(assetLibrary.banners || []).map((p) => (
                                     <button key={p.id} onClick={()=> { bannerPicker.onSelect(p); setBannerPicker(null); }} className="border rounded-md overflow-hidden text-left hover:shadow">
-                                        <div className="relative h-28 bg-gray-50 flex items-center justify-center">
-                                            {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="absolute inset-0 w-full h-full object-cover"/> : <div className="text-[11px] text-gray-500">No image</div>}
-                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[11px] px-2 py-1 truncate">{p.copy?.heading || p.name}</div>
+                                        <div className="relative h-28 bg-gray-50">
+                                            {p.images?.[0] && <img src={p.images[0]} alt={p.name} className="absolute inset-0 w-full h-full object-cover"/>}
+                                            {p.template !== 'text-panel' && p.template !== 'split' && p.template !== 'outline' && p.template !== 'stripe' && p.template !== 'glass' && p.template !== 'arch' && p.template !== 'center-hero' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+                                            {p.template === 'text-panel' && (
+                                                <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
+                                                    <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                                    <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
+                                                </div>
+                                            )}
+                                            {p.template === 'split' && (
+                                                <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900 w-[46%]">
+                                                    <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                                    <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
+                                                </div>
+                                            )}
+                                            {(p.template === 'overlay' || p.template === 'logo-badge') && (
+                                                <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                                    <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                                    <div className="opacity-90 text-[11px] truncate">{p.copy?.subtext}</div>
+                                                </div>
+                                            )}
+                                            {p.logo && <img src={p.logo} className="absolute top-2 right-2 h-4 w-auto object-contain" alt="logo" />}
                                         </div>
                                         <div className="p-2">
                                             <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
