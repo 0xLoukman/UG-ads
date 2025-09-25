@@ -1464,7 +1464,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     );
 };
 
-const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLibrary, goToCreative }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void, openLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, goToCreative: () => void }) => {
+const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLibrary, goToCreative, openBanner }: { campaigns: FullCampaign[], brief: string, setCampaigns: React.Dispatch<React.SetStateAction<FullCampaign[]>>, onBack: () => void, onReview: () => void, openLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, goToCreative: () => void, openBanner: (onSelect: (preset: BannerPreset) => void) => void }) => {
     const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(campaigns[0]?.id || null);
     const selectedCampaign = useMemo(() => campaigns.find(c => c.id === selectedCampaignId), [campaigns, selectedCampaignId]);
 
