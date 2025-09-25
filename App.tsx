@@ -493,6 +493,15 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                         onRemove={(i) => { const next = (ag.images || []).filter((_,idx)=>idx!==i); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); }}
                         onChooseFromLibrary={() => onPickFromLibrary('images', 15, (urls) => { const next = [ ...(ag.images || []), ...urls ].slice(0, 15); onUpdate(['googleAds','assetGroups', agIndex, 'images'], next); })}
                         onOpenGenerator={onOpenGenerator}
+                        onChooseBanner={() => onPickBanner((preset) => {
+                            const urls = (preset.images || []).slice(0, 15);
+                            const next = [ ...(ag.images || []), ...urls ].slice(0, 15);
+                            onUpdate(['googleAds','assetGroups', agIndex, 'images'], next);
+                            if (preset.logo) {
+                                const logosNext = [ ...(ag.logos || []), preset.logo ].slice(0, 5);
+                                onUpdate(['googleAds','assetGroups', agIndex, 'logos'], logosNext);
+                            }
+                        })}
                     />
 
                     <UploadSection
