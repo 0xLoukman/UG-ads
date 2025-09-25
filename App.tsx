@@ -1569,7 +1569,7 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
-        { key: '300x600', w: 300, h: 600, label: '300×600 ��� Half page' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
@@ -2026,7 +2026,7 @@ const App: React.FC = () => {
             case 'summary':
                 return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
-                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} openLibrary={openLibrary} goToCreative={() => setTopTab('creative')} />;
+                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} openLibrary={openLibrary} goToCreative={() => setTopTab('creative')} openBanner={openBanner} />;
             case 'review':
                 return <ReviewView campaigns={campaigns} onBack={() => setView('details')} />;
             default:
