@@ -1569,7 +1569,7 @@ const CreativeGeneratorView = ({ onSaveBanner }: { onSaveBanner: (preset: Omit<B
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
-        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 ��� Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
@@ -1905,10 +1905,14 @@ const App: React.FC = () => {
         return { images: [], logos: [], banners: [] };
     });
     const [libraryPicker, setLibraryPicker] = useState<{ open: boolean; type: 'images'|'logos'; max: number; onSelect: (urls: string[]) => void } | null>(null);
+    const [bannerPicker, setBannerPicker] = useState<{ open: boolean; onSelect: (preset: BannerPreset) => void } | null>(null);
     useEffect(() => { try { localStorage.setItem('assetLibrary', JSON.stringify(assetLibrary)); } catch {} }, [assetLibrary]);
 
     const openLibrary = (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => {
         setLibraryPicker({ open: true, type, max, onSelect });
+    };
+    const openBanner = (onSelect: (preset: BannerPreset) => void) => {
+        setBannerPicker({ open: true, onSelect });
     };
 
     const handleSaveBannerPreset = (preset: Omit<BannerPreset,'id'|'createdAt'>) => {
