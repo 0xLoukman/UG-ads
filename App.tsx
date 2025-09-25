@@ -221,7 +221,7 @@ const EditableList = ({ title, items, onUpdate, onAdd, onDelete, onGenerate, onR
     );
 };
 
-const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove, onChooseFromLibrary, onOpenGenerator }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; onChooseFromLibrary?: () => void; onOpenGenerator?: () => void; }) => {
+const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove, onChooseFromLibrary, onOpenGenerator, onChooseBanner }: { label: string; hint: string; accept: string; max: number; items: string[]; onAddFiles: (files: FileList) => void; onRemove: (index: number) => void; onChooseFromLibrary?: () => void; onOpenGenerator?: () => void; onChooseBanner?: () => void; }) => {
     const inputRef = React.useRef<HTMLInputElement | null>(null);
     const remaining = Math.max(0, max - (items?.length || 0));
     return (
