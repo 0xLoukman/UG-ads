@@ -1999,7 +1999,7 @@ const App: React.FC = () => {
             case 'summary':
                 return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
-                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} />;
+                return <DetailsView campaigns={campaigns} setCampaigns={setCampaigns} brief={brief} onBack={backToSummary} onReview={() => setView('review')} openLibrary={openLibrary} goToCreative={() => setTopTab('creative')} />;
             case 'review':
                 return <ReviewView campaigns={campaigns} onBack={() => setView('details')} />;
             default:
