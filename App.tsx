@@ -2068,6 +2068,34 @@ const App: React.FC = () => {
                         onClose={() => setLibraryPicker(null)}
                     />
                 )}
+                {bannerPicker?.open && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black/40" onClick={() => setBannerPicker(null)} />
+                        <div className="relative bg-white rounded-lg shadow-lg w-[720px] max-w-[95vw] p-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="text-sm font-semibold text-gray-800">Select banner preset</div>
+                                <button onClick={() => setBannerPicker(null)} className="text-sm text-gray-600 hover:text-black">Close</button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 max-h-80 overflow-auto">
+                                {(assetLibrary.banners || []).length === 0 && (
+                                    <div className="col-span-3 text-xs text-gray-500">No saved banners yet.</div>
+                                )}
+                                {(assetLibrary.banners || []).map((p) => (
+                                    <button key={p.id} onClick={()=> { bannerPicker.onSelect(p); setBannerPicker(null); }} className="border rounded-md overflow-hidden text-left hover:shadow">
+                                        <div className="relative h-28 bg-gray-50 flex items-center justify-center">
+                                            {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="absolute inset-0 w-full h-full object-cover"/> : <div className="text-[11px] text-gray-500">No image</div>}
+                                            <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[11px] px-2 py-1 truncate">{p.copy?.heading || p.name}</div>
+                                        </div>
+                                        <div className="p-2">
+                                            <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
+                                            <div className="text-[11px] text-gray-500 truncate">{p.template}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
