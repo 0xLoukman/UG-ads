@@ -2155,7 +2155,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     )}
                     {bannerPresets?.map(p => (
                         <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); setImages(p.images || []); setActiveImage(0); setLogo(p.logo || null); setCopy(p.copy || null as any); applyTemplate(p.template as any); setAccent(p.accent); if ((p as any).sizeKey) setSizeKey((p as any).sizeKey as any); }} className="w-full border rounded-md bg-white hover:shadow text-left">
-                            <div className="relative bg-gray-50 rounded-t-md overflow-hidden" style={{aspectRatio:'5/4'}}>
+                            <div className="relative bg-gray-50 rounded-t-md overflow-hidden" style={{aspectRatio: (p as any).width && (p as any).height ? `${(p as any).width}/${(p as any).height}` : (p.sizeKey==='336x280'?'336/280': p.sizeKey==='728x90'?'728/90': p.sizeKey==='300x600'?'300/600': p.sizeKey==='320x100'?'320/100':'300/250')}}>
                                 {p.images?.[0] && <img src={p.images[0]} className="absolute inset-0 w-full h-full object-cover" alt={p.name} />}
                                 {(p.template === 'overlay' || p.template === 'center-hero') && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
                                 <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
@@ -2163,6 +2163,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                     <div className="opacity-90 text-[11px] truncate">{p.copy?.subtext}</div>
                                 </div>
                                 {p.logo && <img src={p.logo} className="absolute top-2 right-2 h-4 w-auto object-contain" alt="logo" />}
+                                <div className="absolute top-1 left-1 bg-white/90 text-[10px] px-1 py-0.5 rounded border">{(p as any).width && (p as any).height ? `${(p as any).width}×${(p as any).height}` : (p.sizeKey || '300x250')}</div>
                             </div>
                             <div className="p-2">
                                 <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
