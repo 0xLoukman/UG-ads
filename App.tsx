@@ -1941,6 +1941,19 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
 
     const validHttp = (u?: string | null) => !!u && /^https?:\/\//i.test(u);
 
+    const applyTemplate = (t: 'overlay'|'text-panel'|'split'|'center-hero') => {
+        setTemplate(t);
+        if (t === 'overlay' || t === 'center-hero') {
+            setHeadingColor('#ffffff');
+            setBodyColor('#ffffff');
+            setCtaColor('#ffffff');
+        } else {
+            setHeadingColor('#111827');
+            setBodyColor('#111827');
+            setCtaColor('#ffffff');
+        }
+    };
+
     const exportOg = () => {
         const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
         const params = new URLSearchParams({
