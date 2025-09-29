@@ -1825,7 +1825,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                     <button onClick={() => {
                                         const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
                                         const name = `Banner ${new Date().toLocaleString()}`;
-                                        onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent });
+                                        { const s = SIZES.find(x => x.key === sizeKey) || SIZES[0]; onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent, sizeKey, width: s.w, height: s.h }); }
                                         setJustSaved(true);
                                         setTimeout(()=> setJustSaved(false), 1500);
                                     }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
@@ -2135,7 +2135,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                 <button onClick={() => {
                                     const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
                                     const name = `Banner ${new Date().toLocaleString()}`;
-                                    onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent });
+                                    { const s = SIZES.find(x => x.key === sizeKey) || SIZES[0]; onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent, sizeKey, width: s.w, height: s.h }); }
                                     setJustSaved(true);
                                     setTimeout(()=> setJustSaved(false), 1500);
                                 }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
