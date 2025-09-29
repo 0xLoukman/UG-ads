@@ -2020,7 +2020,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                 { id:'split', label:'Split panel' },
                                 { id:'center-hero', label:'Centered hero' },
                             ] as const).map(t => (
-                                <button key={t.id} onClick={()=> setTemplate(t.id as any)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
+                                <button key={t.id} onClick={()=> applyTemplate(t.id as any)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
                             ))}
                         </div>
                     </div>
