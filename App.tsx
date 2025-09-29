@@ -1886,6 +1886,277 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     );
 };
 
+// ===== Creative Generator V2 View =====
+const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPresets }: { onSaveBanner: (preset: Omit<BannerPreset,'id'|'createdAt'>) => void, onPickFromLibrary: (type: 'images'|'logos', max: number, onSelect: (urls: string[]) => void) => void, bannerPresets: BannerPreset[] }) => {
+    const [prompt, setPrompt] = useState('');
+    const [images, setImages] = useState<string[]>([]);
+    const [logo, setLogo] = useState<string | null>(null);
+    const [copy, setCopy] = useState<{ heading: string; subtext: string; cta: string } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [template, setTemplate] = useState<'overlay'|'text-panel'|'split'|'center-hero'>('overlay');
+    const [accent, setAccent] = useState('#2563eb');
+    const [headingColor, setHeadingColor] = useState<string>('#ffffff');
+    const [bodyColor, setBodyColor] = useState<string>('#ffffff');
+    const [ctaColor, setCtaColor] = useState<string>('#ffffff');
+    const [font, setFont] = useState<string>('Inter');
+    const [justSaved, setJustSaved] = useState(false);
+
+    const SIZES = [
+        { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+    ] as const;
+    const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
+
+    useEffect(() => {
+        if (!font) return;
+        const family = font.replace(/\s+/g,'+');
+        const id = `gf-${family}`;
+        if (!document.getElementById(id)) {
+            const link = document.createElement('link');
+            link.id = id;
+            link.rel = 'stylesheet';
+            link.href = `https://fonts.googleapis.com/css2?family=${family}:wght@400;600;700;800&display=swap`;
+            document.head.appendChild(link);
+        }
+    }, [font]);
+
+    const onFiles = async (fileList: FileList | null, set: (arr: string[]) => void, appendTo?: string[]) => {
+        if (!fileList) return;
+        const arr = await Promise.all(Array.from(fileList).map(f => new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); })));
+        const next = [...(appendTo || []), ...arr];
+        set(next);
+    };
+
+    const generate = async () => {
+        setIsLoading(true);
+        try {
+            const c = await generateBannerCopy(prompt);
+            setCopy(c);
+        } finally { setIsLoading(false); }
+    };
+
+    const validHttp = (u?: string | null) => !!u && /^https?:\/\//i.test(u);
+
+    const exportOg = () => {
+        const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
+        const params = new URLSearchParams({
+            title: copy?.heading || 'Special Offer',
+            subtitle: copy?.subtext || 'Save on your next stay when you book direct.',
+            cta: copy?.cta || 'Book Now',
+            accent,
+            font,
+            hc: headingColor,
+            bc: bodyColor,
+            cc: ctaColor,
+            template,
+            w: String(s.w),
+            h: String(s.h),
+        });
+        if (validHttp(images[0])) params.set('image', images[0]!);
+        if (validHttp(logo)) params.set('logo', logo!);
+        const url = `/api/og?${params.toString()}`;
+        window.open(url, '_blank');
+    };
+
+    return (
+        <div className="w-full h-[calc(100vh-180px)] bg-white border border-gray-200 rounded-lg overflow-hidden grid grid-cols-12">
+            <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
+                <div className="mb-3">
+                    <div className="text-sm font-semibold text-gray-800">Creative parameters</div>
+                    <div className="text-xs text-gray-500">Set content, fonts and colors</div>
+                </div>
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-xs text-gray-600 mb-1">Prompt</label>
+                        <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-24" placeholder="Write a short brief" />
+                        <div className="mt-2 flex gap-2">
+                            <button onClick={generate} disabled={isLoading} className="px-3 py-1.5 text-xs rounded-md bg-black text-white disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800">Images</div>
+                        <div className="text-xs text-gray-500 mb-2">Upload 1–5 photos</div>
+                        <input id="v2-images" type="file" className="hidden" accept="image/*" multiple onChange={(e)=> onFiles(e.target.files, setImages, images)} />
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
+                            <label htmlFor="v2-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
+                            <button onClick={()=> onPickFromLibrary('images', 5, (urls)=> setImages([...(images||[]), ...urls].slice(0,5)))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800">Logo</div>
+                        <div className="text-xs text-gray-500 mb-2">SVG or PNG</div>
+                        <input id="v2-logo" type="file" className="hidden" accept="image/*" onChange={async (e)=> { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => setLogo(r.result as string); r.readAsDataURL(f); }} />
+                        <div className="flex items-center gap-2 flex-wrap">
+                            {logo && <img src={logo} className="h-8 w-auto object-contain border rounded" alt="logo" />}
+                            <label htmlFor="v2-logo" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Upload logo</label>
+                            <button onClick={()=> onPickFromLibrary('logos', 1, (urls)=> setLogo(urls[0] || null))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800">Template</div>
+                        <div className="text-xs text-gray-500 mb-2">Simplified layouts</div>
+                        <div className="flex flex-wrap gap-2">
+                            {([
+                                { id:'overlay', label:'Photo overlay' },
+                                { id:'text-panel', label:'Text on white' },
+                                { id:'split', label:'Split panel' },
+                                { id:'center-hero', label:'Centered hero' },
+                            ] as const).map(t => (
+                                <button key={t.id} onClick={()=> setTemplate(t.id as any)} className={`px-2 py-1.5 text-xs rounded-md border ${template===t.id ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{t.label}</button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800">Typography</div>
+                        <div className="text-xs text-gray-500 mb-1">Google Fonts</div>
+                        <select value={font} onChange={(e)=> setFont(e.target.value)} className="w-full text-xs border border-gray-200 rounded-md px-2 py-1 bg-white">
+                            {['Inter','Poppins','Montserrat','Playfair Display','Lora','Roboto','Nunito','Merriweather'].map(f => (<option key={f} value={f}>{f}</option>))}
+                        </select>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800">Colors</div>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                            <label className="text-xs text-gray-600">Heading
+                                <input type="color" value={headingColor} onChange={(e)=> setHeadingColor(e.target.value)} className="w-full h-6 border rounded mt-1" />
+                            </label>
+                            <label className="text-xs text-gray-600">Body
+                                <input type="color" value={bodyColor} onChange={(e)=> setBodyColor(e.target.value)} className="w-full h-6 border rounded mt-1" />
+                            </label>
+                            <label className="text-xs text-gray-600">CTA text
+                                <input type="color" value={ctaColor} onChange={(e)=> setCtaColor(e.target.value)} className="w-full h-6 border rounded mt-1" />
+                            </label>
+                            <label className="text-xs text-gray-600">Accent
+                                <input type="color" value={accent} onChange={(e)=> setAccent(e.target.value)} className="w-full h-6 border rounded mt-1" />
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <div className="text-sm font-medium text-gray-800 mb-1">Copy</div>
+                        <div className="space-y-2">
+                            <input value={copy?.heading || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), heading: e.target.value })} placeholder="Headline" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                            <input value={copy?.subtext || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), subtext: e.target.value })} placeholder="Subtext" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                            <input value={copy?.cta || ''} onChange={(e)=> setCopy({ ...(copy || { heading:'', subtext:'', cta:'' }), cta: e.target.value })} placeholder="Button label" className="w-full border border-gray-200 rounded-md px-2 py-1 text-sm" />
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <section className="col-span-6 h-full overflow-auto p-4">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-800">Preview</div>
+                    <div className="flex items-center gap-1">
+                        {SIZES.map(s => (
+                            <button key={s.key} onClick={()=> setSizeKey(s.key as any)} className={`px-2 py-1.5 text-xs rounded-md border ${sizeKey===s.key ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{s.key}</button>
+                        ))}
+                    </div>
+                </div>
+                {(() => {
+                    const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
+                    const headingStyle: React.CSSProperties = { color: headingColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
+                    const bodyStyle: React.CSSProperties = { color: bodyColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
+                    const ctaStyle: React.CSSProperties = { color: ctaColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
+                    return (
+                        <div className="border border-gray-200 rounded-lg p-3">
+                            <div className="text-xs text-gray-600 mb-2">{s.label}</div>
+                            <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                                <div className="relative" style={{width: s.w, height: s.h}}>
+                                    {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                    {template === 'overlay' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+
+                                    {template === 'text-panel' && (
+                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2" style={{color: bodyStyle.color, fontFamily: bodyStyle.fontFamily}}>
+                                            <div className="font-extrabold leading-tight" style={{...headingStyle, fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-80" style={{...bodyStyle, fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                        </div>
+                                    )}
+
+                                    {template === 'split' && (
+                                        <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2" style={{width: Math.round(s.w*0.42), color: bodyStyle.color, fontFamily: bodyStyle.fontFamily}}>
+                                            <div className="font-extrabold leading-tight" style={{...headingStyle, fontSize: Math.max(12, Math.min(22, Math.round(s.h*0.14)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-80" style={{...bodyStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-md font-bold text-white" style={{background: accent, fontSize: Math.max(9, Math.min(13, Math.round(s.h*0.09)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                            {logo && <img src={logo} className="absolute bottom-2 left-2 h-5 w-auto object-contain" alt="logo" />}
+                                        </div>
+                                    )}
+
+                                    {template === 'center-hero' && (
+                                        <>
+                                            <div className="absolute inset-0" style={{background:'linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55))'}} />
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center" style={{color: bodyStyle.color, fontFamily: bodyStyle.fontFamily}}>
+                                                <div className="tracking-wide" style={{...headingStyle, fontSize: Math.max(14, Math.min(28, Math.round(s.h*0.18))), fontWeight:800}}>{copy?.heading || 'Feels Like Home'}</div>
+                                                <div className="mt-1 opacity-95" style={{...bodyStyle, fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Book direct for perks'}</div>
+                                                <button className="mt-2 px-2 py-1 rounded-md font-bold" style={{border:`2px solid ${accent}`, background:'transparent', ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                        </>
+                                    )}
+
+                                    {template === 'overlay' && (
+                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white" style={{color: bodyStyle.color, fontFamily: bodyStyle.fontFamily}}>
+                                            <div className="font-extrabold leading-tight" style={{...headingStyle, fontSize: Math.max(12, Math.min(24, Math.round(s.h*0.16)))}}>{copy?.heading || 'Special Offer'}</div>
+                                            <div className="opacity-95" style={{...bodyStyle, fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                            <div>
+                                                <button className="mt-1 px-2 py-1 rounded-full text-white font-bold" style={{ background: accent, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="mt-2 flex justify-end gap-2">
+                                <button onClick={() => {
+                                    const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
+                                    const name = `Banner ${new Date().toLocaleString()}`;
+                                    onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent });
+                                    setJustSaved(true);
+                                    setTimeout(()=> setJustSaved(false), 1500);
+                                }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
+                                {justSaved && <span className="text-[11px] text-green-600">Saved</span>}
+                                <button onClick={exportOg} className="text-xs px-3 py-1.5 rounded-md border">Export OG image</button>
+                            </div>
+                        </div>
+                    );
+                })()}
+            </section>
+
+            <aside className="col-span-3 h-full overflow-auto border-l border-gray-200 p-3">
+                <div className="text-sm font-semibold text-gray-800 mb-2">Saved banners</div>
+                <div className="space-y-2">
+                    {bannerPresets?.length === 0 && (
+                        <div className="text-xs text-gray-500">No saved banners yet.</div>
+                    )}
+                    {bannerPresets?.map(p => (
+                        <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); setImages(p.images || []); setLogo(p.logo || null); setCopy(p.copy || null as any); setTemplate(p.template as any); setAccent(p.accent); }} className="w-full border rounded-md bg-white hover:shadow text-left">
+                            <div className="relative bg-gray-50 rounded-t-md overflow-hidden" style={{aspectRatio:'5/4'}}>
+                                {p.images?.[0] && <img src={p.images[0]} className="absolute inset-0 w-full h-full object-cover" alt={p.name} />}
+                                {(p.template === 'overlay' || p.template === 'center-hero') && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+                                <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
+                                    <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
+                                    <div className="opacity-90 text-[11px] truncate">{p.copy?.subtext}</div>
+                                </div>
+                                {p.logo && <img src={p.logo} className="absolute top-2 right-2 h-4 w-auto object-contain" alt="logo" />}
+                            </div>
+                            <div className="p-2">
+                                <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
+                                <div className="text-[11px] text-gray-500 truncate">{p.template}</div>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </aside>
+        </div>
+    );
+};
+
 // ===== Review View =====
 const ReviewView = ({ campaigns, onBack }: { campaigns: FullCampaign[]; onBack: () => void }) => {
     return (
@@ -1946,7 +2217,7 @@ const App: React.FC = () => {
     const [brief, setBrief] = useState("");
     const [summaries, setSummaries] = useState<CampaignSummary[]>([]);
     const [campaigns, setCampaigns] = useState<FullCampaign[]>([]);
-    const [topTab, setTopTab] = useState<'campaign' | 'creative'>('campaign');
+    const [topTab, setTopTab] = useState<'campaign' | 'creative' | 'creativeV2'>('campaign');
     const [assetLibrary, setAssetLibrary] = useState<AssetLibrary>(() => {
         try {
             const raw = localStorage.getItem('assetLibrary');
@@ -2092,6 +2363,7 @@ const App: React.FC = () => {
                     <nav className="flex gap-2">
                         <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
                         <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
+                        <button onClick={()=> setTopTab('creativeV2')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creativeV2' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator v2</button>
                     </nav>
                 </div>
                 {error && (
@@ -2108,6 +2380,8 @@ const App: React.FC = () => {
                 )}
                 {topTab === 'creative' ? (
                     <CreativeGeneratorView onSaveBanner={handleSaveBannerPreset} onPickFromLibrary={openLibrary} bannerPresets={assetLibrary.banners || []} />
+                ) : topTab === 'creativeV2' ? (
+                    <CreativeGeneratorV2View onSaveBanner={handleSaveBannerPreset} onPickFromLibrary={openLibrary} bannerPresets={assetLibrary.banners || []} />
                 ) : (
                     renderContent()
                 )}
