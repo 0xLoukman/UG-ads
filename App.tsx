@@ -1909,6 +1909,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
+    const [activeImage, setActiveImage] = useState(0);
 
     useEffect(() => {
         if (!font) return;
