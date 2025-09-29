@@ -1995,7 +1995,12 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                         <div className="text-xs text-gray-500 mb-2">Upload 1–5 photos</div>
                         <input id="v2-images" type="file" className="hidden" accept="image/*" multiple onChange={(e)=> onFiles(e.target.files, setImages, images)} />
                         <div className="flex items-center gap-2 flex-wrap">
-                            {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
+                            {images.map((src, i) => (
+                                <button key={i} onClick={()=> setActiveImage(i)} className={`relative rounded-md overflow-hidden border ${activeImage===i ? 'ring-2 ring-blue-500' : ''}`} aria-label={`Select image ${i+1} as background`}>
+                                    <img src={src} className="w-16 h-16 object-cover" alt={`img ${i+1}`} />
+                                    {activeImage===i && <span className="absolute bottom-1 left-1 bg-white/90 text-[10px] px-1 py-0.5 rounded">Active</span>}
+                                </button>
+                            ))}
                             <label htmlFor="v2-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
                             <button onClick={()=> onPickFromLibrary('images', 5, (urls)=> setImages([...(images||[]), ...urls].slice(0,5)))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
                         </div>
