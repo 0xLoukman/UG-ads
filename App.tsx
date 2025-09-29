@@ -94,13 +94,18 @@ const channelIcons: Record<Channel, React.ReactNode> = {
 
 // ===== UI COMPONENTS =====
 
-const Header = () => (
+const Header = ({ topTab, setTopTab }: { topTab: 'campaign'|'creative'|'creativeV2', setTopTab: (t: 'campaign'|'creative'|'creativeV2') => void }) => (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 p-4 border-b border-gray-200">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
                 <img src="https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F1003138594934a01b42521ec1d693a8d" alt="Logo" className="h-8 w-auto object-contain" />
                 <div className="text-xs text-gray-500">AI Campaign generator</div>
             </div>
+            <nav className="flex gap-2">
+                <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
+                <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
+                <button onClick={()=> setTopTab('creativeV2')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creativeV2' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator v2</button>
+            </nav>
         </div>
     </header>
 );
@@ -2377,15 +2382,9 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <Header />
+            <Header topTab={topTab} setTopTab={setTopTab} />
             <main className={view==='details' ? 'w-full p-0 md:p-0' : 'max-w-6xl mx-auto p-4 md:p-8'}>
-                <div className="mb-4 border-b border-gray-200">
-                    <nav className="flex gap-2">
-                        <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
-                        <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
-                        <button onClick={()=> setTopTab('creativeV2')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creativeV2' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator v2</button>
-                    </nav>
-                </div>
+                <div className="mb-4" />
                 {error && (
                     <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 flex items-start" role="alert">
                         <ErrorIcon/>
