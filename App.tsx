@@ -1969,7 +1969,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
             w: String(s.w),
             h: String(s.h),
         });
-        if (validHttp(images[0])) params.set('image', images[0]!);
+        if (validHttp(images[activeImage])) params.set('image', images[activeImage]!);
         if (validHttp(logo)) params.set('logo', logo!);
         const url = `/api/og?${params.toString()}`;
         window.open(url, '_blank');
