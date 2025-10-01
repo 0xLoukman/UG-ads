@@ -1076,6 +1076,18 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
 
+    const campaignTypeRef = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        if (!showCampaignTypes) return;
+        const handler = (event: MouseEvent) => {
+            if (campaignTypeRef.current && !campaignTypeRef.current.contains(event.target as Node)) {
+                setShowCampaignTypes(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [showCampaignTypes]);
+
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
     const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
