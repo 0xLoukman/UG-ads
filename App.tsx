@@ -1305,6 +1305,32 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ))}
                         </div>
 
+                        <div className="mt-4">
+                            <div className="text-xs text-gray-500 uppercase tracking-wide">Campaign types</div>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {ALL_CAMPAIGN_TYPES.map(type => {
+                                    const active = selectedCampaignTypes.includes(type);
+                                    return (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => toggleCampaignType(type)}
+                                            className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${active ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                            aria-pressed={active}
+                                        >
+                                            {active ? '✓ ' : ''}{type}
+                                        </button>
+                                    );
+                                })}
+                                {ALL_CAMPAIGN_TYPES.length === 0 && (
+                                    <span className="text-xs text-gray-400">No campaign types available.</span>
+                                )}
+                            </div>
+                            {selectedCampaignTypes.length === 0 && (
+                                <div className="mt-1 text-[11px] text-gray-400">Select one or more types to steer the campaign output.</div>
+                            )}
+                        </div>
+
                         {!hasKey && (
                             <div className="mt-3 pt-3 border-t border-gray-100">
                                 <details className="text-xs text-gray-500">
@@ -1614,7 +1640,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
-        { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 ��� Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
