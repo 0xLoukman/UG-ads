@@ -2587,34 +2587,37 @@ const GoogleAccountDropdown = ({ accounts, selectedId, onSelect }: { accounts: G
             <button
                 type="button"
                 onClick={() => setOpen(v => !v)}
-                className="flex items-center gap-3 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
                 aria-haspopup="listbox"
                 aria-expanded={open}
                 aria-label={`Selected Google Ads account ${active.name}`}
             >
-                <div className="text-left">
-                    <div className="text-[10px] uppercase tracking-wide text-gray-500">Google Ads account</div>
-                    <div className="text-xs font-medium text-gray-800">{active.name}</div>
-                    <div className="text-[10px] text-gray-500">CID {active.customerId}</div>
-                </div>
-                <ChevronDownIcon className="w-3 h-3 text-gray-500" />
+                <img src={channelIconSrc.Google} alt="Google Ads" className="w-4 h-4 object-contain" />
+                <span className="text-gray-700 font-medium truncate max-w-[120px] sm:max-w-[160px]">{active.name}</span>
+                <span className="hidden md:inline text-[11px] text-gray-500">CID {active.customerId}</span>
+                <ChevronDownIcon className="w-3 h-3 text-gray-400" />
             </button>
             {open && (
-                <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
-                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Choose account</div>
-                    <div className="space-y-1 max-h-56 overflow-auto pr-1">
+                <div className="absolute right-0 mt-1 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl p-3">
+                    <div className="text-sm font-medium text-gray-800 mb-2">Choose account</div>
+                    <div className="space-y-2 max-h-60 overflow-auto pr-1">
                         {accounts.map(acc => (
                             <button
                                 type="button"
                                 key={acc.id}
                                 onClick={() => { onSelect(acc.id); setOpen(false); }}
-                                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${acc.id === active.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'}`}
+                                className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${acc.id === active.id ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'}`}
                             >
-                                <div className="text-xs font-medium">{acc.name}</div>
-                                <div className="text-[11px] text-gray-500">CID {acc.customerId}</div>
-                                <div className="text-[11px] text-gray-400">{acc.timezone} · {acc.currency}</div>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="text-sm font-semibold">{acc.name}</span>
+                                    <span className="text-[11px] text-gray-500">CID {acc.customerId}</span>
+                                </div>
+                                <div className="text-[11px] text-gray-400 mt-1">{acc.timezone} · {acc.currency}</div>
                             </button>
                         ))}
+                    </div>
+                    <div className="mt-3 flex justify-end">
+                        <button type="button" onClick={() => setOpen(false)} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">Close</button>
                     </div>
                 </div>
             )}
