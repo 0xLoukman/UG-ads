@@ -2307,10 +2307,13 @@ const App: React.FC = () => {
         });
     };
 
-    const handleGenerateSummary = async (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => {
+    const handleGenerateSummary = async (prompt: string, channels: Channel[], manualParams?: ManualCampaignConfig, accountId?: string) => {
         setIsLoading(true);
         setError(null);
         setBrief(prompt);
+        if (accountId) {
+            setSelectedGoogleAccountId(accountId);
+        }
         try {
             const result = await generateCampaignSummary(prompt, channels, manualParams);
             setSummaries(result);
