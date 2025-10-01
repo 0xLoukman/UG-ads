@@ -1193,7 +1193,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
             const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
             secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
         }
-        const manual = (primaryMarkets.length || secondaryMarkets.length) ? { primaryMarkets, secondaryMarkets, campaignTypes: [] as string[] } : undefined;
+        const hasManualData = primaryMarkets.length || secondaryMarkets.length || selectedCampaignTypes.length;
+        const manual = hasManualData ? { primaryMarkets, secondaryMarkets, campaignTypes: selectedCampaignTypes } : undefined;
         onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
     };
 
@@ -1947,7 +1948,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
-        { key: '336x280', w: 336, h: 280, label: '336×280 ��� Large rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
