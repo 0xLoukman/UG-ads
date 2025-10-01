@@ -1060,6 +1060,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
+    const [showCampaignTypes, setShowCampaignTypes] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
 
     useEffect(() => {
