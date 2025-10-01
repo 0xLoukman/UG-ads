@@ -1292,6 +1292,40 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 {selectedChannels.includes('Google') && googleAccounts.length > 0 && activeGoogleAccount && (
                                     <GoogleAccountDropdown accounts={googleAccounts} selectedId={activeGoogleAccount.id} onSelect={onSelectAccount} />
                                 )}
+                                <div className="relative" ref={campaignTypeRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCampaignTypes(v => !v)}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                    >
+                                        <OptionsIcon />
+                                        {selectedCampaignTypes.length === 0 ? 'Campaign types' : `${selectedCampaignTypes.length} type${selectedCampaignTypes.length > 1 ? 's' : ''}`}
+                                        <ChevronDownIcon className="w-3 h-3 text-gray-400" />
+                                    </button>
+                                    {showCampaignTypes && (
+                                        <div className="absolute left-0 top-12 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
+                                            <div className="text-sm font-medium text-gray-800 mb-2">Select campaign types</div>
+                                            <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                                                {ALL_CAMPAIGN_TYPES.map(type => {
+                                                    const active = selectedCampaignTypes.includes(type);
+                                                    return (
+                                                        <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
+                                                            <span className="flex-1">{type}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                                {ALL_CAMPAIGN_TYPES.length === 0 && (
+                                                    <div className="text-xs text-gray-400">No campaign types available.</div>
+                                                )}
+                                            </div>
+                                            <div className="mt-3 flex justify-end gap-2">
+                                                <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">Clear</button>
+                                                <button type="button" onClick={() => setShowCampaignTypes(false)} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">Done</button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <button
                                     onClick={handleGenerate}
