@@ -1059,9 +1059,10 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [brief, setBrief] = useState("");
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
-    const [showUpload, setShowUpload] = useState(false);
-    const [showCampaignTypes, setShowCampaignTypes] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
+    const [setupOpen, setSetupOpen] = useState(false);
+    const [setupPanel, setSetupPanel] = useState<'root' | 'channel' | 'account' | 'types'>('root');
+    const setupRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (!googleAccounts.length) return;
@@ -1070,23 +1071,23 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         }
     }, [googleAccounts, selectedAccountId, onSelectAccount]);
 
+    useEffect(() => {
+        if (!setupOpen) return;
+        const handler = (event: MouseEvent) => {
+            if (setupRef.current && !setupRef.current.contains(event.target as Node)) {
+                setSetupOpen(false);
+                setSetupPanel('root');
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [setupOpen]);
+
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
     const toggleCampaignType = (type: string) => {
         setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
-
-    const campaignTypeRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        if (!showCampaignTypes) return;
-        const handler = (event: MouseEvent) => {
-            if (campaignTypeRef.current && !campaignTypeRef.current.contains(event.target as Node)) {
-                setShowCampaignTypes(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [showCampaignTypes]);
 
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
