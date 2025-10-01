@@ -2284,6 +2284,7 @@ const App: React.FC = () => {
         } catch {}
         return { images: [], logos: [], banners: [] };
     });
+    const [selectedGoogleAccountId, setSelectedGoogleAccountId] = useState<string>(GOOGLE_AD_ACCOUNTS[0].id);
     const [libraryPicker, setLibraryPicker] = useState<{ open: boolean; type: 'images'|'logos'; max: number; onSelect: (urls: string[]) => void } | null>(null);
     const [bannerPicker, setBannerPicker] = useState<{ open: boolean; onSelect: (preset: BannerPreset) => void } | null>(null);
     useEffect(() => { try { localStorage.setItem('assetLibrary', JSON.stringify(assetLibrary)); } catch {} }, [assetLibrary]);
