@@ -1189,10 +1189,10 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
             secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
         }
         const manual = (primaryMarkets.length || secondaryMarkets.length) ? { primaryMarkets, secondaryMarkets, campaignTypes: [] as string[] } : undefined;
-        onGenerate(brief, selectedChannels, manual);
+        onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
     };
 
-    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey;
+    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey || (selectedChannels.includes('Google') && !activeGoogleAccount);
 
     return (
         <div className="flex justify-center items-start pt-16 sm:pt-24">
