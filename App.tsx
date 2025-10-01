@@ -1259,10 +1259,13 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 </button>
                             </div>
 
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                                 <div className="relative">
                                     <ChannelDropdown selected={selectedChannels[0] || 'Google'} onSelect={(c) => setSelectedChannels([c])} />
                                 </div>
+                                {selectedChannels.includes('Google') && googleAccounts.length > 0 && activeGoogleAccount && (
+                                    <GoogleAccountDropdown accounts={googleAccounts} selectedId={activeGoogleAccount.id} onSelect={onSelectAccount} />
+                                )}
 
                                 <button
                                     onClick={handleGenerate}
