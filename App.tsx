@@ -968,7 +968,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         }
         const mkt = has('market');
         const typ = has('type');
-        if (!mkt && typ) return 'Nice direction! Which markets do you want to target? 🌍';
+        if (!mkt && typ) return 'Nice direction! Which markets do you want to target? ����';
         if (mkt && !typ) return 'That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
         if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
         if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
@@ -1287,43 +1287,151 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             </div>
 
                             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                                <div className="relative">
-                                    <ChannelDropdown selected={selectedChannels[0] || 'Google'} onSelect={(c) => setSelectedChannels([c])} />
-                                </div>
-                                {selectedChannels.includes('Google') && googleAccounts.length > 0 && activeGoogleAccount && (
-                                    <GoogleAccountDropdown accounts={googleAccounts} selectedId={activeGoogleAccount.id} onSelect={onSelectAccount} />
-                                )}
-                                <div className="relative" ref={campaignTypeRef}>
+                                <div className="relative" ref={setupRef}>
                                     <button
                                         type="button"
-                                        onClick={() => setShowCampaignTypes(v => !v)}
-                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                        onClick={() => {
+                                            setSetupOpen(prev => {
+                                                const next = !prev;
+                                                if (!prev) setSetupPanel('root');
+                                                return next;
+                                            });
+                                        }}
+                                        className="campaign-setup-trigger flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
                                     >
                                         <OptionsIcon />
-                                        {selectedCampaignTypes.length === 0 ? 'Campaign types' : `${selectedCampaignTypes.length} type${selectedCampaignTypes.length > 1 ? 's' : ''}`}
-                                        <ChevronDownIcon className="w-3 h-3 text-gray-400" />
+                                        Campaign setup
+                                        <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${setupOpen ? 'rotate-180' : ''}`} />
                                     </button>
-                                    {showCampaignTypes && (
-                                        <div className="absolute left-0 top-12 w-64 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
-                                            <div className="text-sm font-medium text-gray-800 mb-2">Select campaign types</div>
-                                            <div className="space-y-2 max-h-56 overflow-auto pr-1">
-                                                {ALL_CAMPAIGN_TYPES.map(type => {
-                                                    const active = selectedCampaignTypes.includes(type);
-                                                    return (
-                                                        <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
-                                                            <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
-                                                            <span className="flex-1">{type}</span>
-                                                        </label>
-                                                    );
-                                                })}
-                                                {ALL_CAMPAIGN_TYPES.length === 0 && (
-                                                    <div className="text-xs text-gray-400">No campaign types available.</div>
-                                                )}
+                                    {setupOpen && (
+                                        <div className="campaign-setup-popover absolute right-0 top-12 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="text-sm font-semibold text-gray-800">
+                                                    {setupPanel === 'root' ? 'Campaign setup' : setupPanel === 'channel' ? 'Select channel' : setupPanel === 'account' ? 'Select Google Ads account' : 'Select campaign types'}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {setupPanel !== 'root' && (
+                                                        <button type="button" onClick={() => setSetupPanel('root')} className="text-xs text-gray-600 hover:text-gray-900">
+                                                            Back
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSetupOpen(false);
+                                                            setSetupPanel('root');
+                                                        }}
+                                                        className="text-xs text-gray-600 hover:text-gray-900"
+                                                    >
+                                                        Close
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="mt-3 flex justify-end gap-2">
-                                                <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">Clear</button>
-                                                <button type="button" onClick={() => setShowCampaignTypes(false)} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">Done</button>
-                                            </div>
+                                            {setupPanel === 'root' && (
+                                                <div className="space-y-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSetupPanel('channel')}
+                                                        className="campaign-setup-row w-full text-left px-3 py-2 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors"
+                                                    >
+                                                        <div className="text-sm font-medium text-gray-800">Ad platform</div>
+                                                        <div className="text-xs text-gray-500 mt-0.5">
+                                                            {selectedChannels[0] === 'Google' ? 'Google Ads' : selectedChannels.join(', ')}
+                                                        </div>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSetupPanel('account')}
+                                                        className="campaign-setup-row w-full text-left px-3 py-2 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors"
+                                                    >
+                                                        <div className="text-sm font-medium text-gray-800">Account</div>
+                                                        <div className="text-xs text-gray-500 mt-0.5">
+                                                            {activeGoogleAccount ? `${activeGoogleAccount.name} · CID ${activeGoogleAccount.customerId}` : 'No account connected'}
+                                                        </div>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSetupPanel('types')}
+                                                        className="campaign-setup-row w-full text-left px-3 py-2 rounded-xl border border-gray-100 hover:border-gray-200 transition-colors"
+                                                    >
+                                                        <div className="text-sm font-medium text-gray-800">Campaign types</div>
+                                                        <div className="text-xs text-gray-500 mt-0.5">
+                                                            {selectedCampaignTypes.length === 0 ? 'None selected' : selectedCampaignTypes.join(', ')}
+                                                        </div>
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {setupPanel === 'channel' && (
+                                                <div className="space-y-2">
+                                                    {channelOptions.map(opt => {
+                                                        const isDisabled = opt !== 'Google';
+                                                        const isActive = selectedChannels.includes(opt as Channel);
+                                                        return (
+                                                            <button
+                                                                key={opt}
+                                                                type="button"
+                                                                disabled={isDisabled}
+                                                                onClick={() => {
+                                                                    if (!isDisabled) {
+                                                                        setSelectedChannels([opt as Channel]);
+                                                                        setSetupPanel('root');
+                                                                    }
+                                                                }}
+                                                                className={`flex items-center justify-between w-full px-3 py-2 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                            >
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
+                                                                    <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                                                                </span>
+                                                                {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                            {setupPanel === 'account' && (
+                                                <div className="space-y-2 max-h-64 overflow-auto pr-1">
+                                                    {googleAccounts.map(acc => (
+                                                        <button
+                                                            type="button"
+                                                            key={acc.id}
+                                                            onClick={() => {
+                                                                onSelectAccount(acc.id);
+                                                                setSetupPanel('root');
+                                                            }}
+                                                            className={`w-full text-left px-3 py-2 rounded-xl border transition-colors ${acc.id === (activeGoogleAccount?.id || '') ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'}`}
+                                                        >
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="text-sm font-semibold">{acc.name}</span>
+                                                                <span className="text-[11px] text-gray-500">CID {acc.customerId}</span>
+                                                            </div>
+                                                            <div className="text-[11px] text-gray-400 mt-1">{acc.timezone} · {acc.currency}</div>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            {setupPanel === 'types' && (
+                                                <div className="flex flex-col">
+                                                    <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                                                        {ALL_CAMPAIGN_TYPES.map(type => {
+                                                            const active = selectedCampaignTypes.includes(type);
+                                                            return (
+                                                                <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
+                                                                    <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
+                                                                    <span className="flex-1">{type}</span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                        {ALL_CAMPAIGN_TYPES.length === 0 && (
+                                                            <div className="text-xs text-gray-400">No campaign types available.</div>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-3 flex justify-end gap-2">
+                                                        <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">Clear</button>
+                                                        <button type="button" onClick={() => setSetupPanel('root')} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">Done</button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
