@@ -1062,9 +1062,12 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
-    const [setupOpen, setSetupOpen] = useState(false);
-    const [setupPanel, setSetupPanel] = useState<'root' | 'channel' | 'account' | 'types'>('root');
-    const setupRef = useRef<HTMLDivElement | null>(null);
+    const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+    const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+    const [campaignTypeMenuOpen, setCampaignTypeMenuOpen] = useState(false);
+    const channelMenuRef = useRef<HTMLDivElement | null>(null);
+    const accountMenuRef = useRef<HTMLDivElement | null>(null);
+    const campaignTypeMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (!googleAccounts.length) return;
@@ -1074,16 +1077,37 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     }, [googleAccounts, selectedAccountId, onSelectAccount]);
 
     useEffect(() => {
-        if (!setupOpen) return;
+        if (!channelMenuOpen) return;
         const handler = (event: MouseEvent) => {
-            if (setupRef.current && !setupRef.current.contains(event.target as Node)) {
-                setSetupOpen(false);
-                setSetupPanel('root');
+            if (channelMenuRef.current && !channelMenuRef.current.contains(event.target as Node)) {
+                setChannelMenuOpen(false);
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
-    }, [setupOpen]);
+    }, [channelMenuOpen]);
+
+    useEffect(() => {
+        if (!accountMenuOpen) return;
+        const handler = (event: MouseEvent) => {
+            if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
+                setAccountMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [accountMenuOpen]);
+
+    useEffect(() => {
+        if (!campaignTypeMenuOpen) return;
+        const handler = (event: MouseEvent) => {
+            if (campaignTypeMenuRef.current && !campaignTypeMenuRef.current.contains(event.target as Node)) {
+                setCampaignTypeMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [campaignTypeMenuOpen]);
 
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
