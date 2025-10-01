@@ -114,6 +114,8 @@ const channelIcons: Record<Channel, React.ReactNode> = {
     TikTok: <img src={channelIconSrc.TikTok} className="h-5 w-auto object-contain" alt="TikTok" />,
 };
 
+const channelOptions: Array<Channel | 'Bing'> = ['Google', 'Meta', 'TikTok', 'Bing'];
+
 // ===== UI COMPONENTS =====
 
 const Header = ({ topTab, setTopTab }: { topTab: 'campaign'|'creative'|'creativeV2', setTopTab: (t: 'campaign'|'creative'|'creativeV2') => void }) => (
