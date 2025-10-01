@@ -1054,6 +1054,15 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [showMarkets, setShowMarkets] = useState(false);
     const [showUpload, setShowUpload] = useState(false);
 
+    useEffect(() => {
+        if (!googleAccounts.length) return;
+        if (!googleAccounts.some(acc => acc.id === selectedAccountId)) {
+            onSelectAccount(googleAccounts[0].id);
+        }
+    }, [googleAccounts, selectedAccountId, onSelectAccount]);
+
+    const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
+
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
     const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
