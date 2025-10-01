@@ -1366,7 +1366,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         onClick={() => {
                                             setChannelMenuOpen(false);
                                             setAccountMenuOpen(false);
-        setCampaignTypeMenuOpen(false);
+                                            setCampaignTypeMenuOpen(false);
                                             setShowMarkets(v => !v);
                                         }}
                                         className="flex items-center justify-between w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-gray-300 transition-colors"
@@ -1818,7 +1818,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
-        { key: '728x90',  w: 728, h: 90,  label: '728×90 ��� Leaderboard' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 ���� Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
