@@ -2494,6 +2494,58 @@ const App: React.FC = () => {
     );
 };
 
+// Google Ads account dropdown component
+const GoogleAccountDropdown = ({ accounts, selectedId, onSelect }: { accounts: GoogleAdAccount[]; selectedId: string; onSelect: (id: string) => void }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement | null>(null);
+    useEffect(() => {
+        const handler = (event: MouseEvent) => {
+            if (ref.current && !ref.current.contains(event.target as Node)) {
+                setOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    if (!accounts.length) {
+        return null;
+    }
+
+    const active = accounts.find(acc => acc.id === selectedId) || accounts[0];
+
+    return (
+        <div className="relative" ref={ref}>
+            <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+                <div className="text-left">
+                    <div className="text-[10px] uppercase tracking-wide text-gray-500">Google Ads account</div>
+                    <div className="text-xs font-medium text-gray-800">{active.name}</div>
+                    <div className="text-[10px] text-gray-500">CID {active.customerId}</div>
+                </div>
+                <ChevronDownIcon className="w-3 h-3 text-gray-500" />
+            </button>
+            {open && (
+                <div className="absolute right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg p-2">
+                    <div className="text-[11px] font-semibold text-gray-500 mb-1">Choose account</div>
+                    <div className="space-y-1 max-h-56 overflow-auto pr-1">
+                        {accounts.map(acc => (
+                            <button
+                                key={acc.id}
+                                onClick={() => { onSelect(acc.id); setOpen(false); }}
+                                className={`w-full text-left px-3 py-2 rounded-md transition-colors ${acc.id === active.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'}`}
+                            >
+                                <div className="text-xs font-medium">{acc.name}</div>
+                                <div className="text-[11px] text-gray-500">CID {acc.customerId}</div>
+                                <div className="text-[11px] text-gray-400">{acc.timezone} · {acc.currency}</div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
 // Channel dropdown component
 const ChannelDropdown = ({ selected, onSelect }: { selected: Channel, onSelect: (c: Channel) => void }) => {
     const [open, setOpen] = useState(false);
