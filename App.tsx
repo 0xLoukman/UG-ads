@@ -5,6 +5,21 @@ import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset
 type View = 'input' | 'summary' | 'details' | 'review';
 type SortConfig = { key: keyof CampaignSummary | 'browserLangs'; direction: 'ascending' | 'descending' } | null;
 type InputMode = 'prompt' | 'manual';
+type ManualCampaignConfig = { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; };
+
+interface GoogleAdAccount {
+    id: string;
+    name: string;
+    customerId: string;
+    timezone: string;
+    currency: string;
+}
+
+const GOOGLE_AD_ACCOUNTS: GoogleAdAccount[] = [
+    { id: 'acct-hotel-global', name: 'LuxeStay Hotels Global', customerId: '123-456-7890', timezone: 'America/New_York', currency: 'USD' },
+    { id: 'acct-urban-collective', name: 'Urban Getaways Collective', customerId: '234-567-8901', timezone: 'Europe/London', currency: 'GBP' },
+    { id: 'acct-pacific-retreats', name: 'Pacific Retreats Marketing', customerId: '345-678-9012', timezone: 'Asia/Singapore', currency: 'SGD' },
+];
 
 const ALL_CAMPAIGN_TYPES = ["PMax", "Brand", "Retargeting", "Hotel Ads"];
 const COUNTRIES: Omit<Market, 'browserLangs'>[] = [
