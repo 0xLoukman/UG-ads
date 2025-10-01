@@ -1293,7 +1293,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             </div>
                             {attachments.map((f, i) => (
                                 <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
-                                    📎 {f.name}
+                                    ��� {f.name}
                                     <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
                                 </span>
                             ))}
@@ -2406,7 +2406,7 @@ const App: React.FC = () => {
 
         switch (view) {
             case 'input':
-                return <InputView onGenerate={handleGenerateSummary} />;
+                return <InputView onGenerate={handleGenerateSummary} googleAccounts={GOOGLE_AD_ACCOUNTS} selectedAccountId={selectedGoogleAccountId} onSelectAccount={setSelectedGoogleAccountId} />;
             case 'summary':
                 return <CampaignSummaryTable summaries={summaries} onSelect={() => {}} onConfirm={handleGenerateDetails} onBack={resetToInput} onUpdate={(id, updater) => setSummaries(prev => prev.map(s => s.id === id ? updater(s) : s))} />;
             case 'details':
