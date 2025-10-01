@@ -2523,7 +2523,14 @@ const GoogleAccountDropdown = ({ accounts, selectedId, onSelect }: { accounts: G
 
     return (
         <div className="relative" ref={ref}>
-            <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors">
+            <button
+                type="button"
+                onClick={() => setOpen(v => !v)}
+                className="flex items-center gap-3 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors"
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-label={`Selected Google Ads account ${active.name}`}
+            >
                 <div className="text-left">
                     <div className="text-[10px] uppercase tracking-wide text-gray-500">Google Ads account</div>
                     <div className="text-xs font-medium text-gray-800">{active.name}</div>
@@ -2537,6 +2544,7 @@ const GoogleAccountDropdown = ({ accounts, selectedId, onSelect }: { accounts: G
                     <div className="space-y-1 max-h-56 overflow-auto pr-1">
                         {accounts.map(acc => (
                             <button
+                                type="button"
                                 key={acc.id}
                                 onClick={() => { onSelect(acc.id); setOpen(false); }}
                                 className={`w-full text-left px-3 py-2 rounded-md transition-colors ${acc.id === active.id ? 'bg-blue-50 text-blue-700' : 'hover:bg-gray-50 text-gray-700'}`}
