@@ -1064,6 +1064,10 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
 
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
+    const toggleCampaignType = (type: string) => {
+        setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+    };
+
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
     const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
@@ -1943,7 +1947,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
-        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 ��� Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
         { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
