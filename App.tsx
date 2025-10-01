@@ -1041,7 +1041,14 @@ const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
 
 type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
 
-const InputView = ({ onGenerate }: { onGenerate: (prompt: string, channels: Channel[], manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[]; }) => void }) => {
+type InputViewProps = {
+    onGenerate: (prompt: string, channels: Channel[], manualParams?: ManualCampaignConfig, accountId?: string) => void;
+    googleAccounts: GoogleAdAccount[];
+    selectedAccountId: string;
+    onSelectAccount: (id: string) => void;
+};
+
+const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAccount }: InputViewProps) => {
     const [brief, setBrief] = useState("");
     const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
