@@ -1341,186 +1341,6 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
 
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <div className="p-4 pb-3 space-y-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                            <div className="relative flex items-center gap-2" ref={channelMenuRef}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setChannelMenuStage('channels');
-                                        setChannelMenuOpen(prev => {
-                                            const next = !prev;
-                                            if (next) {
-                                                setShowMarkets(false);
-                                            }
-                                            return next;
-                                        });
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
-                                >
-                                    <img src={channelIconSrc[selectedChannels[0] || 'Google']} className="w-4 h-4" alt={selectedChannels[0] || 'Google'} />
-                                    <span className="flex items-center gap-1">
-                                        <span>{selectedChannels[0] === 'Google' ? 'Google Ads' : selectedChannels.join(', ')}</span>
-                                        {selectedCampaignTypes.length > 0 && (
-                                            <span className="text-xs text-gray-500">• {selectedCampaignTypes.length} type{selectedCampaignTypes.length > 1 ? 's' : ''}</span>
-                                        )}
-                                    </span>
-                                    <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${channelMenuOpen && channelMenuStage === 'channels' ? 'rotate-180' : ''}`} />
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setChannelMenuStage('types');
-                                        setChannelMenuOpen(true);
-                                        setShowMarkets(false);
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
-                                >
-                                    <OptionsIcon />
-                                    <span>{selectedCampaignTypes.length === 0 ? 'Campaign types' : `${selectedCampaignTypes.length} selected`}</span>
-                                    <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${channelMenuOpen && channelMenuStage === 'types' ? 'rotate-180' : ''}`} />
-                                </button>
-                                {channelMenuOpen && (
-                                    <div className="absolute left-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="text-sm font-semibold text-gray-800">
-                                                {channelMenuStage === 'channels' ? 'Select channel' : 'Select campaign types'}
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                {channelMenuStage === 'types' && (
-                                                    <button type="button" onClick={() => setChannelMenuStage('channels')} className="text-xs text-gray-600 hover:text-gray-900">
-                                                        Back
-                                                    </button>
-                                                )}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setChannelMenuOpen(false);
-                                                        setChannelMenuStage('channels');
-                                                    }}
-                                                    className="text-xs text-gray-600 hover:text-gray-900"
-                                                >
-                                                    Close
-                                                </button>
-                                            </div>
-                                        </div>
-                                        {channelMenuStage === 'channels' ? (
-                                            <div className="space-y-2">
-                                                {channelOptions.map(opt => {
-                                                    const isDisabled = opt !== 'Google';
-                                                    const isActive = selectedChannels.includes(opt as Channel);
-                                                    return (
-                                                        <button
-                                                            key={opt}
-                                                            type="button"
-                                                            disabled={isDisabled}
-                                                            onClick={() => {
-                                                                if (!isDisabled) {
-                                                                    setSelectedChannels([opt as Channel]);
-                                                                    if (opt === 'Google') {
-                                                                        setChannelMenuStage('types');
-                                                                    } else {
-                                                                        setChannelMenuOpen(false);
-                                                                    }
-                                                                }
-                                                            }}
-                                                            className={`flex items-center justify-between w-full px-3 py-2 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                        >
-                                                            <span className="inline-flex items-center gap-2">
-                                                                <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
-                                                                <span>{opt === 'Google' ? 'Adwords' : opt}</span>
-                                                            </span>
-                                                            {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-col">
-                                                <div className="space-y-2 max-h-56 overflow-auto pr-1">
-                                                    {ALL_CAMPAIGN_TYPES.map(type => {
-                                                        const active = selectedCampaignTypes.includes(type);
-                                                        return (
-                                                            <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
-                                                                <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
-                                                                <span className="flex-1">{type}</span>
-                                                            </label>
-                                                        );
-                                                    })}
-                                                    {ALL_CAMPAIGN_TYPES.length === 0 && (
-                                                        <div className="text-xs text-gray-400">No campaign types available.</div>
-                                                    )}
-                                                </div>
-                                                <div className="mt-3 flex justify-end gap-2">
-                                                    <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">Clear</button>
-                                                    <button type="button" onClick={() => { setChannelMenuOpen(false); setChannelMenuStage('channels'); }} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">Done</button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="relative" ref={dropdownRef}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setChannelMenuOpen(false);
-                                        setChannelMenuStage('channels');
-                                        setShowMarkets(v => !v);
-                                    }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
-                                >
-                                    <svg className="w-4 h-4 text-gray-500" viewBox="0 0 19 20" fill="none" aria-hidden="true">
-                                        <path d="M6.33913 10.6787H11.7386C11.6566 12.503 11.2521 14.1831 10.678 15.4135C10.3555 16.1065 10.0076 16.5958 9.68518 16.8956C9.36839 17.1926 9.1506 17.2407 9.03746 17.2407C8.92433 17.2407 8.70654 17.1926 8.38975 16.8956C8.06731 16.5958 7.71941 16.1036 7.39697 15.4135C6.82279 14.1831 6.41832 12.503 6.3363 10.6787H6.33913ZM11.7415 9.32103H6.34196C6.42115 7.49668 6.82562 5.81658 7.39979 4.58621C7.72224 3.89607 8.07014 3.40392 8.39258 3.1041C8.70937 2.80712 8.92716 2.75903 9.04029 2.75903C9.15343 2.75903 9.37122 2.80712 9.68801 3.1041C10.0104 3.40392 10.3583 3.89607 10.6808 4.58621C11.255 5.81658 11.6594 7.49668 11.7415 9.32103ZM13.0991 9.32103C13.0001 6.89988 12.375 4.65126 11.4614 3.17481C14.0664 4.09689 15.9841 6.46995 16.25 9.32103H13.0991ZM16.25 10.6787C15.9841 13.5298 14.0664 15.9028 11.4614 16.8249C12.375 15.3484 13.0001 13.0998 13.0991 10.6787H16.25ZM4.98147 10.6787C5.08047 13.0998 5.70556 15.3484 6.61914 16.8249C4.01415 15.9 2.09646 13.5298 1.83059 10.6787H4.98147ZM1.83059 9.32103C2.09646 6.46995 4.01415 4.09689 6.61914 3.17481C5.70556 4.65126 5.08047 6.89988 4.98147 9.32103H1.83059Z" fill="currentColor"/>
-                                    </svg>
-                                    <span>{marketItems.length === 0 ? 'Markets' : `${marketItems.length} market${marketItems.length > 1 ? 's' : ''}`}</span>
-                                    <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${showMarkets ? 'rotate-180' : ''}`} />
-                                </button>
-                                {showMarkets && (
-                                    <div className="absolute left-0 top-full mt-2 w-80 max-w-full rounded-2xl border bg-white shadow-xl p-3 z-30">
-                                        <div className="text-sm font-medium mb-2">Add markets</div>
-                                        <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search countries…" className="w-full rounded-xl border px-3 py-2 text-sm mb-2" />
-                                        <div className="max-h-64 overflow-auto space-y-1 pr-1">
-                                            {visibleMarkets.length > 0 ? (
-                                                visibleMarkets.map(m => (
-                                                    <label key={m.code} className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                                        <input type="checkbox" className="h-4 w-4" checked={picked.includes(m.code)} onChange={() => togglePick(m.code)} />
-                                                        <span className="flex-1">{m.name}</span>
-                                                    </label>
-                                                ))
-                                            ) : (
-                                                <div className="text-xs text-gray-400 p-2">No results</div>
-                                            )}
-                                        </div>
-                                        {(() => { const acts = actionsForSelection(picked, assigned); return (
-                                            <>
-                                                {acts.showAddMarket && (
-                                                    <div className="mt-3"><button onClick={() => { addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white w-full">Add market</button></div>
-                                                )}
-                                                {(acts.showAddMarkets || acts.showAddCluster) && (
-                                                    <div className="mt-3 flex gap-2">
-                                                        <button onClick={() => { if (acts.showAddMarkets) addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddMarkets} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white flex-1 disabled:opacity-40">Add markets</button>
-                                                        <button onClick={() => { if (acts.showAddCluster) addMarketCluster(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddCluster} className="px-3 py-2 text-sm rounded-xl border flex-1 disabled:opacity-40">Add cluster</button>
-                                                    </div>
-                                                )}
-                                            </>
-                                        );})()}
-                                    </div>
-                                )}
-                            </div>
-                            <input ref={uploadInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
-                            <button onClick={() => uploadInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
-                                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
-                                    <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
-                                </svg>
-                                Upload
-                            </button>
-                            {attachments.map((f, i) => (
-                                <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
-                                    📎 {f.name}
-                                    <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
-                                </span>
-                            ))}
-                        </div>
                         <div className="flex flex-wrap gap-2">
                             {marketItems.length === 0 ? (
                                 <span className="text-xs text-gray-400">Use Markets to add countries or clusters.</span>
@@ -1540,7 +1360,158 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ))}
                         </div>
                         <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
-                        <div className="flex justify-end">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <div className="relative" ref={channelMenuRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setChannelMenuOpen(prev => {
+                                                const next = !prev;
+                                                if (next) {
+                                                    setShowMarkets(false);
+                                                }
+                                                return next;
+                                            });
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                    >
+                                        <img src={channelIconSrc[selectedChannels[0] || 'Google']} className="w-4 h-4" alt={selectedChannels[0] || 'Google'} />
+                                        <span className="flex items-center gap-1">
+                                            <span>{selectedChannels[0] === 'Google' ? 'Google Ads' : selectedChannels.join(', ')}</span>
+                                            {selectedCampaignTypes.length > 0 && (
+                                                <span className="text-xs text-gray-500">• {selectedCampaignTypes.length} type{selectedCampaignTypes.length > 1 ? 's' : ''}</span>
+                                            )}
+                                        </span>
+                                        <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${channelMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {channelMenuOpen && (
+                                        <div className="absolute left-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="text-sm font-semibold text-gray-800">Channel & campaign types</div>
+                                                <button type="button" onClick={() => setChannelMenuOpen(false)} className="text-xs text-gray-600 hover:text-gray-900">
+                                                    Close
+                                                </button>
+                                            </div>
+                                            <div className="space-y-2">
+                                                {channelOptions.map(opt => {
+                                                    const isDisabled = opt !== 'Google';
+                                                    const isActive = selectedChannels.includes(opt as Channel);
+                                                    return (
+                                                        <button
+                                                            key={opt}
+                                                            type="button"
+                                                            disabled={isDisabled}
+                                                            onClick={() => {
+                                                                if (!isDisabled) {
+                                                                    setSelectedChannels([opt as Channel]);
+                                                                    if (opt !== 'Google') {
+                                                                        setChannelMenuOpen(false);
+                                                                    }
+                                                                }
+                                                            }}
+                                                            className={`flex items-center justify-between w-full px-3 py-2 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                        >
+                                                            <span className="inline-flex items-center gap-2">
+                                                                <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
+                                                                <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                                                            </span>
+                                                            {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                            {selectedChannels.includes('Google') && (
+                                                <div className="mt-3 border-t border-gray-100 pt-3">
+                                                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Campaign types</div>
+                                                    <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                                                        {ALL_CAMPAIGN_TYPES.map(type => {
+                                                            const active = selectedCampaignTypes.includes(type);
+                                                            return (
+                                                                <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
+                                                                    <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
+                                                                    <span className="flex-1">{type}</span>
+                                                                </label>
+                                                            );
+                                                        })}
+                                                        {ALL_CAMPAIGN_TYPES.length === 0 && (
+                                                            <div className="text-xs text-gray-400">No campaign types available.</div>
+                                                        )}
+                                                    </div>
+                                                    <div className="mt-3 flex justify-between gap-2">
+                                                        <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">
+                                                            Clear
+                                                        </button>
+                                                        <button type="button" onClick={() => setChannelMenuOpen(false)} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">
+                                                            Done
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="relative" ref={dropdownRef}>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setChannelMenuOpen(false);
+                                            setShowMarkets(v => !v);
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
+                                    >
+                                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 19 20" fill="none" aria-hidden="true">
+                                            <path d="M6.33913 10.6787H11.7386C11.6566 12.503 11.2521 14.1831 10.678 15.4135C10.3555 16.1065 10.0076 16.5958 9.68518 16.8956C9.36839 17.1926 9.1506 17.2407 9.03746 17.2407C8.92433 17.2407 8.70654 17.1926 8.38975 16.8956C8.06731 16.5958 7.71941 16.1036 7.39697 15.4135C6.82279 14.1831 6.41832 12.503 6.3363 10.6787H6.33913ZM11.7415 9.32103H6.34196C6.42115 7.49668 6.82562 5.81658 7.39979 4.58621C7.72224 3.89607 8.07014 3.40392 8.39258 3.1041C8.70937 2.80712 8.92716 2.75903 9.04029 2.75903C9.15343 2.75903 9.37122 2.80712 9.68801 3.1041C10.0104 3.40392 10.3583 3.89607 10.6808 4.58621C11.255 5.81658 11.6594 7.49668 11.7415 9.32103ZM13.0991 9.32103C13.0001 6.89988 12.375 4.65126 11.4614 3.17481C14.0664 4.09689 15.9841 6.46995 16.25 9.32103H13.0991ZM16.25 10.6787C15.9841 13.5298 14.0664 15.9028 11.4614 16.8249C12.375 15.3484 13.0001 13.0998 13.0991 10.6787H16.25ZM4.98147 10.6787C5.08047 13.0998 5.70556 15.3484 6.61914 16.8249C4.01415 15.9 2.09646 13.5298 1.83059 10.6787H4.98147ZM1.83059 9.32103C2.09646 6.46995 4.01415 4.09689 6.61914 3.17481C5.70556 4.65126 5.08047 6.89988 4.98147 9.32103H1.83059Z" fill="currentColor"/>
+                                        </svg>
+                                        <span>{marketItems.length === 0 ? 'Markets' : `${marketItems.length} market${marketItems.length > 1 ? 's' : ''}`}</span>
+                                        <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${showMarkets ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {showMarkets && (
+                                        <div className="absolute left-0 top-full mt-2 w-80 max-w-full rounded-2xl border bg-white shadow-xl p-3 z-30">
+                                            <div className="text-sm font-medium mb-2">Add markets</div>
+                                            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search countries…" className="w-full rounded-xl border px-3 py-2 text-sm mb-2" />
+                                            <div className="max-h-64 overflow-auto space-y-1 pr-1">
+                                                {visibleMarkets.length > 0 ? (
+                                                    visibleMarkets.map(m => (
+                                                        <label key={m.code} className="flex items-center gap-2 text-sm p-2 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" className="h-4 w-4" checked={picked.includes(m.code)} onChange={() => togglePick(m.code)} />
+                                                            <span className="flex-1">{m.name}</span>
+                                                        </label>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-xs text-gray-400 p-2">No results</div>
+                                                )}
+                                            </div>
+                                            {(() => { const acts = actionsForSelection(picked, assigned); return (
+                                                <>
+                                                    {acts.showAddMarket && (
+                                                        <div className="mt-3"><button onClick={() => { addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white w-full">Add market</button></div>
+                                                    )}
+                                                    {(acts.showAddMarkets || acts.showAddCluster) && (
+                                                        <div className="mt-3 flex gap-2">
+                                                            <button onClick={() => { if (acts.showAddMarkets) addMarketSingles(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddMarkets} className="px-3 py-2 text-sm rounded-xl border bg-gray-900 text-white flex-1 disabled:opacity-40">Add markets</button>
+                                                            <button onClick={() => { if (acts.showAddCluster) addMarketCluster(picked); setPicked([]); setQ(''); setShowMarkets(false); }} disabled={!acts.showAddCluster} className="px-3 py-2 text-sm rounded-xl border flex-1 disabled:opacity-40">Add cluster</button>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );})()}
+                                        </div>
+                                    )}
+                                </div>
+                                <input ref={uploadInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
+                                <button onClick={() => uploadInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
+                                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
+                                        <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
+                                    </svg>
+                                    Upload
+                                </button>
+                                {attachments.map((f, i) => (
+                                    <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
+                                        📎 {f.name}
+                                        <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
+                                    </span>
+                                ))}
+                            </div>
                             <button
                                 onClick={handleGenerate}
                                 disabled={isGenerateDisabled}
@@ -1550,11 +1521,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 Create campaign
                             </button>
                         </div>
-
-
-
                         {!hasKey && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
+                            <div className="pt-3 border-t border-gray-100">
                                 <details className="text-xs text-gray-500">
                                     <summary className="cursor-pointer list-none underline underline-offset-2 decoration-dotted">Set Gemini key</summary>
                                     <div className="mt-2 flex gap-2">
