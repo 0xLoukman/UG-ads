@@ -989,7 +989,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         if (!mkt && typ) return 'Nice direction! Which markets do you want to target? ����';
         if (mkt && !typ) return 'That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
         if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
-        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ��';
+        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
         return 'You\'re doing great — add any extra details you think matter, or proceed when ready ✅';
     }, [value, missing, schema, has]);
 
@@ -1239,6 +1239,16 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         setShowMarkets(false);
         setBrief(example);
     };
+
+    useEffect(() => {
+        if (!showPromptExamples) return;
+        const container = promptExamplesRef.current;
+        if (!container) return;
+        updatePromptScrollState();
+        const handleScroll = () => updatePromptScrollState();
+        container.addEventListener('scroll', handleScroll);
+        return () => container.removeEventListener('scroll', handleScroll);
+    }, [showPromptExamples, updatePromptScrollState]);
 
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
