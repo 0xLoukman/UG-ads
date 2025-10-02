@@ -1435,12 +1435,16 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                                 if (isActive) {
                                                                     setSelectedChannels([]);
                                                                     setSelectedCampaignTypes([]);
+                                                                    setChannelMenuStage('channels');
                                                                     setChannelMenuOpen(false);
                                                                     return;
                                                                 }
                                                                 setSelectedChannels([opt as Channel]);
-                                                                if (opt !== 'Google') {
+                                                                if (opt === 'Google') {
+                                                                    setChannelMenuStage('types');
+                                                                } else {
                                                                     setSelectedCampaignTypes([]);
+                                                                    setChannelMenuStage('channels');
                                                                     setChannelMenuOpen(false);
                                                                 }
                                                             }}
