@@ -97,6 +97,7 @@ const deleteIn = (obj: any, path: (string | number)[]): any => {
 
 
 const channelIconSrc: Record<string, string> = {
+    Channels: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F1d2376b7080b49b29cdb925e5e9a9e9e?format=webp&width=800',
     Google: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F533ea53c28d34716a117391b4d019fab?format=webp&width=800',
     Meta: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6d64048564434594b3d94470b48f7f90?format=webp&width=800',
     TikTok: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F7f6f42d403b0493d9a24bfa1923d7754?format=webp&width=800',
@@ -109,6 +110,12 @@ const channelIcons: Record<Channel, React.ReactNode> = {
 };
 
 const channelOptions: Array<Channel | 'Bing'> = ['Google', 'Meta', 'TikTok', 'Bing'];
+
+const PROMPT_EXAMPLES: string[] = [
+    'Create a Google Ads Performance Max campaign for a luxury hotel in Dubai targeting English and Arabic speakers with summer offers.',
+    'Plan a Google Ads Remarketing campaign for a boutique resort in Paris aimed at past guests with limited-time winter packages.',
+    'Launch a Google Ads Brand campaign for a beachfront resort in Bali focusing on family-friendly amenities and school holiday travel.',
+];
 
 // ===== UI COMPONENTS =====
 
