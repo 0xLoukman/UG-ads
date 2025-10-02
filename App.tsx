@@ -34,7 +34,8 @@ const COUNTRIES: Omit<Market, 'browserLangs'>[] = [
     { name: "Denmark", iso: "DK"}, { name: "Finland", iso: "FI"},
     { name: "Austria", iso: "AT"}, { name: "Belgium", iso: "BE"},
     { name: "Ireland", iso: "IE"}, { name: "New Zealand", iso: "NZ"},
-    { name: "Singapore", iso: "SG"}, { name: "Hong Kong", iso: "HK"}
+    { name: "Singapore", iso: "SG"}, { name: "Hong Kong", iso: "HK"},
+    { name: "Morocco", iso: "MA"}
 ].sort((a,b) => a.name.localeCompare(b.name));
 
 const getMarketWithLangs = (country: Omit<Market, 'browserLangs'>): Market => {
@@ -2212,7 +2213,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                         <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                         <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-24" placeholder="Write a short brief" />
                         <div className="mt-2 flex gap-2">
-                            <button onClick={generate} disabled={isLoading} className="px-3 py-1.5 text-xs rounded-md bg-black text-white disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
+                            <button onClick={generate} disabled={isLoading} className="px-3 py-1.5 text-xs rounded-md bg-black text-white disabled:bg-gray-400">{isLoading ? 'Generating���' : 'Generate copy'}</button>
                         </div>
                     </div>
                     <div>
