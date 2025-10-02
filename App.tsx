@@ -481,7 +481,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
                 <button aria-label="Previous variation" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <button aria-label="Next variation" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
                 <div className="mx-auto max-w-md rounded-xl border border-gray-200 p-4 bg-white">
-                    <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
+                    <div className="text-[11px] text-gray-500 mb-1">Ad �� {urlHost}</div>
                     <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
                         {isSearchLike ? (
                             <>
@@ -1233,7 +1233,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     }, [channelMenuOpen]);
 
     const primaryChannel = selectedChannels[0];
-    const channelDisplayIcon = channelIconSrc[primaryChannel ?? 'Channels'];
+    const channelDisplayIcon = getChannelIcon(primaryChannel ?? 'Channels');
     const channelDisplayLabel = primaryChannel ? (primaryChannel === 'Google' ? 'Adwords' : primaryChannel) : 'Channels';
     const promptExamplesRef = useRef<HTMLDivElement | null>(null);
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
@@ -1580,7 +1580,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                                 className={`flex items-center justify-between w-full px-3 py-1 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                                                             >
                                                                 <span className="inline-flex items-center gap-2">
-                                                                    <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
+                                                                    {getChannelIcon(opt, 'sm')}
                                                                     <span>{opt === 'Google' ? 'Adwords' : opt}</span>
                                                                 </span>
                                                                 {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
@@ -1865,7 +1865,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             return (
                             <React.Fragment key={s.id}>
                             <tr className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{channelIcons[s.channel]}</span><span>{s.channel}</span></td>
+                                <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{getChannelIcon(s.channel, 'md')}</span><span>{s.channel}</span></td>
                                 <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
                                 <td className="px-6 py-3">{s.campaignType}</td>
                                 <td className="px-6 py-3">{s.market.name} ({s.market.iso})</td>
@@ -2007,7 +2007,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLib
                                 onClick={() => setSelectedCampaignId(c.id)}
                                 className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${selectedCampaignId === c.id ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
                             >
-                                <span className="text-gray-500">{channelIcons[c.channel]}</span>
+                                <span className="text-gray-500">{getChannelIcon(c.channel, 'md')}</span>
                                 <div className="flex-grow">
                                     <p className="text-sm font-semibold">{c.campaignName}</p>
                                     <p className="text-xs text-gray-500">{c.market.name}</p>
