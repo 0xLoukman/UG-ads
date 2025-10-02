@@ -1556,6 +1556,14 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                 </div>
                                             ) : selectedChannels.includes('Google') ? (
                                                 <div className="flex flex-col">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setChannelMenuStage('channels')}
+                                                        className="mb-3 flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition-colors hover:border-gray-300 hover:text-gray-900"
+                                                    >
+                                                        <ChevronLeftIcon className="w-3.5 h-3.5" />
+                                                        <span>Return to channels</span>
+                                                    </button>
                                                     <div className="space-y-2 max-h-56 overflow-auto pr-1">
                                                         {ALL_CAMPAIGN_TYPES.map(type => {
                                                             const active = selectedCampaignTypes.includes(type);
