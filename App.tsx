@@ -1012,7 +1012,8 @@ const MARKETS: { code: string; name: string }[] = [
   { code: "GB", name: "UK" },
   { code: "IE", name: "Ireland" },
   { code: "CH", name: "Switzerland" },
-  { code: "AT", name: "Austria" }
+  { code: "AT", name: "Austria" },
+  { code: "MA", name: "Morocco" }
 ];
 const findMarket = (c: string) => MARKETS.find(m => m.code === c);
 const LANGUAGE_LIST: { code: string; name: string }[] = [
@@ -2213,7 +2214,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                         <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                         <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-24" placeholder="Write a short brief" />
                         <div className="mt-2 flex gap-2">
-                            <button onClick={generate} disabled={isLoading} className="px-3 py-1.5 text-xs rounded-md bg-black text-white disabled:bg-gray-400">{isLoading ? 'Generating���' : 'Generate copy'}</button>
+                            <button onClick={generate} disabled={isLoading} className="px-3 py-1.5 text-xs rounded-md bg-black text-white disabled:bg-gray-400">{isLoading ? 'Generating…' : 'Generate copy'}</button>
                         </div>
                     </div>
                     <div>
