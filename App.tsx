@@ -1199,6 +1199,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     };
 
     const applyPromptExample = (example: string) => {
+        setChannelMenuOpen(false);
+        setShowMarkets(false);
         setBrief(example);
     };
 
