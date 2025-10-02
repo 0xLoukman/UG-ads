@@ -1376,7 +1376,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         key={`prompt-example-${index}`}
                                         type="button"
                                         onClick={() => applyPromptExample(example)}
-                                        className="max-w-[260px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+                                        className="max-w-xs rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
                                     >
                                         {example}
                                     </button>
