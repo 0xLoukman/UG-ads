@@ -58,10 +58,70 @@ const summarySchema = {
 const summaryPlanSchema = { type: Type.ARRAY, items: summarySchema };
 const SUMMARY_SYSTEM_INSTRUCTION = `You are an expert marketing strategist. Create a structured high-level campaign plan as JSON. Follow any manual parameters exactly. One language per campaign. No creative copy, only structure. Output must match the JSON schema.`;
 
+const describeMarkets = (label: string, markets: Market[]) => {
+  if (!markets.length) return `${label}: None`;
+  const items = markets.map(m => {
+    const langs = m.browserLangs?.length ? ` [langs: ${m.browserLangs.join(', ')}]` : '';
+    return `${m.name} (${m.iso})${langs}`;
+  });
+  return `${label}: ${items.join(', ')}`;
+};
+
+const alignWithManualSelections = (
+  summaries: CampaignSummary[],
+  manualParams: ManualOverrides,
+  channels: Channel[]
+): CampaignSummary[] => {
+  const manualTypes = manualParams.campaignTypes.filter(Boolean);
+  const manualMarkets = [...manualParams.primaryMarkets, ...manualParams.secondaryMarkets].filter(Boolean);
+  const channelPool = channels.length ? channels : summaries.map(s => s.channel).filter(Boolean);
+  const ensureCount = Math.max(
+    summaries.length || 0,
+    manualTypes.length || 0,
+    manualMarkets.length || 0,
+    channelPool.length || 0,
+    1
+  );
+  const base = summaries.length ? summaries : [];
+  const next = [...base];
+  while (next.length < ensureCount) {
+    const index = next.length;
+    const market = manualMarkets.length ? manualMarkets[index % manualMarkets.length] : (base[0]?.market || DEFAULT_MARKET);
+    const type = manualTypes.length ? manualTypes[index % manualTypes.length] : (base[0]?.campaignType || DEFAULT_TYPE);
+    const channel = channelPool.length ? channelPool[index % channelPool.length] : (base[0]?.channel || 'Google');
+    const languages = market.browserLangs?.length ? [market.browserLangs[0]] : (base[0]?.languages?.length ? base[0].languages : [DEFAULT_LANGUAGE]);
+    next.push({
+      id: self.crypto.randomUUID(),
+      channel,
+      campaignName: `${market.name} ${type} Campaign`,
+      campaignType: type,
+      market,
+      languages,
+    });
+  }
+  return next.map((summary, idx) => {
+    let updated = { ...summary };
+    if (channelPool.length) {
+      updated.channel = channelPool[idx % channelPool.length] || updated.channel;
+    }
+    if (manualTypes.length) {
+      updated.campaignType = manualTypes[idx % manualTypes.length] || updated.campaignType;
+    }
+    if (manualMarkets.length) {
+      const market = manualMarkets[idx % manualMarkets.length];
+      updated.market = market;
+      if (!updated.languages?.length || manualMarkets.length) {
+        updated.languages = market.browserLangs?.length ? [market.browserLangs[0]] : (updated.languages?.length ? updated.languages : [DEFAULT_LANGUAGE]);
+      }
+    }
+    return updated;
+  });
+};
+
 export const generateCampaignSummary = async (
   brief: string,
   channels: Channel[],
-  manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[] }
+  manualParams?: ManualOverrides
 ): Promise<CampaignSummary[]> => {
   const hasManual = !!(
     manualParams && (
@@ -70,14 +130,6 @@ export const generateCampaignSummary = async (
       manualParams.campaignTypes.length
     )
   );
-  const describeMarkets = (label: string, markets: Market[]) => {
-    if (!markets.length) return `${label}: None`;
-    const items = markets.map(m => {
-      const langs = m.browserLangs?.length ? ` [langs: ${m.browserLangs.join(', ')}]` : '';
-      return `${m.name} (${m.iso})${langs}`;
-    });
-    return `${label}: ${items.join(', ')}`;
-  };
   const manualSection = hasManual
     ? `Manual Parameters (follow exactly):\n${describeMarkets('- Primary Markets', manualParams!.primaryMarkets)}\n${describeMarkets('- Secondary Markets', manualParams!.secondaryMarkets)}\n- Campaign Types: ${manualParams!.campaignTypes.length ? manualParams!.campaignTypes.join(', ') : 'None'}`
     : '';
@@ -93,7 +145,11 @@ export const generateCampaignSummary = async (
   const text = (response.text || '').trim();
   if (!text) throw new Error('Empty response');
   const arr = JSON.parse(text) as Omit<CampaignSummary, 'id'>[];
-  return arr.map(s => ({ ...s, id: self.crypto.randomUUID() }));
+  const summaries = arr.map(s => ({ ...s, id: self.crypto.randomUUID() }));
+  if (!hasManual || !manualParams) {
+    return summaries;
+  }
+  return alignWithManualSelections(summaries, manualParams, channels);
 };
 
 // ===== DETAILS GENERATION (STEP 2) =====
