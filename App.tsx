@@ -1368,6 +1368,21 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ))}
                         </div>
                         <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
+                        <div className="space-y-2">
+                            <div className="text-xs font-medium text-gray-500">Try one of these prompts</div>
+                            <div className="flex flex-wrap gap-2">
+                                {PROMPT_EXAMPLES.map((example, index) => (
+                                    <button
+                                        key={`prompt-example-${index}`}
+                                        type="button"
+                                        onClick={() => applyPromptExample(example)}
+                                        className="max-w-[260px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+                                    >
+                                        {example}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-2">
                                 <div className="relative" ref={channelMenuRef}>
