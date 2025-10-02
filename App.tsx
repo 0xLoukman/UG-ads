@@ -1350,7 +1350,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                 </div>
 
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-                    <div className="p-4 pb-3">
+                    <div className="p-4 pb-3 space-y-4">
                         <div className="campaign-setup-section">
                             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Campaign setup</div>
                             <div className="campaign-setup-grid grid gap-3 sm:grid-cols-2">
