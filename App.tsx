@@ -1446,8 +1446,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                     >
                                         <ChevronLeftIcon className="w-3.5 h-3.5" />
                                     </button>
-                                    <div className="relative flex-1">
-                                        <div ref={promptExamplesRef} className="flex w-full flex-nowrap gap-2 overflow-hidden">
+                                    <div className="relative flex-1 overflow-hidden">
+                                        <div ref={promptExamplesRef} className="flex w-full flex-nowrap gap-2 overflow-x-auto overflow-y-hidden scroll-smooth">
                                             {PROMPT_EXAMPLES.map((example, index) => (
                                                 <button
                                                     key={`prompt-example-${index}`}
@@ -1461,11 +1461,11 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         </div>
                                         <div
                                             aria-hidden="true"
-                                            className={`pointer-events-none absolute inset-y-0 -left-4 w-10 bg-gradient-to-r from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollPrev ? 'opacity-100' : 'opacity-0'}`}
+                                            className={`pointer-events-none absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollPrev ? 'opacity-100' : 'opacity-0'}`}
                                         />
                                         <div
                                             aria-hidden="true"
-                                            className={`pointer-events-none absolute inset-y-0 -right-4 w-10 bg-gradient-to-l from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollNext ? 'opacity-100' : 'opacity-0'}`}
+                                            className={`pointer-events-none absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollNext ? 'opacity-100' : 'opacity-0'}`}
                                         />
                                     </div>
                                     <button
