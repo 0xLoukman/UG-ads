@@ -1501,20 +1501,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                     {channelMenuOpen && (
                                         <div className="absolute left-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
                                             <div className="flex items-center justify-between mb-2">
-                                                <div className="flex items-center gap-2">
-                                                    {channelMenuStage === 'types' && (
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setChannelMenuStage('channels')}
-                                                            className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
-                                                        >
-                                                            <ChevronLeftIcon className="w-3.5 h-3.5" />
-                                                            <span>Return</span>
-                                                        </button>
-                                                    )}
-                                                    <div className="text-sm font-semibold text-gray-800">
-                                                        {channelMenuStage === 'channels' ? 'Select channel' : 'Select campaign types'}
-                                                    </div>
+                                                <div className="text-sm font-semibold text-gray-800">
+                                                    {channelMenuStage === 'channels' ? 'Select channel' : 'Select campaign types'}
                                                 </div>
                                                 <button
                                                     type="button"
