@@ -609,7 +609,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click ���Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1217,6 +1217,14 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const toggleCampaignType = (type: string) => {
         setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
+
+    const updatePromptScrollState = useCallback(() => {
+        const container = promptExamplesRef.current;
+        if (!container) return;
+        const canScrollPrev = container.scrollLeft > 0;
+        const canScrollNext = container.scrollLeft + container.clientWidth < container.scrollWidth - 1;
+        setPromptScrollState({ canScrollPrev, canScrollNext });
+    }, []);
 
     const scrollPromptExamples = (direction: 'prev' | 'next') => {
         const container = promptExamplesRef.current;
