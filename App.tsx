@@ -1511,10 +1511,15 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                         {ALL_CAMPAIGN_TYPES.map(type => {
                                                             const active = selectedCampaignTypes.includes(type);
                                                             return (
-                                                                <label key={type} className="flex items-center gap-2 text-sm px-2 py-1.5 rounded-xl hover:bg-gray-50 cursor-pointer">
-                                                                    <input type="checkbox" className="h-4 w-4" checked={active} onChange={() => toggleCampaignType(type)} />
-                                                                    <span className="flex-1">{type}</span>
-                                                                </label>
+                                                                <button
+                                                                    key={type}
+                                                                    type="button"
+                                                                    onClick={() => toggleCampaignType(type)}
+                                                                    className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-sm transition-colors ${active ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'}`}
+                                                                >
+                                                                    <span>{type}</span>
+                                                                    {active && <CheckMarkIcon className="w-4 h-4" />}
+                                                                </button>
                                                             );
                                                         })}
                                                         {ALL_CAMPAIGN_TYPES.length === 0 && (
