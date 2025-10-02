@@ -1447,7 +1447,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         <ChevronLeftIcon className="w-3.5 h-3.5" />
                                     </button>
                                     <div className="relative flex-1 overflow-hidden">
-                                        <div ref={promptExamplesRef} className="flex w-full flex-nowrap gap-2 overflow-x-auto overflow-y-hidden scroll-smooth">
+                                        <div ref={promptExamplesRef} className="flex w-full flex-nowrap gap-2 overflow-x-auto overflow-y-hidden scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                                             {PROMPT_EXAMPLES.map((example, index) => (
                                                 <button
                                                     key={`prompt-example-${index}`}
