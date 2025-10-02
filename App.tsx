@@ -1050,6 +1050,110 @@ const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
   };
 };
 
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const MARKET_LOOKUP = (() => {
+  const map = new Map<string, Omit<Market, 'browserLangs'>>();
+  const register = (country: Omit<Market, 'browserLangs'>, key: string) => {
+    if (!key.trim()) return;
+    map.set(key.toLowerCase(), country);
+  };
+
+  const combined = new Map<string, Omit<Market, 'browserLangs'>>();
+  COUNTRIES.forEach(country => combined.set(country.iso, country));
+  MARKETS.forEach(entry => {
+    if (!combined.has(entry.code)) {
+      combined.set(entry.code, { name: entry.name, iso: entry.code });
+    }
+  });
+
+  combined.forEach(country => {
+    register(country, country.name);
+    register(country, country.iso);
+  });
+
+  const MARKET_ALIASES: Record<string, string> = {
+    'usa': 'US',
+    'u.s.': 'US',
+    'u.s.a.': 'US',
+    'united states of america': 'US',
+    'america': 'US',
+    'uk': 'GB',
+    'u.k.': 'GB',
+    'britain': 'GB',
+    'england': 'GB',
+    'uae': 'AE',
+    'united arab emirates': 'AE',
+    'dubai': 'AE',
+    'ksa': 'SA',
+    'saudi arabia': 'SA',
+    'maroc': 'MA'
+  };
+
+  Object.entries(MARKET_ALIASES).forEach(([alias, iso]) => {
+    const country = combined.get(iso);
+    if (country) {
+      register(country, alias);
+    }
+  });
+
+  return map;
+})();
+
+const extractMarketsFromText = (text: string): Market[] => {
+  if (!text.trim()) return [];
+  const normalized = text.toLowerCase();
+  const matches = new Map<string, Omit<Market, 'browserLangs'>>();
+
+  MARKET_LOOKUP.forEach((country, key) => {
+    const pattern = escapeRegex(key).replace(/\s+/g, '\\s+');
+    const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+    if (regex.test(normalized)) {
+      if (!matches.has(country.iso)) {
+        matches.set(country.iso, country);
+      }
+    }
+  });
+
+  return Array.from(matches.values()).map(getMarketWithLangs);
+};
+
+const CAMPAIGN_TYPE_ALIASES: Record<string, string> = {
+  'performance max': 'PMax',
+  'performance-max': 'PMax',
+  'performance marketing max': 'PMax',
+  'remarketing': 'Retargeting',
+  'retargeting': 'Retargeting',
+  'hotel campaign': 'Hotel Ads',
+  'hotel ad': 'Hotel Ads',
+  'branding': 'Brand',
+  'brand campaign': 'Brand'
+};
+
+const extractCampaignTypesFromText = (text: string): string[] => {
+  if (!text.trim()) return [];
+  const normalized = text.toLowerCase();
+  const detected = new Set<string>();
+
+  ALL_CAMPAIGN_TYPES.forEach(type => {
+    const pattern = escapeRegex(type.toLowerCase()).replace(/\s+/g, '\\s+');
+    const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+    if (regex.test(normalized)) {
+      detected.add(type);
+    }
+  });
+
+  Object.entries(CAMPAIGN_TYPE_ALIASES).forEach(([alias, canonical]) => {
+    const pattern = escapeRegex(alias.toLowerCase()).replace(/\s+/g, '\\s+');
+    const regex = new RegExp(`\\b${pattern}\\b`, 'i');
+    if (regex.test(normalized)) {
+      detected.add(canonical as string);
+    }
+  });
+
+  return Array.from(detected);
+};
+
 type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
 
 type InputViewProps = {
