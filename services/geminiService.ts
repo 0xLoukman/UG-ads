@@ -57,10 +57,28 @@ export const generateCampaignSummary = async (
   channels: Channel[],
   manualParams?: { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[] }
 ): Promise<CampaignSummary[]> => {
-  const manual = !!(manualParams && (manualParams.primaryMarkets.length || manualParams.secondaryMarkets.length));
-  const finalPrompt = manual
-    ? `Primary Channels: ${channels.join(', ')}\n\nManual Parameters:\n- Primary Markets: ${manualParams!.primaryMarkets.map(m=>m.name).join(', ')}\n- Secondary Markets: ${manualParams!.secondaryMarkets.map(m=>m.name).join(', ')}\n- Campaign Types: ${manualParams!.campaignTypes.join(', ')}\n\nCreative Brief:\n${brief}`
-    : `Primary Channels: ${channels.join(', ')}.\n\nCreative Brief:\n${brief}`;
+  const hasManual = !!(
+    manualParams && (
+      manualParams.primaryMarkets.length ||
+      manualParams.secondaryMarkets.length ||
+      manualParams.campaignTypes.length
+    )
+  );
+  const describeMarkets = (label: string, markets: Market[]) => {
+    if (!markets.length) return `${label}: None`;
+    const items = markets.map(m => {
+      const langs = m.browserLangs?.length ? ` [langs: ${m.browserLangs.join(', ')}]` : '';
+      return `${m.name} (${m.iso})${langs}`;
+    });
+    return `${label}: ${items.join(', ')}`;
+  };
+  const manualSection = hasManual
+    ? `Manual Parameters (follow exactly):\n${describeMarkets('- Primary Markets', manualParams!.primaryMarkets)}\n${describeMarkets('- Secondary Markets', manualParams!.secondaryMarkets)}\n- Campaign Types: ${manualParams!.campaignTypes.length ? manualParams!.campaignTypes.join(', ') : 'None'}`
+    : '';
+  const channelLine = channels.length ? `Primary Channels: ${channels.join(', ')}` : 'Primary Channels: None provided';
+  const finalPrompt = hasManual
+    ? `${channelLine}\n\n${manualSection}\n\nCreative Brief:\n${brief}`
+    : `${channelLine}.\n\nCreative Brief:\n${brief}`;
   const response = await ensureClient().models.generateContent({
     model: 'gemini-2.5-flash',
     contents: finalPrompt,
