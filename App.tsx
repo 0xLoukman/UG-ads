@@ -1865,7 +1865,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             return (
                             <React.Fragment key={s.id}>
                             <tr className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 flex items-center space-x-2"><span className="text-gray-500">{getChannelIcon(s.channel, 'md')}</span><span>{s.channel}</span></td>
+                                <td className="px-6 py-4 flex items-center space-x-2"><span className="inline-flex items-center justify-center">{getChannelIcon(s.channel, 'md')}</span><span>{s.channel}</span></td>
                                 <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
                                 <td className="px-6 py-3">{s.campaignType}</td>
                                 <td className="px-6 py-3">{s.market.name} ({s.market.iso})</td>
@@ -2007,7 +2007,7 @@ const DetailsView = ({ campaigns, brief, setCampaigns, onBack, onReview, openLib
                                 onClick={() => setSelectedCampaignId(c.id)}
                                 className={`flex items-center space-x-3 p-3 rounded-lg text-left transition-colors ${selectedCampaignId === c.id ? 'bg-blue-100 text-blue-800' : 'hover:bg-gray-100'}`}
                             >
-                                <span className="text-gray-500">{getChannelIcon(c.channel, 'md')}</span>
+                                <span className="inline-flex items-center justify-center">{getChannelIcon(c.channel, 'md')}</span>
                                 <div className="flex-grow">
                                     <p className="text-sm font-semibold">{c.campaignName}</p>
                                     <p className="text-xs text-gray-500">{c.market.name}</p>
