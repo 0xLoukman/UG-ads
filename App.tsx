@@ -47,7 +47,7 @@ const getMarketWithLangs = (country: Omit<Market, 'browserLangs'>): Market => {
         NL: ['nl-NL'], SE: ['sv-SE'], CH: ['de-CH', 'fr-CH', 'it-CH'],
         NO: ['no-NO'], DK: ['da-DK'], FI: ['fi-FI'], AT: ['de-AT'],
         BE: ['nl-BE', 'fr-BE'], IE: ['en-IE'], NZ: ['en-NZ'], SG: ['en-SG'],
-        HK: ['en-HK', 'zh-HK']
+        HK: ['en-HK', 'zh-HK'], MA: ['fr-MA', 'ar-MA']
     };
     return { ...country, browserLangs: langMap[country.iso] || [] };
 };
@@ -262,7 +262,7 @@ const UploadSection = ({ label, hint, accept, max, items, onAddFiles, onRemove, 
                 {items?.map((src, i) => (
                     <div key={i} className="relative">
                         <img src={src} alt={`${label} ${i+1}`} className="w-16 h-16 object-cover rounded-md border" />
-                        <button aria-label={`Remove ${label} ${i+1}`} onClick={() => onRemove(i)} className="absolute -top-2 -right-2 bg-white border rounded-full w-6 h-6 flex items-center justify-center text-red-500 hover:bg-red-50">×</button>
+                        <button aria-label={`Remove ${label} ${i+1}`} onClick={() => onRemove(i)} className="absolute -top-2 -right-2 bg-white border rounded-full w-6 h-6 flex items-center justify-center text-red-500 hover:bg-red-50">��</button>
                     </div>
                 ))}
                 <input ref={inputRef} className="hidden" type="file" accept={accept} multiple onChange={(e) => { if(e.target.files) { onAddFiles(e.target.files); e.currentTarget.value = ''; } }} />
