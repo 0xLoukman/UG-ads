@@ -1310,7 +1310,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         if (!brief.trim() || !hasKey) return;
         const singles = marketItems.filter(i => i.type === 'single');
         const clusters = marketItems.filter(i => i.type === 'cluster');
-        const primaryMarkets: Market[] = singles.map(i => {
+        let primaryMarkets: Market[] = singles.map(i => {
             const code = i.codes[0];
             const country = { name: findMarket(code)?.name || code, iso: code } as Omit<Market,'browserLangs'>;
             return getMarketWithLangs(country);
@@ -1322,8 +1322,21 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
             const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
             secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
         }
-        const hasManualData = primaryMarkets.length || secondaryMarkets.length || selectedCampaignTypes.length;
-        const manual = hasManualData ? { primaryMarkets, secondaryMarkets, campaignTypes: selectedCampaignTypes } : undefined;
+
+        const promptMarkets = extractMarketsFromText(brief);
+        const promptCampaignTypes = extractCampaignTypesFromText(brief);
+
+        const primaryMap = new Map<string, Market>(primaryMarkets.map(m => [m.iso, m]));
+        promptMarkets.forEach(pm => {
+            if (!primaryMap.has(pm.iso)) {
+                primaryMap.set(pm.iso, pm);
+            }
+        });
+        primaryMarkets = Array.from(primaryMap.values());
+
+        const combinedCampaignTypes = Array.from(new Set([...selectedCampaignTypes, ...promptCampaignTypes]));
+        const hasManualData = primaryMarkets.length || secondaryMarkets.length || combinedCampaignTypes.length;
+        const manual = hasManualData ? { primaryMarkets, secondaryMarkets, campaignTypes: combinedCampaignTypes } : undefined;
         onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
     };
 
