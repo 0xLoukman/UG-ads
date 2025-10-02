@@ -1259,14 +1259,6 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [hasKey, setHasKey] = useState<boolean>(detectKey());
     const [keyInput, setKeyInput] = useState<string>('');
 
-    const handleToggleChannel = (channel: Channel) => {
-        setSelectedChannels(prev =>
-            prev.includes(channel)
-                ? prev.filter(c => c !== channel)
-                : [...prev, channel]
-        );
-    };
-
     const guidedSchema: GuidedPromptRequirement[] = useMemo(() => {
         const countryNames = COUNTRIES.map(c => c.name);
         const countryIsos = COUNTRIES.map(c => c.iso);
