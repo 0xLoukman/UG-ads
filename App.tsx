@@ -1191,7 +1191,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
 
     const primaryChannel = selectedChannels[0];
     const channelDisplayIcon = channelIconSrc[primaryChannel ?? 'Channels'];
-    const channelDisplayLabel = primaryChannel ? (primaryChannel === 'Google' ? 'Google Ads' : primaryChannel) : 'Channels';
+    const channelDisplayLabel = primaryChannel ? (primaryChannel === 'Google' ? 'Adwords' : primaryChannel) : 'Channels';
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
     const toggleCampaignType = (type: string) => {
