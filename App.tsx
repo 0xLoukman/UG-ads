@@ -1442,8 +1442,13 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                             <div className="flex items-center justify-between mb-2">
                                                 <div className="flex items-center gap-2">
                                                     {channelMenuStage === 'types' && (
-                                                        <button type="button" onClick={() => setChannelMenuStage('channels')} className="text-xs text-gray-600 hover:text-gray-900">
-                                                            Back
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setChannelMenuStage('channels')}
+                                                            className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
+                                                        >
+                                                            <ChevronLeftIcon className="w-3.5 h-3.5" />
+                                                            <span>Back</span>
                                                         </button>
                                                     )}
                                                     <div className="text-sm font-semibold text-gray-800">
