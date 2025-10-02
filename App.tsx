@@ -1185,6 +1185,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
     const [channelMenuStage, setChannelMenuStage] = useState<'channels' | 'types'>('channels');
+    const [showPromptExamples, setShowPromptExamples] = useState(true);
     const channelMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -1209,10 +1210,18 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const primaryChannel = selectedChannels[0];
     const channelDisplayIcon = channelIconSrc[primaryChannel ?? 'Channels'];
     const channelDisplayLabel = primaryChannel ? (primaryChannel === 'Google' ? 'Adwords' : primaryChannel) : 'Channels';
+    const promptExamplesRef = useRef<HTMLDivElement | null>(null);
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
     const toggleCampaignType = (type: string) => {
         setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+    };
+
+    const scrollPromptExamples = (direction: 'prev' | 'next') => {
+        const container = promptExamplesRef.current;
+        if (!container) return;
+        const scrollAmount = container.clientWidth * 0.8;
+        container.scrollBy({ left: direction === 'next' ? scrollAmount : -scrollAmount, behavior: 'smooth' });
     };
 
     const applyPromptExample = (example: string) => {
