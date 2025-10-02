@@ -1509,7 +1509,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                             className="flex items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
                                                         >
                                                             <ChevronLeftIcon className="w-3.5 h-3.5" />
-                                                            <span>Back</span>
+                                                            <span>Return</span>
                                                         </button>
                                                     )}
                                                     <div className="text-sm font-semibold text-gray-800">
