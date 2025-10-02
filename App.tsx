@@ -1165,7 +1165,7 @@ type InputViewProps = {
 
 const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAccount }: InputViewProps) => {
     const [brief, setBrief] = useState("");
-    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
+    const [selectedChannels, setSelectedChannels] = useState<Channel[]>([]);
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
@@ -1189,6 +1189,9 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         return () => document.removeEventListener('mousedown', handler);
     }, [channelMenuOpen]);
 
+    const primaryChannel = selectedChannels[0];
+    const channelDisplayIcon = channelIconSrc[primaryChannel ?? 'Channels'];
+    const channelDisplayLabel = primaryChannel ? (primaryChannel === 'Google' ? 'Google Ads' : primaryChannel) : 'Channels';
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
     const toggleCampaignType = (type: string) => {
