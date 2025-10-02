@@ -1416,52 +1416,68 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                     {channelMenuOpen && (
                                         <div className="absolute left-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl p-3 z-30">
                                             <div className="flex items-center justify-between mb-2">
-                                                <div className="text-sm font-semibold text-gray-800">Channel & campaign types</div>
-                                                <button type="button" onClick={() => setChannelMenuOpen(false)} className="text-xs text-gray-600 hover:text-gray-900">
+                                                <div className="flex items-center gap-2">
+                                                    {channelMenuStage === 'types' && (
+                                                        <button type="button" onClick={() => setChannelMenuStage('channels')} className="text-xs text-gray-600 hover:text-gray-900">
+                                                            Back
+                                                        </button>
+                                                    )}
+                                                    <div className="text-sm font-semibold text-gray-800">
+                                                        {channelMenuStage === 'channels' ? 'Select channel' : 'Select campaign types'}
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setChannelMenuOpen(false);
+                                                        setChannelMenuStage('channels');
+                                                    }}
+                                                    className="text-xs text-gray-600 hover:text-gray-900"
+                                                >
                                                     Close
                                                 </button>
                                             </div>
-                                            <div className="space-y-2">
-                                                {channelOptions.map(opt => {
-                                                    const isDisabled = opt !== 'Google';
-                                                    const isActive = selectedChannels.includes(opt as Channel);
-                                                    return (
-                                                        <button
-                                                            key={opt}
-                                                            type="button"
-                                                            disabled={isDisabled}
-                                                            onClick={() => {
-                                                                if (isDisabled) return;
-                                                                if (isActive) {
-                                                                    setSelectedChannels([]);
-                                                                    setSelectedCampaignTypes([]);
-                                                                    setChannelMenuStage('channels');
-                                                                    setChannelMenuOpen(false);
-                                                                    return;
-                                                                }
-                                                                setSelectedChannels([opt as Channel]);
-                                                                if (opt === 'Google') {
-                                                                    setChannelMenuStage('types');
-                                                                } else {
-                                                                    setSelectedCampaignTypes([]);
-                                                                    setChannelMenuStage('channels');
-                                                                    setChannelMenuOpen(false);
-                                                                }
-                                                            }}
-                                                            className={`flex items-center justify-between w-full px-3 py-2 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                                                        >
-                                                            <span className="inline-flex items-center gap-2">
-                                                                <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
-                                                                <span>{opt === 'Google' ? 'Adwords' : opt}</span>
-                                                            </span>
-                                                            {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                            {selectedChannels.includes('Google') && (
-                                                <div className="mt-3 border-t border-gray-100 pt-3">
-                                                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Campaign types</div>
+                                            {channelMenuStage === 'channels' ? (
+                                                <div className="space-y-2">
+                                                    {channelOptions.map(opt => {
+                                                        const isDisabled = opt !== 'Google';
+                                                        const isActive = selectedChannels.includes(opt as Channel);
+                                                        return (
+                                                            <button
+                                                                key={opt}
+                                                                type="button"
+                                                                disabled={isDisabled}
+                                                                onClick={() => {
+                                                                    if (isDisabled) return;
+                                                                    if (isActive) {
+                                                                        setSelectedChannels([]);
+                                                                        setSelectedCampaignTypes([]);
+                                                                        setChannelMenuStage('channels');
+                                                                        setChannelMenuOpen(false);
+                                                                        return;
+                                                                    }
+                                                                    setSelectedChannels([opt as Channel]);
+                                                                    if (opt === 'Google') {
+                                                                        setChannelMenuStage('types');
+                                                                    } else {
+                                                                        setSelectedCampaignTypes([]);
+                                                                        setChannelMenuStage('channels');
+                                                                        setChannelMenuOpen(false);
+                                                                    }
+                                                                }}
+                                                                className={`flex items-center justify-between w-full px-3 py-2 rounded-xl border transition-colors ${isActive ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-gray-200 text-gray-700'} ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                            >
+                                                                <span className="inline-flex items-center gap-2">
+                                                                    <img src={channelIconSrc[opt]} className="w-4 h-4" alt={opt} />
+                                                                    <span>{opt === 'Google' ? 'Adwords' : opt}</span>
+                                                                </span>
+                                                                {isDisabled && <span className="text-[10px] text-gray-500">Coming soon</span>}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : selectedChannels.includes('Google') ? (
+                                                <div className="flex flex-col">
                                                     <div className="space-y-2 max-h-56 overflow-auto pr-1">
                                                         {ALL_CAMPAIGN_TYPES.map(type => {
                                                             const active = selectedCampaignTypes.includes(type);
@@ -1480,11 +1496,20 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                         <button type="button" onClick={() => setSelectedCampaignTypes([])} className="text-xs px-3 py-1.5 rounded-full border border-gray-200 text-gray-600 hover:text-gray-900">
                                                             Clear
                                                         </button>
-                                                        <button type="button" onClick={() => setChannelMenuOpen(false)} className="text-xs px-3 py-1.5 rounded-full bg-black text-white">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setChannelMenuOpen(false);
+                                                                setChannelMenuStage('channels');
+                                                            }}
+                                                            className="text-xs px-3 py-1.5 rounded-full bg-black text-white"
+                                                        >
                                                             Done
                                                         </button>
                                                     </div>
                                                 </div>
+                                            ) : (
+                                                <div className="text-xs text-gray-500">Select a channel first.</div>
                                             )}
                                         </div>
                                     )}
