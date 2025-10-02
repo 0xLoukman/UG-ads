@@ -609,7 +609,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click ���Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1186,6 +1186,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
     const [channelMenuStage, setChannelMenuStage] = useState<'channels' | 'types'>('channels');
     const [showPromptExamples, setShowPromptExamples] = useState(true);
+    const [promptScrollState, setPromptScrollState] = useState({ canScrollPrev: false, canScrollNext: false });
     const channelMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
