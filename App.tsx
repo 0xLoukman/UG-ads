@@ -1198,6 +1198,10 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         setSelectedCampaignTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
     };
 
+    const applyPromptExample = (example: string) => {
+        setBrief(example);
+    };
+
     // Markets dropdown state
     const [marketItems, setMarketItems] = useState<MarketItem[]>([]);
     const assigned = useMemo(() => new Set(marketItems.flatMap(x => x.codes)), [marketItems]);
