@@ -1395,6 +1395,9 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                                 const next = !prev;
                                                 if (next) {
                                                     setShowMarkets(false);
+                                                    setChannelMenuStage(selectedChannels.includes('Google') ? 'types' : 'channels');
+                                                } else {
+                                                    setChannelMenuStage('channels');
                                                 }
                                                 return next;
                                             });
