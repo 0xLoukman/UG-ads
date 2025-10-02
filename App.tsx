@@ -1078,33 +1078,12 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         const handler = (event: MouseEvent) => {
             if (channelMenuRef.current && !channelMenuRef.current.contains(event.target as Node)) {
                 setChannelMenuOpen(false);
+                setChannelMenuStage('channels');
             }
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [channelMenuOpen]);
-
-    useEffect(() => {
-        if (!accountMenuOpen) return;
-        const handler = (event: MouseEvent) => {
-            if (accountMenuRef.current && !accountMenuRef.current.contains(event.target as Node)) {
-                setAccountMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [accountMenuOpen]);
-
-    useEffect(() => {
-        if (!campaignTypeMenuOpen) return;
-        const handler = (event: MouseEvent) => {
-            if (campaignTypeMenuRef.current && !campaignTypeMenuRef.current.contains(event.target as Node)) {
-                setCampaignTypeMenuOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [campaignTypeMenuOpen]);
 
     const activeGoogleAccount = useMemo(() => googleAccounts.find(acc => acc.id === selectedAccountId) || googleAccounts[0], [googleAccounts, selectedAccountId]);
 
@@ -2152,7 +2131,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320��100 • Large mobile banner' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
     const [activeImage, setActiveImage] = useState(0);
