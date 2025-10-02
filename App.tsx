@@ -1234,7 +1234,6 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     };
     const removeAttachment = (index: number) => setAttachments(att => att.filter((_, i) => i !== index));
     const uploadInputRef = useRef<HTMLInputElement | null>(null);
-    const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([]);
 
     const detectKey = () => {
         try {
