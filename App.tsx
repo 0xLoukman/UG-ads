@@ -1243,11 +1243,18 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     useEffect(() => {
         if (!showPromptExamples) return;
         const container = promptExamplesRef.current;
-        if (!container) return;
+        if (!container) {
+            updatePromptScrollState();
+            return;
+        }
         updatePromptScrollState();
         const handleScroll = () => updatePromptScrollState();
         container.addEventListener('scroll', handleScroll);
-        return () => container.removeEventListener('scroll', handleScroll);
+        window.addEventListener('resize', updatePromptScrollState);
+        return () => {
+            container.removeEventListener('scroll', handleScroll);
+            window.removeEventListener('resize', updatePromptScrollState);
+        };
     }, [showPromptExamples, updatePromptScrollState]);
 
     // Markets dropdown state
