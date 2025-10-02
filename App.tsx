@@ -1441,28 +1441,38 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         type="button"
                                         onClick={() => scrollPromptExamples('prev')}
                                         disabled={!promptScrollState.canScrollPrev}
-                                        className={`flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollPrev ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
+                                        className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollPrev ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
                                         aria-label="Scroll prompts left"
                                     >
                                         <ChevronLeftIcon className="w-3.5 h-3.5" />
                                     </button>
-                                    <div ref={promptExamplesRef} className="flex flex-1 flex-nowrap gap-2 overflow-hidden">
-                                        {PROMPT_EXAMPLES.map((example, index) => (
-                                            <button
-                                                key={`prompt-example-${index}`}
-                                                type="button"
-                                                onClick={() => applyPromptExample(example)}
-                                                className="min-w-[240px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
-                                            >
-                                                {example}
-                                            </button>
-                                        ))}
+                                    <div className="relative flex-1">
+                                        <div ref={promptExamplesRef} className="flex w-full flex-nowrap gap-2 overflow-hidden">
+                                            {PROMPT_EXAMPLES.map((example, index) => (
+                                                <button
+                                                    key={`prompt-example-${index}`}
+                                                    type="button"
+                                                    onClick={() => applyPromptExample(example)}
+                                                    className="min-w-[240px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+                                                >
+                                                    {example}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div
+                                            aria-hidden="true"
+                                            className={`pointer-events-none absolute inset-y-0 -left-4 w-10 bg-gradient-to-r from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollPrev ? 'opacity-100' : 'opacity-0'}`}
+                                        />
+                                        <div
+                                            aria-hidden="true"
+                                            className={`pointer-events-none absolute inset-y-0 -right-4 w-10 bg-gradient-to-l from-white via-white/80 to-transparent transition-opacity duration-200 ${promptScrollState.canScrollNext ? 'opacity-100' : 'opacity-0'}`}
+                                        />
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => scrollPromptExamples('next')}
                                         disabled={!promptScrollState.canScrollNext}
-                                        className={`flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollNext ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
+                                        className={`relative z-10 flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollNext ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
                                         aria-label="Scroll prompts right"
                                     >
                                         <ChevronRightIcon className="w-3.5 h-3.5" />
