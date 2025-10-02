@@ -1414,21 +1414,52 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ))}
                         </div>
                         <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
-                        <div className="space-y-2">
-                            <div className="text-xs font-medium text-gray-500">Try one of these prompts</div>
-                            <div className="flex flex-wrap gap-2">
-                                {PROMPT_EXAMPLES.map((example, index) => (
+                        {showPromptExamples && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs font-medium text-gray-500">
+                                    <span>Try one of these prompts</span>
                                     <button
-                                        key={`prompt-example-${index}`}
                                         type="button"
-                                        onClick={() => applyPromptExample(example)}
-                                        className="max-w-xs rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+                                        onClick={() => setShowPromptExamples(false)}
+                                        className="text-xs font-normal text-gray-400 hover:text-gray-600"
                                     >
-                                        {example}
+                                        Dismiss
                                     </button>
-                                ))}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollPromptExamples('prev')}
+                                        disabled={!promptScrollState.canScrollPrev}
+                                        className={`flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollPrev ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
+                                        aria-label="Scroll prompts left"
+                                    >
+                                        <ChevronLeftIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                    <div ref={promptExamplesRef} className="flex flex-1 flex-nowrap gap-2 overflow-hidden">
+                                        {PROMPT_EXAMPLES.map((example, index) => (
+                                            <button
+                                                key={`prompt-example-${index}`}
+                                                type="button"
+                                                onClick={() => applyPromptExample(example)}
+                                                className="min-w-[240px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-left text-xs text-gray-600 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:text-gray-900"
+                                            >
+                                                {example}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => scrollPromptExamples('next')}
+                                        disabled={!promptScrollState.canScrollNext}
+                                        className={`flex h-7 w-7 items-center justify-center rounded-full border border-gray-200 text-gray-500 transition-colors ${promptScrollState.canScrollNext ? 'hover:border-gray-300 hover:text-gray-900' : 'opacity-40 cursor-not-allowed'}`}
+                                        aria-label="Scroll prompts right"
+                                    >
+                                        <ChevronRightIcon className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                        )}
                         <div className="flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-2">
                                 <div className="relative" ref={channelMenuRef}>
