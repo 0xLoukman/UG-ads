@@ -131,17 +131,21 @@ const deleteIn = (obj: any, path: (string | number)[]): any => {
 };
 
 
-const channelIconSrc: Record<string, string> = {
-    Channels: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F1d2376b7080b49b29cdb925e5e9a9e9e?format=webp&width=800',
-    Google: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F533ea53c28d34716a117391b4d019fab?format=webp&width=800',
-    Meta: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F6d64048564434594b3d94470b48f7f90?format=webp&width=800',
-    TikTok: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F7f6f42d403b0493d9a24bfa1923d7754?format=webp&width=800',
-    Bing: 'https://cdn.builder.io/api/v1/image/assets%2Fc0fd0d6879d745f581077638ce903418%2F217a72f512e44b679bcb89421e851a42?format=webp&width=800',
-};
-const channelIcons: Record<Channel, React.ReactNode> = {
-    Google: <img src={channelIconSrc.Google} className="h-5 w-auto object-contain" alt="Google Ads" />,
-    Meta: <img src={channelIconSrc.Meta} className="h-5 w-auto object-contain" alt="Meta" />,
-    TikTok: <img src={channelIconSrc.TikTok} className="h-5 w-auto object-contain" alt="TikTok" />,
+const getChannelIcon = (channel: 'Channels' | Channel | 'Bing', size: 'sm' | 'md' = 'sm'): React.ReactNode => {
+    const dimension = size === 'sm' ? 'w-4 h-4' : 'w-5 h-5';
+    switch (channel) {
+        case 'Google':
+            return <GoogleIcon className={dimension} />;
+        case 'Meta':
+            return <MetaIcon className={`${dimension} text-[#0866FF]`} />;
+        case 'TikTok':
+            return <TiktokIcon className={`${dimension} text-black`} />;
+        case 'Bing':
+            return <BingIcon className={`${dimension} text-[#008373]`} />;
+        case 'Channels':
+        default:
+            return <SparklesIcon className={`${dimension} text-gray-500`} />;
+    }
 };
 
 const channelOptions: Array<Channel | 'Bing'> = ['Google', 'Meta', 'TikTok', 'Bing'];
