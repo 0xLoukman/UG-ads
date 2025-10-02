@@ -1352,36 +1352,6 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
                     <div className="p-4 pb-3 space-y-4">
 
-                        <div className="campaign-brief-section mt-6 border-t border-gray-100 pt-4">
-                            <div className="mb-4">
-                                <GuidedPrompt value={brief} onChange={setBrief} schema={guidedSchema} placeholder="Enter a task" />
-                            </div>
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                    <input ref={uploadInputRef} type="file" accept="image/*" multiple className="hidden" onChange={onFiles} />
-                                    <button onClick={() => uploadInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors">
-                                        <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none">
-                                            <path d="M4 3C2.89688 3 2 3.89688 2 5V15C2 16.1031 2.89688 17 4 17H10.625C10.1969 16.4062 9.875 15.7281 9.6875 15H4.75C4.47188 15 4.2125 14.8438 4.08437 14.5969C3.95625 14.35 3.975 14.05 4.13438 13.8219L5.88438 11.3219C6.025 11.1219 6.25312 11.0031 6.5 11.0031C6.74688 11.0031 6.975 11.1219 7.11562 11.3219L7.94063 12.5031L9.85938 9.3625C9.99688 9.14063 10.2375 9.00313 10.5 9.00313C10.7625 9.00313 11.0031 9.14063 11.1406 9.3625L11.1469 9.375C12.2406 8.22187 13.7875 7.50313 15.5 7.50313C15.6688 7.50313 15.8344 7.50938 16 7.525V5C16 3.89688 15.1031 3 14 3H4ZM6 5.5C6.82812 5.5 7.5 6.17188 7.5 7C7.5 7.82812 6.82812 8.5 6 8.5C5.17188 8.5 4.5 7.82812 4.5 7C4.5 6.17188 5.17188 5.5 6 5.5ZM15.5 18C17.9844 18 20 15.9844 20 13.5C20 11.0156 17.9844 9 15.5 9C13.0156 9 11 11.0156 11 13.5C11 15.9844 13.0156 18 15.5 18ZM16 11.5V13H17.5C17.775 13 18 13.225 18 13.5C18 13.775 17.775 14 17.5 14H16V15.5C16 15.775 15.775 16 15.5 16C15.225 16 15 15.775 15 15.5V14H13.5C13.225 14 13 13.775 13 13.5C13 13.225 13.225 13 13.5 13H15V11.5C15 11.225 15.225 11 15.5 11C15.775 11 16 11.225 16 11.5Z" fill="currentColor"/>
-                                        </svg>
-                                        Upload
-                                    </button>
-                                    {attachments.map((f, i) => (
-                                        <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
-                                            📎 {f.name}
-                                            <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
-                                        </span>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerateDisabled}
-                                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                                >
-                                    <SparklesIcon className="w-4 h-4" />
-                                    Create campaign
-                                </button>
-                            </div>
-                        </div>
 
 
                         {!hasKey && (
