@@ -1523,7 +1523,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         }}
                                         className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
                                     >
-                                        <img src={channelDisplayIcon} className="w-4 h-4" alt={channelDisplayLabel} />
+                                        <span className="text-gray-500">{getChannelIcon(primaryChannel ?? 'Channels', 'sm')}</span>
                                         <span className="flex items-center gap-1">
                                             <span>{channelDisplayLabel}</span>
                                             {primaryChannel && selectedCampaignTypes.length > 0 && (
