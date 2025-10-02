@@ -481,7 +481,7 @@ const CampaignPreview = ({ campaign }: { campaign: FullCampaign }) => {
                 <button aria-label="Previous variation" onClick={prev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                 <button aria-label="Next variation" onClick={next} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/90 border border-gray-200 rounded-full w-8 h-8 flex items-center justify-center hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-400"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 6 15 12 9 18"/></svg></button>
                 <div className="mx-auto max-w-md rounded-xl border border-gray-200 p-4 bg-white">
-                    <div className="text-[11px] text-gray-500 mb-1">Ad �� {urlHost}</div>
+                    <div className="text-[11px] text-gray-500 mb-1">Ad · {urlHost}</div>
                     <div className="text-[#1a0dab] text-[15px] font-medium leading-snug">
                         {isSearchLike ? (
                             <>
@@ -1522,8 +1522,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                             });
                                         }}
                                         className="flex items-center gap-2 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-colors"
-                                    >
-                                        <span className="text-gray-500">{getChannelIcon(primaryChannel ?? 'Channels', 'sm')}</span>
+>
+                                        <span className="text-gray-500">{channelDisplayIcon}</span>
                                         <span className="flex items-center gap-1">
                                             <span>{channelDisplayLabel}</span>
                                             {primaryChannel && selectedCampaignTypes.length > 0 && (
