@@ -1063,11 +1063,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
-    const [accountMenuOpen, setAccountMenuOpen] = useState(false);
-    const [campaignTypeMenuOpen, setCampaignTypeMenuOpen] = useState(false);
+    const [channelMenuStage, setChannelMenuStage] = useState<'channels' | 'types'>('channels');
     const channelMenuRef = useRef<HTMLDivElement | null>(null);
-    const accountMenuRef = useRef<HTMLDivElement | null>(null);
-    const campaignTypeMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (!googleAccounts.length) return;
@@ -2155,7 +2152,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+        { key: '320x100', w: 320, h: 100, label: '320��100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
     const [activeImage, setActiveImage] = useState(0);
