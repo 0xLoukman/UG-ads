@@ -1,6 +1,12 @@
 import { FullCampaign, CampaignSummary, Channel, Market } from '../types';
 import { GoogleGenAI, Type } from '@google/genai';
 
+type ManualOverrides = { primaryMarkets: Market[]; secondaryMarkets: Market[]; campaignTypes: string[] };
+
+const DEFAULT_MARKET: Market = { name: 'United States', iso: 'US', browserLangs: ['en-US'] };
+const DEFAULT_TYPE = 'PMax';
+const DEFAULT_LANGUAGE = 'en-US';
+
 // ===== API KEY HANDLING =====
 const getApiKey = (): string | null => {
   try {
