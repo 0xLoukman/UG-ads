@@ -1169,6 +1169,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+    const [channelMenuStage, setChannelMenuStage] = useState<'channels' | 'types'>('channels');
     const channelMenuRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -1183,6 +1184,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         const handler = (event: MouseEvent) => {
             if (channelMenuRef.current && !channelMenuRef.current.contains(event.target as Node)) {
                 setChannelMenuOpen(false);
+                setChannelMenuStage('channels');
             }
         };
         document.addEventListener('mousedown', handler);
