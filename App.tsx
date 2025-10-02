@@ -1241,7 +1241,10 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     };
 
     useEffect(() => {
-        if (!showPromptExamples) return;
+        if (!showPromptExamples) {
+            setPromptScrollState({ canScrollPrev: false, canScrollNext: false });
+            return;
+        }
         const container = promptExamplesRef.current;
         if (!container) {
             updatePromptScrollState();
