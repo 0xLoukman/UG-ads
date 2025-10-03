@@ -72,22 +72,38 @@ const alignWithManualSelections = (
   manualParams: ManualOverrides,
   channels: Channel[]
 ): CampaignSummary[] => {
-  const manualTypes = manualParams.campaignTypes.filter(Boolean);
-  const manualMarkets = [...manualParams.primaryMarkets, ...manualParams.secondaryMarkets].filter(Boolean);
+  const manualTypePool = manualParams.campaignTypes.filter(Boolean);
+  const summaryTypePool = summaries.map(s => s.campaignType).filter(Boolean);
+  const allTypes = Array.from(new Set([...manualTypePool, ...summaryTypePool]));
+
+  const manualMarketPool = [...manualParams.primaryMarkets, ...manualParams.secondaryMarkets].filter(Boolean);
+  const summaryMarkets = summaries.map(s => s.market).filter(Boolean);
+  const marketMap = new Map<string, Market>();
+  [...manualMarketPool, ...summaryMarkets].forEach(market => {
+    if (!market) return;
+    const iso = market.iso || market.name;
+    if (!marketMap.has(iso)) {
+      marketMap.set(iso, market);
+    }
+  });
+  const allMarkets = Array.from(marketMap.values());
+
   const channelPool = channels.length ? channels : summaries.map(s => s.channel).filter(Boolean);
+
   const ensureCount = Math.max(
     summaries.length || 0,
-    manualTypes.length || 0,
-    manualMarkets.length || 0,
+    allTypes.length || 0,
+    allMarkets.length || 0,
     channelPool.length || 0,
     1
   );
+
   const base = summaries.length ? summaries : [];
   const next = [...base];
   while (next.length < ensureCount) {
     const index = next.length;
-    const market = manualMarkets.length ? manualMarkets[index % manualMarkets.length] : (base[0]?.market || DEFAULT_MARKET);
-    const type = manualTypes.length ? manualTypes[index % manualTypes.length] : (base[0]?.campaignType || DEFAULT_TYPE);
+    const market = allMarkets.length ? allMarkets[index % allMarkets.length] : (base[0]?.market || DEFAULT_MARKET);
+    const type = allTypes.length ? allTypes[index % allTypes.length] : (base[0]?.campaignType || DEFAULT_TYPE);
     const channel = channelPool.length ? channelPool[index % channelPool.length] : (base[0]?.channel || 'Google');
     const languages = market.browserLangs?.length ? [market.browserLangs[0]] : (base[0]?.languages?.length ? base[0].languages : [DEFAULT_LANGUAGE]);
     next.push({
@@ -99,18 +115,19 @@ const alignWithManualSelections = (
       languages,
     });
   }
+
   return next.map((summary, idx) => {
-    let updated = { ...summary };
+    const updated: CampaignSummary = { ...summary };
     if (channelPool.length) {
       updated.channel = channelPool[idx % channelPool.length] || updated.channel;
     }
-    if (manualTypes.length) {
-      updated.campaignType = manualTypes[idx % manualTypes.length] || updated.campaignType;
+    if (allTypes.length) {
+      updated.campaignType = allTypes[idx % allTypes.length] || updated.campaignType;
     }
-    if (manualMarkets.length) {
-      const market = manualMarkets[idx % manualMarkets.length];
+    if (allMarkets.length) {
+      const market = allMarkets[idx % allMarkets.length];
       updated.market = market;
-      if (!updated.languages?.length || manualMarkets.length) {
+      if (!updated.languages?.length || allMarkets.length) {
         updated.languages = market.browserLangs?.length ? [market.browserLangs[0]] : (updated.languages?.length ? updated.languages : [DEFAULT_LANGUAGE]);
       }
     }
