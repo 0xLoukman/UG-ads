@@ -1418,7 +1418,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
     };
 
-    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey || (selectedChannels.includes('Google') && !googleAccounts.length && !selectedCampaignTypes.length);
+    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey || (selectedChannels.includes('Google') && !googleAccounts.length);
 
     return (
         <div className="flex justify-center items-start pt-8 sm:pt-12">
