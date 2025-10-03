@@ -74,7 +74,7 @@ const alignWithManualSelections = (
 ): CampaignSummary[] => {
   const manualTypePool = manualParams.campaignTypes.filter(Boolean);
   const summaryTypePool = summaries.map(s => s.campaignType).filter(Boolean);
-  const allTypes = Array.from(new Set([...manualTypePool, ...summaryTypePool]));
+  const typeList = Array.from(new Set([...manualTypePool, ...summaryTypePool]));
 
   const manualMarketPool = [...manualParams.primaryMarkets, ...manualParams.secondaryMarkets].filter(Boolean);
   const summaryMarkets = summaries.map(s => s.market).filter(Boolean);
@@ -86,53 +86,47 @@ const alignWithManualSelections = (
       marketMap.set(iso, market);
     }
   });
-  const allMarkets = Array.from(marketMap.values());
+  const marketList = Array.from(marketMap.values());
 
-  const channelPool = channels.length ? channels : summaries.map(s => s.channel).filter(Boolean);
+  const channelPoolRaw = channels.length ? channels : summaries.map(s => s.channel).filter(Boolean);
+  const channelList = channelPoolRaw.length ? Array.from(new Set(channelPoolRaw)) : ['Google'];
 
-  const ensureCount = Math.max(
-    summaries.length || 0,
-    allTypes.length || 0,
-    allMarkets.length || 0,
-    channelPool.length || 0,
-    1
-  );
+  const resolvedMarkets = marketList.length ? marketList : (summaries.length ? [summaries[0].market] : [DEFAULT_MARKET]);
+  const resolvedTypes = typeList.length ? typeList : (summaries.length ? [summaries[0].campaignType] : [DEFAULT_TYPE]);
 
-  const base = summaries.length ? summaries : [];
-  const next = [...base];
-  while (next.length < ensureCount) {
-    const index = next.length;
-    const market = allMarkets.length ? allMarkets[index % allMarkets.length] : (base[0]?.market || DEFAULT_MARKET);
-    const type = allTypes.length ? allTypes[index % allTypes.length] : (base[0]?.campaignType || DEFAULT_TYPE);
-    const channel = channelPool.length ? channelPool[index % channelPool.length] : (base[0]?.channel || 'Google');
-    const languages = market.browserLangs?.length ? [market.browserLangs[0]] : (base[0]?.languages?.length ? base[0].languages : [DEFAULT_LANGUAGE]);
-    next.push({
-      id: self.crypto.randomUUID(),
-      channel,
-      campaignName: `${market.name} ${type} Campaign`,
-      campaignType: type,
-      market,
-      languages,
+  const combos: Array<{ market: Market; type: string; channel: Channel }> = [];
+  resolvedMarkets.forEach(market => {
+    resolvedTypes.forEach(type => {
+      channelList.forEach(channel => {
+        combos.push({ market, type, channel: channel as Channel });
+      });
     });
+  });
+
+  if (!combos.length) {
+    return summaries;
   }
 
-  return next.map((summary, idx) => {
-    const updated: CampaignSummary = { ...summary };
-    if (channelPool.length) {
-      updated.channel = channelPool[idx % channelPool.length] || updated.channel;
-    }
-    if (allTypes.length) {
-      updated.campaignType = allTypes[idx % allTypes.length] || updated.campaignType;
-    }
-    if (allMarkets.length) {
-      const market = allMarkets[idx % allMarkets.length];
-      updated.market = market;
-      if (!updated.languages?.length || allMarkets.length) {
-        updated.languages = market.browserLangs?.length ? [market.browserLangs[0]] : (updated.languages?.length ? updated.languages : [DEFAULT_LANGUAGE]);
-      }
-    }
-    return updated;
+  const base = [...summaries];
+  const updated = combos.map((combo, index) => {
+    const source = base[index] || base[index % Math.max(base.length, 1)] || null;
+    const primaryLanguage = combo.market.browserLangs?.[0] || source?.languages?.[0] || DEFAULT_LANGUAGE;
+    return {
+      id: source?.id || self.crypto.randomUUID(),
+      channel: combo.channel,
+      campaignName: source?.campaignName && source.campaignName.trim().length
+        ? source.campaignName
+        : `${combo.market.name} ${combo.type} Campaign`,
+      campaignType: combo.type,
+      market: combo.market,
+      languages: [primaryLanguage],
+    } satisfies CampaignSummary;
   });
+
+  const usedIds = new Set(updated.map(s => s.id));
+  const extras = summaries.filter(s => !usedIds.has(s.id));
+
+  return [...updated, ...extras];
 };
 
 export const generateCampaignSummary = async (
