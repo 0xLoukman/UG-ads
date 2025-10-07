@@ -35,7 +35,7 @@ const COUNTRIES: Omit<Market, 'browserLangs'>[] = [
     { name: "Austria", iso: "AT"}, { name: "Belgium", iso: "BE"},
     { name: "Ireland", iso: "IE"}, { name: "New Zealand", iso: "NZ"},
     { name: "Singapore", iso: "SG"}, { name: "Hong Kong", iso: "HK"},
-    { name: "Morocco", iso: "MA"}
+    { name: "Algeria", iso: "DZ"}, { name: "Morocco", iso: "MA"}
 ].sort((a,b) => a.name.localeCompare(b.name));
 
 const getMarketWithLangs = (country: Omit<Market, 'browserLangs'>): Market => {
