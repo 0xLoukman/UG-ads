@@ -1861,13 +1861,11 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     const allLangOptions = Array.from(new Set(COUNTRIES.flatMap(c => getMarketWithLangs(c as any).browserLangs)));
 
     const headers = [
-        { key: 'channel', label: 'Channel' },
-        { key: 'campaignName', label: 'Campaign Name' },
-        { key: 'campaignType', label: 'Campaign Type' },
-        { key: 'market', label: 'Market' },
-        { key: 'browserLangs', label: 'Browser Langs' },
-        { key: 'languages', label: 'Ad Langs' },
-        { key: 'actions', label: 'Actions' },
+        { key: 'campaignName', label: 'Campaigns' },
+        { key: 'campaignType', label: 'Type' },
+        { key: 'languages', label: 'Language' },
+        { key: 'market', label: 'Country' },
+        { key: 'actions', label: '' },
     ];
 
     return (
@@ -1890,13 +1888,35 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             return (
                             <React.Fragment key={s.id}>
                             <tr className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 flex items-center space-x-2"><span className="inline-flex items-center justify-center">{getChannelIcon(s.channel, 'md')}</span><span>{s.channel}</span></td>
-                                <td className="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">{s.campaignName}</td>
-                                <td className="px-6 py-3">{s.campaignType}</td>
-                                <td className="px-6 py-3">{s.market.name} ({s.market.iso})</td>
-                                <td className="px-6 py-3">{s.market.browserLangs.join(', ')}</td>
-                                <td className="px-6 py-3">{s.languages.map(langNameFromCode).join(', ')}</td>
-                                <td className="px-6 py-3 text-right"><button onClick={() => setEditingId(s.id)} className="text-xs px-2 py-1 rounded-md border border-gray-200">Edit</button></td>
+                                <td className="px-6 py-4 flex items-center gap-4">
+                                    <span className="inline-flex items-center justify-center">{getChannelIcon(s.channel, 'md')}</span>
+                                    <span className="font-semibold text-gray-900">{s.campaignName}</span>
+                                </td>
+                                <td className="px-6 py-3">
+                                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M16.6621 3.52486C16.1505 3.52486 15.7371 3.93822 15.7371 4.44986V4.71291L4.60242 7.89549C4.49258 7.50814 4.13414 7.22486 3.71211 7.22486C3.20047 7.22486 2.78711 7.63822 2.78711 8.14986V11.8499C2.78711 12.3615 3.20047 12.7749 3.71211 12.7749C4.13414 12.7749 4.49258 12.4916 4.60242 12.1042L6.675 12.6968C6.55359 13.009 6.48711 13.3472 6.48711 13.6999C6.48711 15.2319 7.73008 16.4749 9.26211 16.4749C10.6178 16.4749 11.748 15.5007 11.988 14.2144L15.7371 15.2839V15.547C15.7371 16.0586 16.1505 16.472 16.6621 16.472C17.1737 16.472 17.5871 16.0586 17.5871 15.547V4.44697C17.5871 3.93533 17.1737 3.52197 16.6621 3.52197V3.52486ZM10.6438 13.8299C10.5773 14.5353 9.98477 15.0874 9.26211 15.0874C8.49609 15.0874 7.87461 14.4659 7.87461 13.6999C7.87461 13.4773 7.92664 13.2663 8.01914 13.0813L10.6438 13.8299Z" fill="#888888"/>
+                                        </svg>
+                                        {s.campaignType}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-3">
+                                    <span className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 text-gray-700 text-sm">
+                                        <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M6.37435 2.54199C6.88138 2.54199 7.29102 2.95163 7.29102 3.45866V4.37533H10.9577C11.4647 4.37533 11.8743 4.78496 11.8743 5.29199C11.8743 5.79902 11.4647 6.20866 10.9577 6.20866H10.6827L10.4421 6.87038C9.97227 8.16517 9.26471 9.34824 8.37383 10.3652C8.7806 10.6173 9.20456 10.8407 9.6457 11.0383L11.0895 11.68L12.8712 7.6696C13.0173 7.3373 13.3467 7.12533 13.7077 7.12533C14.0686 7.12533 14.398 7.3373 14.5441 7.6696L18.2108 15.9196C18.4171 16.3837 18.2079 16.9251 17.7467 17.1285C17.2855 17.3318 16.7413 17.1256 16.5379 16.6644L15.965 15.3753H11.4533L10.8803 16.6644C10.6741 17.1284 10.1327 17.3347 9.67148 17.1285C9.21029 16.9222 9.00117 16.3808 9.20742 15.9196L10.3475 13.3558L8.90378 12.7141C8.24492 12.4219 7.61471 12.0725 7.01888 11.6714C6.40872 12.1641 5.74128 12.5938 5.02799 12.9519L4.03398 13.4446C3.58138 13.6709 3.03138 13.4876 2.80508 13.035C2.57878 12.5824 2.76211 12.0324 3.21471 11.8061L4.20299 11.3105C4.66992 11.0756 5.11393 10.8034 5.53216 10.4998C5.13685 10.136 4.76445 9.74355 4.41784 9.32819L4.12852 8.97871C3.80482 8.58913 3.85638 8.01048 4.24596 7.68678C4.63555 7.36309 5.21419 7.41465 5.53789 7.80423L5.83008 8.15371C6.15951 8.55189 6.52044 8.92142 6.90143 9.2623C7.68919 8.39147 8.31081 7.36881 8.72044 6.24303L8.73477 6.20866H2.71055C2.20065 6.20866 1.79102 5.79902 1.79102 5.29199C1.79102 4.78496 2.20065 4.37533 2.70768 4.37533H5.45768V3.45866C5.45768 2.95163 5.86732 2.54199 6.37435 2.54199ZM13.7077 10.2993L12.2668 13.542H15.1486L13.7077 10.2993Z" fill="#888888"/>
+                                        </svg>
+                                        {s.languages.map(langNameFromCode).join(', ')}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-3">
+                                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded-md border border-gray-200 bg-gray-100 text-gray-700 text-sm">
+                                        <span className="text-base">{getCountryFlag(s.market.iso)}</span>
+                                        {s.market.iso}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-3 text-right">
+                                    <button onClick={() => setEditingId(s.id)} className="text-xs px-3 py-1.5 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200">Edit Campaign</button>
+                                </td>
                             </tr>
                             {isEditing && (
                                 <tr className="bg-gray-50 border-b" key={`${s.id}-edit`}>
