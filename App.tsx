@@ -633,7 +633,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group����.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1052,6 +1052,7 @@ const MARKETS: { code: string; name: string }[] = [
   { code: "IE", name: "Ireland" },
   { code: "CH", name: "Switzerland" },
   { code: "AT", name: "Austria" },
+  { code: "DZ", name: "Algeria" },
   { code: "MA", name: "Morocco" }
 ];
 const findMarket = (c: string) => MARKETS.find(m => m.code === c);
