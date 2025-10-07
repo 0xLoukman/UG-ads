@@ -1010,28 +1010,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
 };
 
 // ===== Markets data and helpers =====
-const MARKETS: { code: string; name: string }[] = [
-  { code: "FR", name: "France" },
-  { code: "DE", name: "Germany" },
-  { code: "ES", name: "Spain" },
-  { code: "IT", name: "Italy" },
-  { code: "PT", name: "Portugal" },
-  { code: "NL", name: "Netherlands" },
-  { code: "BE", name: "Belgium" },
-  { code: "DK", name: "Denmark" },
-  { code: "SE", name: "Sweden" },
-  { code: "NO", name: "Norway" },
-  { code: "FI", name: "Finland" },
-  { code: "AE", name: "UAE" },
-  { code: "SA", name: "Saudi Arabia" },
-  { code: "QA", name: "Qatar" },
-  { code: "GB", name: "UK" },
-  { code: "IE", name: "Ireland" },
-  { code: "CH", name: "Switzerland" },
-  { code: "AT", name: "Austria" },
-  { code: "DZ", name: "Algeria" },
-  { code: "MA", name: "Morocco" }
-];
+const MARKETS = WORLD_COUNTRIES;
 const findMarket = (c: string) => MARKETS.find(m => m.code === c);
 const LANGUAGE_LIST: { code: string; name: string }[] = [
   { code: 'en', name: 'English' },
