@@ -2469,7 +2469,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                             <div className="text-xs text-gray-500">No saved banners yet.</div>
                         )}
                         {bannerPresets?.map(p => (
-                            <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); setImages(p.images || []); setLogo(p.logo || null); setCopy(p.copy || null as any); setTemplate(p.template as any); setAccent(p.accent); setStage('edit'); }} className="w-full border rounded-md bg-white hover:shadow text-left">
+                            <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); updateImages(() => (p.images ? [...p.images] : []), 0); setLogo(p.logo || null); setCopy(p.copy || null as any); setTemplate(p.template as any); setAccent(p.accent); setStage('edit'); }} className="w-full border rounded-md bg-white hover:shadow text-left">
                                 <div className="relative bg-gray-50 rounded-t-md overflow-hidden" style={{ aspectRatio: (p as any).width && (p as any).height ? (p as any).width + '/' + (p as any).height : (p.sizeKey==='336x280'?'336/280': p.sizeKey==='728x90'?'728/90': p.sizeKey==='300x600'?'300/600': p.sizeKey==='320x100'?'320/100':'300/250') }}>
                                     {p.images?.[0] && <img src={p.images[0]} className="absolute inset-0 w-full h-full object-cover" alt={p.name} />}
                                     {(p.template === 'overlay' || p.template === 'center-hero') && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
