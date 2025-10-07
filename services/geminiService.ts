@@ -238,6 +238,49 @@ export const generateCampaignSummary = async (
   return alignWithManualSelections(summaries, manualParams, channels);
 };
 
+// ===== AI-POWERED EXTRACTION =====
+const extractionSchema = {
+  type: Type.OBJECT,
+  properties: {
+    markets: { type: Type.ARRAY, items: { ...marketSchema } },
+    campaignTypes: { type: Type.ARRAY, items: { type: Type.STRING } },
+  },
+  required: ['markets', 'campaignTypes'],
+};
+
+const EXTRACTION_SYSTEM_INSTRUCTION = `You are an expert at extracting structured data from user prompts. Extract all countries/markets and campaign types mentioned.
+For markets: Return country name, ISO code (2-letter), and appropriate browser language codes.
+For campaign types: Extract mentioned types like "PMax", "Performance Max", "Brand Search", "Search", etc.
+Be intelligent - don't match common words to country codes (e.g., "in" is NOT India unless clearly a country reference).
+If nothing is mentioned, return empty arrays.`;
+
+export const extractMarketsAndTypes = async (text: string): Promise<{ markets: Market[]; campaignTypes: string[] }> => {
+  if (!text.trim()) return { markets: [], campaignTypes: [] };
+
+  const prompt = `Extract all countries/markets and campaign types from this text: """${text}"""`;
+
+  try {
+    const response = await ensureClient().models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        systemInstruction: EXTRACTION_SYSTEM_INSTRUCTION,
+        responseMimeType: 'application/json',
+        responseSchema: extractionSchema,
+      },
+    });
+
+    const result = JSON.parse(response.text || '{}');
+    return {
+      markets: result.markets || [],
+      campaignTypes: result.campaignTypes || [],
+    };
+  } catch (error) {
+    console.error('AI extraction failed:', error);
+    return { markets: [], campaignTypes: [] };
+  }
+};
+
 // ===== DETAILS GENERATION (STEP 2) =====
 const googleAdSchema = {
   type: Type.OBJECT,
