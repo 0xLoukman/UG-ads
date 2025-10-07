@@ -2159,6 +2159,15 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
             </div>
             <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto' : 'grid grid-cols-12 gap-4 h-full'}>
                 <div className={stage==='setup' ? '' : 'md:col-span-4 h-full overflow-auto pr-2'}>
+                    {stage==='edit' && (
+                        <div className="flex items-center justify-between mb-3">
+                            <div>
+                                <div className="text-sm font-semibold text-gray-800">Creative inputs</div>
+                                <div className="text-xs text-gray-500">Adjust assets and layout</div>
+                            </div>
+                            <button onClick={()=> setStage('setup')} className="text-xs text-gray-500 hover:text-gray-900">Start over</button>
+                        </div>
+                    )}
                     <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                     <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
                     <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
