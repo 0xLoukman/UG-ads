@@ -2105,11 +2105,36 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
-    const onFiles = async (fileList: FileList | null, set: (arr: string[]) => void, appendTo?: string[]) => {
+    const updateImages = (updater: (current: string[]) => string[], focusIndex?: number) => {
+        setImages(prevImages => {
+            const nextImages = updater(prevImages).slice(0, 5);
+            if (nextImages.length === 0) {
+                setActiveImageIndex(0);
+            } else if (typeof focusIndex === 'number' && focusIndex >= 0 && focusIndex < nextImages.length) {
+                setActiveImageIndex(focusIndex);
+            } else {
+                setActiveImageIndex(prev => {
+                    const safeIndex = Math.min(prev, nextImages.length - 1);
+                    return safeIndex < 0 ? 0 : safeIndex;
+                });
+            }
+            return nextImages;
+        });
+    };
+
+    const handleImageFiles = async (fileList: FileList | null) => {
         if (!fileList) return;
-        const arr = await Promise.all(Array.from(fileList).map(f => new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(r.result as string); r.readAsDataURL(f); })));
-        const next = [...(appendTo || []), ...arr];
-        set(next);
+        const uploads = await Promise.all(
+            Array.from(fileList).map(
+                (file) =>
+                    new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result as string);
+                        reader.readAsDataURL(file);
+                    })
+            )
+        );
+        updateImages((prev) => [...prev, ...uploads]);
     };
 
     const generate = async () => {
