@@ -1004,17 +1004,17 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
 
     const topText = useMemo(() => {
         const raw = (value || '').trim();
-        if (missing.length === 0) return "Looks great! Any extra details about the hotel or creative angle will help us craft even better campaigns — but this is enough to kick things off 🚀";
+        if (missing.length === 0) return "Looks great! Any extra details about the hotel or creative angle will help us craft even better campaigns — but this is enough to kick things off.";
         if (raw.length === 0 || missing.length === schema.length) {
-            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you ✍️';
+            return 'Tell us more about your campaign. Start anywhere — markets, campaign type, hotel details, or creative angle — I\'ll guide you.';
         }
         const mkt = has('market');
         const typ = has('type');
-        if (!mkt && typ) return 'Nice direction! Which markets do you want to target? ����';
-        if (mkt && !typ) return 'That\'s cool 😎 Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads) 🎯';
-        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special 🏨';
-        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc. ✨';
-        return 'You\'re doing great — add any extra details you think matter, or proceed when ready ✅';
+        if (!mkt && typ) return 'Nice direction! Which markets do you want to target?';
+        if (mkt && !typ) return 'That\'s cool! Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads).';
+        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special.';
+        if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc.';
+        return 'You\'re doing great — add any extra details you think matter, or proceed when ready.';
     }, [value, missing, schema, has]);
 
     return (
