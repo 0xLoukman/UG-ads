@@ -1211,6 +1211,44 @@ const extractCampaignTypesFromText = (text: string): string[] => {
   return Array.from(detected);
 };
 
+const canonicalizeCampaignType = (value: string): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  if (CAMPAIGN_TYPE_ALIASES[lower]) return CAMPAIGN_TYPE_ALIASES[lower] as string;
+  const exact = ALL_CAMPAIGN_TYPES.find(type => type.toLowerCase() === lower);
+  if (exact) return exact;
+  return trimmed
+    .split(/\s+/)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+};
+
+const normalizeAiMarket = (raw: Partial<Market> | null | undefined): Market | null => {
+  if (!raw) return null;
+  const rawIso = (raw.iso || '').toString().trim();
+  let iso = rawIso ? rawIso.toUpperCase() : '';
+  if (!iso && raw.name) {
+    const byName = MARKETS.find(m => m.name.toLowerCase() === raw.name!.toLowerCase());
+    if (byName) iso = byName.code;
+  }
+  const base = iso ? findMarket(iso) : undefined;
+  if (!iso && base) iso = base.code;
+  if (!iso) return null;
+  const name = (raw.name || base?.name || iso).toString();
+  const marketWithLangs = getMarketWithLangs({ name, iso });
+  const langSet = new Set<string>(marketWithLangs.browserLangs);
+  if (Array.isArray(raw.browserLangs)) {
+    raw.browserLangs.forEach(lang => {
+      if (typeof lang === 'string' && lang.trim()) {
+        langSet.add(lang.trim());
+      }
+    });
+  }
+  return { ...marketWithLangs, name, browserLangs: Array.from(langSet) };
+};
+
 type MarketItem = { type: 'single' | 'cluster'; name: string; codes: string[] };
 
 type InputViewProps = {
