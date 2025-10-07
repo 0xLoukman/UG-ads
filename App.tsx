@@ -2221,11 +2221,43 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         <div>
                             <div className="text-sm font-medium text-gray-800">Images</div>
                             <div className="text-xs text-gray-500 mb-2">Upload 1–5 photos (used as background)</div>
-                            <input id="creative-images" type="file" className="hidden" accept="image/*" multiple onChange={(e)=> onFiles(e.target.files, setImages, images)} />
+                            <input
+                                id="creative-images"
+                                type="file"
+                                className="hidden"
+                                accept="image/*"
+                                multiple
+                                onChange={(e) => {
+                                    handleImageFiles(e.target.files);
+                                    e.currentTarget.value = '';
+                                }}
+                            />
                             <div className="flex items-center gap-2 flex-wrap">
-                                {images.map((src, i) => (<img key={i} src={src} className="w-16 h-16 object-cover rounded-md border" alt={`img ${i+1}`} />))}
-                                <label htmlFor="creative-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">Add images</label>
-                                <button onClick={()=> onPickFromLibrary('images', 5, (urls)=> setImages([...(images||[]), ...urls].slice(0,5)))} className="px-2 py-1.5 text-xs rounded-md border">Use library</button>
+                                {images.map((src, index) => (
+                                    <button
+                                        type="button"
+                                        key={index}
+                                        onClick={() => setActiveImageIndex(index)}
+                                        aria-pressed={activeImageIndex === index}
+                                        className={`relative rounded-md overflow-hidden border focus:outline-none focus:ring-2 focus:ring-blue-500 ${activeImageIndex === index ? 'ring-2 ring-blue-500 border-blue-200' : ''}`}
+                                    >
+                                        <img src={src} className="w-16 h-16 object-cover" alt={`Background ${index + 1}`} />
+                                        {activeImageIndex === index && (
+                                            <span className="absolute bottom-1 left-1 rounded bg-white/90 px-1 text-[10px] font-medium text-gray-700">
+                                                Active
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                                <label htmlFor="creative-images" className="px-2 py-1.5 text-xs rounded-md border cursor-pointer">
+                                    Add images
+                                </label>
+                                <button
+                                    onClick={() => onPickFromLibrary('images', 5, (urls) => updateImages((prev) => [...prev, ...urls]))}
+                                    className="px-2 py-1.5 text-xs rounded-md border"
+                                >
+                                    Use library
+                                </button>
                             </div>
                         </div>
                         <div>
