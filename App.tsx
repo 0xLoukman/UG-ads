@@ -2212,7 +2212,16 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                 <div className="text-sm font-semibold text-gray-800">Creative inputs</div>
                                 <div className="text-xs text-gray-500">Adjust assets and layout</div>
                             </div>
-                            <button onClick={()=> setStage('setup')} className="text-xs text-gray-500 hover:text-gray-900">Start over</button>
+                            <button
+                                onClick={() => {
+                                    setStage('setup');
+                                    setCopy(null);
+                                    setActiveImageIndex(0);
+                                }}
+                                className="text-xs text-gray-500 hover:text-gray-900"
+                            >
+                                Start over
+                            </button>
                         </div>
                     )}
                     <label className="block text-xs text-gray-600 mb-1">Prompt</label>
