@@ -47,7 +47,7 @@ const getMarketWithLangs = (country: Omit<Market, 'browserLangs'>): Market => {
         NL: ['nl-NL'], SE: ['sv-SE'], CH: ['de-CH', 'fr-CH', 'it-CH'],
         NO: ['no-NO'], DK: ['da-DK'], FI: ['fi-FI'], AT: ['de-AT'],
         BE: ['nl-BE', 'fr-BE'], IE: ['en-IE'], NZ: ['en-NZ'], SG: ['en-SG'],
-        HK: ['en-HK', 'zh-HK'], MA: ['fr-MA', 'ar-MA']
+        HK: ['en-HK', 'zh-HK'], DZ: ['ar-DZ', 'fr-DZ'], MA: ['fr-MA', 'ar-MA']
     };
     return { ...country, browserLangs: langMap[country.iso] || [] };
 };
@@ -633,7 +633,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group����.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
