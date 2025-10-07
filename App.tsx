@@ -1264,6 +1264,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+    const [isParsingPrompt, setIsParsingPrompt] = useState(false);
     const [channelMenuStage, setChannelMenuStage] = useState<'channels' | 'types'>('channels');
     const [showPromptExamples, setShowPromptExamples] = useState(true);
     const [promptScrollState, setPromptScrollState] = useState({ canScrollPrev: false, canScrollNext: false });
