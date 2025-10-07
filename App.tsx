@@ -1751,7 +1751,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 {attachments.map((f, i) => (
                                     <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
                                         📎 {f.name}
-                                        <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
+                                        <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">��</button>
                                     </span>
                                 ))}
                             </div>
@@ -1865,10 +1865,10 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     }, [summaries]);
 
     return (
-        <div className="space-y-0">
-            <div className={`border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible`}>
-                <table className="w-full text-sm text-left text-gray-600 relative">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+        <div className="campaign-summary-wrapper space-y-0">
+            <div className="campaign-summary-table-container border border-gray-200 rounded-lg overflow-x-auto">
+                <table className="campaign-summary-table w-full text-sm text-left text-gray-600 relative">
+                    <thead className="campaign-summary-table__head text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                             {headers.map(h => (
                                 <th key={h.key} scope="col" className="px-6 py-3 cursor-pointer" onClick={() => requestSort(h.key as any)}>
