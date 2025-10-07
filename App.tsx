@@ -610,7 +610,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click ���Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -870,7 +870,7 @@ const MarketSelector = ({ label, selectedMarkets, onAdd, onRemove, allSelectedMa
     );
 };
 
-const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { label: string, options: string[], selectedOptions: string[], onToggle: (option: string) => void }) => {
+const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle, placeholder = 'Select options...', searchPlaceholder = 'Search options' }: { label: string, options: string[], selectedOptions: string[], onToggle: (option: string) => void, placeholder?: string, searchPlaceholder?: string }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState('');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -881,54 +881,58 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
                 setIsOpen(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     const filtered = useMemo(() => {
         const q = query.toLowerCase();
-        return options.filter(o => o.toLowerCase().includes(q));
+        return options.filter(option => option.toLowerCase().includes(q));
     }, [options, query]);
 
     const visibleSelected = selectedOptions.slice(0, 2);
     const extraCount = Math.max(0, selectedOptions.length - visibleSelected.length);
 
     return (
-        <div ref={containerRef} className="max-w-md">
-             <label className="text-sm font-medium text-gray-700">{label}</label>
-             <div className="relative mt-1">
-                <button onClick={() => setIsOpen(!isOpen)} className="w-full h-10 px-2 border border-gray-200 rounded-lg flex justify-between items-center text-left">
-                    <div className="flex flex-wrap gap-1.5 items-center">
+        <div ref={containerRef} className="campaign-multi-select max-w-md w-full">
+            <label className="campaign-multi-select__label text-[11px] font-semibold uppercase tracking-wide text-gray-600">{label}</label>
+            <div className="relative mt-1">
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="campaign-multi-select__trigger w-full h-10 rounded-lg border border-gray-200 px-3 flex items-center justify-between bg-white text-left text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                >
+                    <div className="flex flex-wrap items-center gap-1.5 overflow-hidden">
                         {selectedOptions.length > 0 ? (
                             <>
                                 {visibleSelected.map(option => (
-                                    <span key={option} className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                    <span key={option} className="campaign-multi-select__chip bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full">
                                         {option}
                                     </span>
                                 ))}
                                 {extraCount > 0 && (
-                                    <span className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">+{extraCount}</span>
+                                    <span className="campaign-multi-select__chip bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-0.5 rounded-full">+{extraCount}</span>
                                 )}
                             </>
                         ) : (
-                            <span className="text-gray-500 text-sm">Select campaign types...</span>
+                            <span className="text-gray-500">{placeholder}</span>
                         )}
                     </div>
                     <ChevronDownIcon className={`w-4 h-4 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isOpen && (
-                    <div className="absolute z-[1000] mt-1 w-[300px] sm:w-[320px] max-w-[calc(100vw-2rem)] bg-white border border-gray-200 rounded-lg shadow-lg">
-                        <div className="p-2 border-b border-gray-100">
+                    <div className="campaign-multi-select__panel absolute z-[1300] mt-2 w-full sm:w-80 rounded-lg border border-gray-200 bg-white shadow-xl">
+                        <div className="border-b border-gray-100 p-2">
                             <input
                                 value={query}
                                 onChange={(e) => setQuery(e.target.value)}
-                                placeholder="Search types"
-                                className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-md"
+                                placeholder={searchPlaceholder}
+                                className="w-full rounded-md border border-gray-200 px-2 py-1.5 text-sm focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
-                        <div className="max-h-48 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        <div className="max-h-52 overflow-y-auto p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                             {filtered.length === 0 ? (
-                                <div className="col-span-2 text-xs text-gray-500 px-2 py-1.5">No matches</div>
+                                <div className="col-span-2 px-2 py-1.5 text-xs text-gray-500">No matches</div>
                             ) : (
                                 filtered.map(option => {
                                     const active = selectedOptions.includes(option);
@@ -937,7 +941,7 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
                                             type="button"
                                             key={option}
                                             onClick={() => onToggle(option)}
-                                            className={`flex items-center justify-between w-full text-sm px-2 py-1.5 rounded-md border ${active ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-white border-gray-200 text-gray-700'} hover:bg-gray-50`}
+                                            className={`flex w-full items-center justify-between rounded-md border px-2 py-1.5 text-sm transition-colors ${active ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}
                                         >
                                             <span className="truncate">{option}</span>
                                             {active && (
@@ -948,17 +952,37 @@ const MultiSelectDropdown = ({ label, options, selectedOptions, onToggle }: { la
                                 })
                             )}
                         </div>
-                        <div className="flex items-center justify-between gap-2 p-2 border-t border-gray-100">
-                            <button onClick={() => options.forEach(o => !selectedOptions.includes(o) && onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200">Select All</button>
-                            <button onClick={() => selectedOptions.forEach(o => onToggle(o))} className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200">Clear</button>
-                            <button onClick={() => setIsOpen(false)} className="ml-auto text-xs px-2 py-1 rounded-full bg-black text-white hover:bg-gray-800">Done</button>
+                        <div className="flex items-center gap-2 border-t border-gray-100 p-2">
+                            <button
+                                type="button"
+                                onClick={() => options.forEach(option => {
+                                    if (!selectedOptions.includes(option)) onToggle(option);
+                                })}
+                                className="text-xs px-2 py-1 rounded-full bg-blue-100 text-blue-800 hover:bg-blue-200"
+                            >
+                                Select all
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => selectedOptions.forEach(option => onToggle(option))}
+                                className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            >
+                                Clear
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsOpen(false)}
+                                className="ml-auto text-xs px-2 py-1 rounded-full bg-black text-white hover:bg-gray-800"
+                            >
+                                Done
+                            </button>
                         </div>
                     </div>
                 )}
-             </div>
+            </div>
         </div>
-    )
-}
+    );
+};
 
 // ===== Guided Prompt =====
 type GuidedPromptRequirement = {
