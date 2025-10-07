@@ -82,8 +82,10 @@ const normalizeIso = (market?: Market | null): string => {
   return name ? name.replace(/[^A-Za-z0-9]/g, '').toUpperCase() : '';
 };
 
-const buildSummaryKey = (channel: Channel, type: string, market?: Market | null): string =>
-  `${channel}__${type.trim().toLowerCase()}__${normalizeIso(market)}`;
+const buildSummaryKey = (channel: Channel, type: string | undefined | null, market?: Market | null): string => {
+  const normalizedType = (type || DEFAULT_TYPE).trim().toLowerCase();
+  return `${channel}__${normalizedType}__${normalizeIso(market)}`;
+};
 
 const dedupeLanguages = (...langLists: (string[] | undefined)[]): string[] => {
   const set = new Set<string>();
