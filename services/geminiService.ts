@@ -67,66 +67,139 @@ const describeMarkets = (label: string, markets: Market[]) => {
   return `${label}: ${items.join(', ')}`;
 };
 
+const toTitleToken = (value: string): string =>
+  value
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean)
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+
+const normalizeIso = (market?: Market | null): string => {
+  if (!market) return '';
+  const iso = market.iso?.trim();
+  if (iso) return iso.toUpperCase();
+  const name = market.name?.trim();
+  return name ? name.replace(/[^A-Za-z0-9]/g, '').toUpperCase() : '';
+};
+
+const buildSummaryKey = (channel: Channel, type: string, market?: Market | null): string =>
+  `${channel}__${type.trim().toLowerCase()}__${normalizeIso(market)}`;
+
+const dedupeLanguages = (...langLists: (string[] | undefined)[]): string[] => {
+  const set = new Set<string>();
+  langLists
+    .flat()
+    .map(lang => lang?.trim())
+    .filter(Boolean)
+    .forEach(lang => set.add(lang!));
+  return Array.from(set);
+};
+
+const mergeMarkets = (markets: Market[]): Map<string, Market> => {
+  const map = new Map<string, Market>();
+  markets.forEach((market, index) => {
+    if (!market) return;
+    const key = normalizeIso(market) || `MARKET-${index}`;
+    const existing = map.get(key);
+    const browserLangs = dedupeLanguages(existing?.browserLangs, market.browserLangs);
+    map.set(key, {
+      ...existing,
+      ...market,
+      iso: key,
+      name: (market.name && market.name.trim()) || existing?.name || market.iso || key,
+      browserLangs,
+    });
+  });
+  return map;
+};
+
+const resolveLanguages = (marketLangs?: string[], summaryLangs?: string[]): string[] => {
+  const merged = dedupeLanguages(marketLangs, summaryLangs);
+  return merged.length ? merged : [DEFAULT_LANGUAGE];
+};
+
+const formatCampaignName = (channel: Channel, type: string, market: Market): string => {
+  const typeSegment = toTitleToken(type || DEFAULT_TYPE);
+  const marketSegment = toTitleToken(market.name || market.iso || DEFAULT_MARKET.name);
+  return `${channel}_${typeSegment}_${marketSegment}`;
+};
+
 const alignWithManualSelections = (
   summaries: CampaignSummary[],
   manualParams: ManualOverrides,
   channels: Channel[]
 ): CampaignSummary[] => {
-  const manualTypePool = manualParams.campaignTypes.filter(Boolean);
+  const manualTypePool = manualParams.campaignTypes.map(type => type.trim()).filter(Boolean);
   const summaryTypePool = summaries.map(s => s.campaignType).filter(Boolean);
   const typeList = Array.from(new Set([...manualTypePool, ...summaryTypePool]));
+  if (!typeList.length) typeList.push(DEFAULT_TYPE);
 
   const manualMarketPool = [...manualParams.primaryMarkets, ...manualParams.secondaryMarkets].filter(Boolean);
   const summaryMarkets = summaries.map(s => s.market).filter(Boolean);
-  const marketMap = new Map<string, Market>();
-  [...manualMarketPool, ...summaryMarkets].forEach(market => {
-    if (!market) return;
-    const iso = market.iso || market.name;
-    if (!marketMap.has(iso)) {
-      marketMap.set(iso, market);
-    }
-  });
+  const marketMap = mergeMarkets([...manualMarketPool, ...summaryMarkets]);
+  if (!marketMap.size) {
+    mergeMarkets([DEFAULT_MARKET]).forEach((value, key) => marketMap.set(key, value));
+  }
   const marketList = Array.from(marketMap.values());
 
-  const channelPoolRaw = channels.length ? channels : summaries.map(s => s.channel).filter(Boolean);
-  const channelList = channelPoolRaw.length ? Array.from(new Set(channelPoolRaw)) : ['Google'];
+  const channelSet = new Set<Channel>();
+  channels.forEach(ch => ch && channelSet.add(ch));
+  summaries.forEach(s => s.channel && channelSet.add(s.channel));
+  if (!channelSet.size) channelSet.add('Google');
+  const channelList = Array.from(channelSet);
 
-  const resolvedMarkets = marketList.length ? marketList : (summaries.length ? [summaries[0].market] : [DEFAULT_MARKET]);
-  const resolvedTypes = typeList.length ? typeList : (summaries.length ? [summaries[0].campaignType] : [DEFAULT_TYPE]);
+  const summaryByKey = new Map<string, CampaignSummary>();
+  summaries.forEach(summary => {
+    const key = buildSummaryKey(summary.channel, summary.campaignType, summary.market);
+    if (key.trim()) summaryByKey.set(key, summary);
+  });
 
-  const combos: Array<{ market: Market; type: string; channel: Channel }> = [];
-  resolvedMarkets.forEach(market => {
-    resolvedTypes.forEach(type => {
+  const summariesByIso = new Map<string, CampaignSummary[]>();
+  summaries.forEach(summary => {
+    const isoKey = normalizeIso(summary.market);
+    if (!summariesByIso.has(isoKey)) summariesByIso.set(isoKey, []);
+    summariesByIso.get(isoKey)!.push(summary);
+  });
+
+  const combinations: CampaignSummary[] = [];
+  const seenKeys = new Set<string>();
+
+  marketList.forEach(market => {
+    typeList.forEach(type => {
       channelList.forEach(channel => {
-        combos.push({ market, type, channel: channel as Channel });
+        const key = buildSummaryKey(channel, type, market);
+        if (seenKeys.has(key)) return;
+        seenKeys.add(key);
+
+        const exact = summaryByKey.get(key);
+        const isoMatches = summariesByIso.get(normalizeIso(market)) || [];
+        const fallback =
+          exact ||
+          isoMatches.find(s => s.campaignType === type && s.channel === channel) ||
+          isoMatches.find(s => s.campaignType === type) ||
+          isoMatches.find(s => s.channel === channel) ||
+          isoMatches[0] ||
+          summaries.find(s => s.campaignType === type && s.channel === channel) ||
+          summaries.find(s => s.channel === channel) ||
+          summaries.find(s => s.campaignType === type) ||
+          summaries[0] ||
+          null;
+
+        combinations.push({
+          id: fallback?.id || self.crypto.randomUUID(),
+          channel,
+          campaignName: formatCampaignName(channel, type, market),
+          campaignType: type,
+          market,
+          languages: resolveLanguages(market.browserLangs, fallback?.languages),
+        });
       });
     });
   });
 
-  if (!combos.length) {
-    return summaries;
-  }
+  const extras = summaries.filter(summary => !seenKeys.has(buildSummaryKey(summary.channel, summary.campaignType, summary.market)));
 
-  const base = [...summaries];
-  const updated = combos.map((combo, index) => {
-    const source = base[index] || base[index % Math.max(base.length, 1)] || null;
-    const primaryLanguage = combo.market.browserLangs?.[0] || source?.languages?.[0] || DEFAULT_LANGUAGE;
-    return {
-      id: source?.id || self.crypto.randomUUID(),
-      channel: combo.channel,
-      campaignName: source?.campaignName && source.campaignName.trim().length
-        ? source.campaignName
-        : `${combo.market.name} ${combo.type} Campaign`,
-      campaignType: combo.type,
-      market: combo.market,
-      languages: [primaryLanguage],
-    } satisfies CampaignSummary;
-  });
-
-  const usedIds = new Set(updated.map(s => s.id));
-  const extras = summaries.filter(s => !usedIds.has(s.id));
-
-  return [...updated, ...extras];
+  return [...combinations, ...extras];
 };
 
 export const generateCampaignSummary = async (
