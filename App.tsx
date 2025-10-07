@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { FullCampaign, CampaignSummary, AssetGroup, AdGroup, Ad, Channel, MetaAdSet, TikTokAdGroup, MetaAd, TikTokAd, Market, AssetLibrary, BannerPreset } from "./types";
-import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd, generateBannerCopy } from "./services/geminiService";
+import { generateCampaignSummary, generateCampaignDetails, generateCreativeAsset, AssetType, generateGoogleAdGroup, generateGoogleSearchAd, generateBannerCopy, extractMarketsAndTypes } from "./services/geminiService";
 import { WORLD_COUNTRIES, LANGUAGE_MAPPINGS } from "./countries";
 
 type View = 'input' | 'summary' | 'details' | 'review';
