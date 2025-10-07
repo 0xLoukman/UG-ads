@@ -1824,7 +1824,14 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                 return 0;
             });
         }
-        return sortableItems;
+        const uniqueItems: CampaignSummary[] = [];
+        const seenIds = new Set<string>();
+        for (const item of sortableItems) {
+            if (seenIds.has(item.id)) continue;
+            seenIds.add(item.id);
+            uniqueItems.push(item);
+        }
+        return uniqueItems;
     }, [summaries, sortConfig]);
     
     const requestSort = (key: keyof CampaignSummary | 'browserLangs') => {
