@@ -516,7 +516,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
     };
 
     return (
-        <>
+        <div className="space-y-4">
             {googleAds.assetGroups && googleAds.assetGroups.length > 0 && (
                 <div className="flex items-center justify-between px-4 py-2">
                     <h3 className="text-sm font-semibold text-gray-700">Asset Groups (PMax)</h3>
@@ -723,7 +723,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </CollapsibleCard>
             ))}
             </>) }
-        </>
+        </div>
     );
 };
 
