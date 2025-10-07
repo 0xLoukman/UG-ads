@@ -1877,7 +1877,7 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             ))}
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="campaign-summary-table__body">
                         {sortedSummaries.map(s => {
                             const isEditing = editingId === s.id;
                             const marketLabelList = (s.market.iso === 'WW' ? s.market.name.split(',').map(n => n.trim()) : [s.market.name]).map(name => `${name} (${COUNTRIES.find(c=>c.name===name)?.iso || s.market.iso})`);
