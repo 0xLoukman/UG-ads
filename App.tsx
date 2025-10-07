@@ -1853,6 +1853,17 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
         { key: 'actions', label: '' },
     ];
 
+    const campaignTypeOptions = useMemo(() => {
+        const unique = new Set<string>();
+        summaries.forEach(summary => {
+            if (summary.campaignType) {
+                unique.add(summary.campaignType);
+            }
+        });
+        ALL_CAMPAIGN_TYPES.forEach(type => unique.add(type));
+        return Array.from(unique);
+    }, [summaries]);
+
     return (
         <div className="space-y-0">
             <div className={`border border-gray-200 rounded-lg overflow-x-auto overflow-y-visible`}>
