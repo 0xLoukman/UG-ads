@@ -2167,8 +2167,9 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     };
 
     const downloadHtml = (w: number, h: number) => {
-        const bg = images[0] || '';
-        const lg = logo || images[1] || '';
+        const bg = activeImage || '';
+        const fallbackLogo = images.find((_, idx) => idx !== activeImageIndex);
+        const lg = logo || fallbackLogo || '';
         const c = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
         let html = '';
         const baseHead = `<!doctype html><html><head><meta charset=\"utf-8\"/><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/><style>*{box-sizing:border-box}body{margin:0}.banner{position:relative;width:${w}px;height:${h}px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow:hidden;border:1px solid #e5e7eb;border-radius:8px}.bg{position:absolute;inset:0;background-image:url('${bg}');background-size:cover;background-position:center;filter:saturate(1.05)}</style></head><body>`;
