@@ -1441,41 +1441,68 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
         ];
     }, []);
 
-    const handleGenerate = () => {
-        if (!brief.trim() || !hasKey) return;
-        const singles = marketItems.filter(i => i.type === 'single');
-        const clusters = marketItems.filter(i => i.type === 'cluster');
-        let primaryMarkets: Market[] = singles.map(i => {
-            const code = i.codes[0];
-            const country = { name: findMarket(code)?.name || code, iso: code } as Omit<Market,'browserLangs'>;
-            return getMarketWithLangs(country);
-        });
-        let secondaryMarkets: Market[] = [];
-        if (clusters.length) {
-            const allCodes = Array.from(new Set(clusters.flatMap(c => c.codes)));
-            const name = allCodes.map(c => findMarket(c)?.name || c).join(', ');
-            const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
-            secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
-        }
-
-        const promptMarkets = extractMarketsFromText(brief);
-        const promptCampaignTypes = extractCampaignTypesFromText(brief);
-
-        const primaryMap = new Map<string, Market>(primaryMarkets.map(m => [m.iso, m]));
-        promptMarkets.forEach(pm => {
-            if (!primaryMap.has(pm.iso)) {
-                primaryMap.set(pm.iso, pm);
+    const handleGenerate = async () => {
+        if (!brief.trim() || !hasKey || isParsingPrompt) return;
+        setIsParsingPrompt(true);
+        try {
+            const singles = marketItems.filter(i => i.type === 'single');
+            const clusters = marketItems.filter(i => i.type === 'cluster');
+            let primaryMarkets: Market[] = singles.map(i => {
+                const code = i.codes[0];
+                const country = { name: findMarket(code)?.name || code, iso: code } as Omit<Market,'browserLangs'>;
+                return getMarketWithLangs(country);
+            });
+            let secondaryMarkets: Market[] = [];
+            if (clusters.length) {
+                const allCodes = Array.from(new Set(clusters.flatMap(c => c.codes)));
+                const name = allCodes.map(c => findMarket(c)?.name || c).join(', ');
+                const langs = allCodes.map(c => getMarketWithLangs({ name: findMarket(c)?.name || c, iso: c }).browserLangs).flat();
+                secondaryMarkets = [{ name, iso: 'WW', browserLangs: Array.from(new Set(langs)) }];
             }
-        });
-        primaryMarkets = Array.from(primaryMap.values());
 
-        const combinedCampaignTypes = Array.from(new Set([...selectedCampaignTypes, ...promptCampaignTypes]));
-        const hasManualData = primaryMarkets.length || secondaryMarkets.length || combinedCampaignTypes.length;
-        const manual = hasManualData ? { primaryMarkets, secondaryMarkets, campaignTypes: combinedCampaignTypes } : undefined;
-        onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
+            let promptMarkets: Market[] = [];
+            let promptCampaignTypes: string[] = [];
+            try {
+                const extraction = await extractMarketsAndTypes(brief);
+                if (extraction.markets?.length) {
+                    promptMarkets = extraction.markets
+                        .map(normalizeAiMarket)
+                        .filter((m): m is Market => !!m);
+                }
+                if (extraction.campaignTypes?.length) {
+                    promptCampaignTypes = extraction.campaignTypes
+                        .map(canonicalizeCampaignType)
+                        .filter((type): type is string => !!type);
+                }
+            } catch (error) {
+                console.error('Failed to extract prompt metadata with AI', error);
+            }
+
+            if (!promptMarkets.length) {
+                promptMarkets = extractMarketsFromText(brief);
+            }
+            if (!promptCampaignTypes.length) {
+                promptCampaignTypes = extractCampaignTypesFromText(brief);
+            }
+
+            const primaryMap = new Map<string, Market>(primaryMarkets.map(m => [m.iso, m]));
+            promptMarkets.forEach(pm => {
+                if (pm.iso && !primaryMap.has(pm.iso)) {
+                    primaryMap.set(pm.iso, pm);
+                }
+            });
+            primaryMarkets = Array.from(primaryMap.values());
+
+            const combinedCampaignTypes = Array.from(new Set([...selectedCampaignTypes, ...promptCampaignTypes]));
+            const hasManualData = primaryMarkets.length || secondaryMarkets.length || combinedCampaignTypes.length;
+            const manual = hasManualData ? { primaryMarkets, secondaryMarkets, campaignTypes: combinedCampaignTypes } : undefined;
+            onGenerate(brief, selectedChannels, manual, activeGoogleAccount?.id);
+        } finally {
+            setIsParsingPrompt(false);
+        }
     };
 
-    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey || (selectedChannels.includes('Google') && !googleAccounts.length);
+    const isGenerateDisabled = !brief.trim() || selectedChannels.length === 0 || !hasKey || isParsingPrompt || (selectedChannels.includes('Google') && !googleAccounts.length);
 
     return (
         <div className="flex justify-center items-start pt-8 sm:pt-12">
