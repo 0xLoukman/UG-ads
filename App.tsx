@@ -135,7 +135,7 @@ const PROMPT_EXAMPLES: string[] = [
 
 // ===== UI COMPONENTS =====
 
-const Header = ({ topTab, setTopTab }: { topTab: 'campaign'|'creative'|'creativeV2', setTopTab: (t: 'campaign'|'creative'|'creativeV2') => void }) => (
+const Header = ({ topTab, setTopTab }: { topTab: 'campaign'|'creative', setTopTab: (t: 'campaign'|'creative') => void }) => (
     <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 p-4 border-b border-gray-200">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -145,7 +145,6 @@ const Header = ({ topTab, setTopTab }: { topTab: 'campaign'|'creative'|'creative
             <nav className="flex gap-2">
                 <button onClick={()=> setTopTab('campaign')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='campaign' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Campaign generator</button>
                 <button onClick={()=> setTopTab('creative')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creative' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator</button>
-                <button onClick={()=> setTopTab('creativeV2')} className={`px-3 py-2 text-sm rounded-t-md ${topTab==='creativeV2' ? 'bg-white border border-gray-200 border-b-transparent' : 'text-gray-600 hover:text-gray-900'}`}>AI Creative generator v2</button>
             </nav>
         </div>
     </header>
@@ -2767,7 +2766,7 @@ const App: React.FC = () => {
     const [brief, setBrief] = useState("");
     const [summaries, setSummaries] = useState<CampaignSummary[]>([]);
     const [campaigns, setCampaigns] = useState<FullCampaign[]>([]);
-    const [topTab, setTopTab] = useState<'campaign' | 'creative' | 'creativeV2'>('campaign');
+    const [topTab, setTopTab] = useState<'campaign' | 'creative'>('campaign');
     const [assetLibrary, setAssetLibrary] = useState<AssetLibrary>(() => {
         try {
             const raw = localStorage.getItem('assetLibrary');
