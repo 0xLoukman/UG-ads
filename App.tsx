@@ -492,7 +492,10 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
     const [creatingGroup, setCreatingGroup] = useState(false);
     const [creatingAd, setCreatingAd] = useState(false);
     const [expandedAdId, setExpandedAdId] = useState<string | null>(null);
+    const [expandedAssetGroupId, setExpandedAssetGroupId] = useState<string | null>(null);
     const isPMax = /pmax|performance\s*max|hotel/i.test(campaign.campaignType);
+    const [budget, setBudget] = useState((campaign as any).budget || '500');
+    const [selectedMarkets, setSelectedMarkets] = useState<Market[]>([campaign.market]);
 
     const currentPlanCombos = useMemo(() => {
         const combos: { campaignId:string; campaignName:string; adGroupId:string; adGroupName:string }[] = [];
