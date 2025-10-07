@@ -1832,8 +1832,8 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 disabled={isGenerateDisabled}
                                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                             >
-                                <SparklesIcon className="w-4 h-4" />
-                                Create campaign
+                                {isParsingPrompt ? <SpinnerIcon className="w-4 h-4 animate-spin" /> : <SparklesIcon className="w-4 h-4" />}
+                                {isParsingPrompt ? 'Parsing prompt…' : 'Create campaign'}
                             </button>
                         </div>
                         {!hasKey && (
