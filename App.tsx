@@ -1751,7 +1751,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 {attachments.map((f, i) => (
                                     <span key={`att-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-[11px]">
                                         📎 {f.name}
-                                        <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">��</button>
+                                        <button onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-black">×</button>
                                     </span>
                                 ))}
                             </div>
@@ -1915,8 +1915,8 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                 </td>
                             </tr>
                             {isEditing && (
-                                <tr className="campaign-edit-row bg-gray-50 border-b" key={`${s.id}-edit`}>
-                                    <td colSpan={headers.length} className="px-6 py-4">
+                                <tr className="campaign-edit-row bg-gray-50 border-b relative" key={`${s.id}-edit`}>
+                                    <td colSpan={headers.length} className="campaign-edit-row__cell px-6 py-4 relative">
                                         <div className="campaign-edit-form grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <div className="campaign-edit-field">
                                                 <label className="campaign-edit-field__label text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1 block">Campaign Name</label>
