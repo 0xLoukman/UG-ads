@@ -2367,50 +2367,6 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                 </div>
             </div>
 
-            {/* Saved banners strip */}
-            <div className={stage==='setup' ? 'hidden' : ''}>
-                <div className="mt-4">
-                    <div className="text-sm font-medium text-gray-800 mb-2">Saved banners</div>
-                    <div className="flex gap-3 overflow-x-auto pb-2">
-                        {bannerPresets?.length === 0 && (
-                            <div className="text-xs text-gray-500">No saved banners yet.</div>
-                        )}
-                        {bannerPresets?.map(p => (
-                            <button key={p.id} onClick={()=> { setPrompt(p.prompt || ''); setImages(p.images || []); setLogo(p.logo || null); setCopy(p.copy || null as any); setTemplate(p.template as any); setAccent(p.accent); setStage('edit'); }} className="border rounded-md bg-white hover:shadow w-[220px] flex-shrink-0 text-left">
-                                <div className="relative h-[120px] bg-gray-50 rounded-t-md overflow-hidden">
-                                    {/* simple template-aware thumb */}
-                                    {p.images?.[0] && <img src={p.images[0]} className="absolute inset-0 w-full h-full object-cover" alt={p.name} />}
-                                    {p.template !== 'text-panel' && p.template !== 'split' && p.template !== 'outline' && p.template !== 'stripe' && p.template !== 'glass' && p.template !== 'arch' && p.template !== 'center-hero' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
-                                    {p.template === 'text-panel' && (
-                                        <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
-                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
-                                            <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
-                                        </div>
-                                    )}
-                                    {p.template === 'split' && (
-                                        <div className="absolute left-0 top-0 bottom-0 bg-white/95 border-r border-gray-200 p-2 text-gray-900 w-[46%]">
-                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
-                                            <div className="opacity-80 text-[11px] truncate">{p.copy?.subtext}</div>
-                                        </div>
-                                    )}
-                                    {(p.template === 'overlay' || p.template === 'logo-badge') && (
-                                        <div className="absolute inset-0 flex flex-col justify-end p-2 text-white">
-                                            <div className="font-bold text-[12px] truncate">{p.copy?.heading}</div>
-                                            <div className="opacity-90 text-[11px] truncate">{p.copy?.subtext}</div>
-                                        </div>
-                                    )}
-                                    {p.logo && <img src={p.logo} className="absolute top-2 right-2 h-4 w-auto object-contain" alt="logo" />}
-                                </div>
-                                <div className="p-2">
-                                    <div className="text-xs font-medium text-gray-800 truncate">{p.name}</div>
-                                    <div className="text-[11px] text-gray-500 truncate">{p.template}</div>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
         </div>
     );
 };
