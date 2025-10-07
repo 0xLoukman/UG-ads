@@ -1916,8 +1916,8 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                             </tr>
                             {isEditing && (
                                 <tr className="campaign-edit-row bg-gray-50 border-b relative" key={`${s.id}-edit`}>
-                                    <td colSpan={headers.length} className="campaign-edit-row__cell px-6 py-4 relative">
-                                        <div className="campaign-edit-form grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <td colSpan={headers.length} className="campaign-edit-row__cell px-6 py-4 relative overflow-visible">
+                                        <div className="campaign-edit-form grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-visible">
                                             <div className="campaign-edit-field">
                                                 <label className="campaign-edit-field__label text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1 block">Campaign Name</label>
                                                 <input
