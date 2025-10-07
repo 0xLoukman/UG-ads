@@ -1416,7 +1416,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ) : (
                                 marketItems.map((c, i) => (
                                     <span key={`market-pill-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
-                                        {c.type === 'single' ? '🌐' : '🗂️'} {c.name}
+                                        {c.type === 'single' ? '🌐' : '����️'} {c.name}
                                         <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">×</button>
                                     </span>
                                 ))
@@ -2324,12 +2324,19 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                     </div>
                 </div>
                 <div className={stage==='setup' ? 'hidden' : 'md:col-span-5 h-full overflow-auto pr-2'}>
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
                         <div className="text-sm font-medium text-gray-800">Preview</div>
-                        <div className="flex items-center gap-1">
-                            {SIZES.map(s => (
-                                <button key={s.key} onClick={()=> setSizeKey(s.key as any)} className={`px-2 py-1.5 text-xs rounded-md border ${sizeKey===s.key ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{s.key}</button>
-                            ))}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <div className="flex items-center gap-1">
+                                {SIZES.map(s => (
+                                    <button key={s.key} onClick={()=> setSizeKey(s.key as any)} className={`px-2 py-1.5 text-xs rounded-md border ${sizeKey===s.key ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}>{s.key}</button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button type="button" onClick={selectPreviousImage} disabled={images.length <= 1} className="px-2 py-1.5 text-xs rounded-md border disabled:cursor-not-allowed disabled:opacity-50">Prev</button>
+                                <button type="button" onClick={selectNextImage} disabled={images.length <= 1} className="px-2 py-1.5 text-xs rounded-md border disabled:cursor-not-allowed disabled:opacity-50">Next</button>
+                                <button type="button" onClick={shuffleBackground} disabled={images.length <= 1} className="px-2 py-1.5 text-xs rounded-md border disabled:cursor-not-allowed disabled:opacity-50">Shuffle</button>
+                            </div>
                         </div>
                     </div>
                     {(() => {
