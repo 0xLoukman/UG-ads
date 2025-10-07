@@ -2094,6 +2094,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     const [template, setTemplate] = useState<'overlay' | 'logo-badge' | 'text-panel' | 'split'>('overlay');
     const [justSaved, setJustSaved] = useState(false);
     const [accent, setAccent] = useState('#0ea5e9');
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
