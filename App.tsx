@@ -1079,6 +1079,30 @@ const suggestClusterName = (codes: string[]) => {
   if (names.length <= 3) return names.join(" · ");
   return `${names[0]} +${names.length - 1}`;
 };
+const mergeLanguageLists = (...lists: (string[] | undefined)[]): string[] => {
+  const result: string[] = [];
+  const seen = new Set<string>();
+  lists.flat().forEach(value => {
+    const normalized = value?.trim();
+    if (!normalized) return;
+    if (seen.has(normalized)) return;
+    seen.add(normalized);
+    result.push(normalized);
+  });
+  return result;
+};
+const createClusterMarket = (codes: string[]): Market | null => {
+  const uniqueCodes = Array.from(new Set(codes.map(code => code.trim().toUpperCase()).filter(Boolean)));
+  if (uniqueCodes.length < 2) return null;
+  const markets = uniqueCodes.map(code => {
+    const baseName = findMarket(code)?.name || code;
+    return getMarketWithLangs({ name: baseName, iso: code } as Omit<Market, 'browserLangs'>);
+  });
+  const name = suggestClusterName(uniqueCodes);
+  const browserLangs = mergeLanguageLists(...markets.map(m => m.browserLangs));
+  const iso = uniqueCodes.join('+');
+  return { name, iso, browserLangs };
+};
 const dedupeCodes = (codes: string[], assignedSet: Set<string>) => Array.from(new Set(codes)).filter(c => !assignedSet.has(c));
 const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
   const count = picked.length;
