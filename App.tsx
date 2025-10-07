@@ -1015,7 +1015,7 @@ const GuidedPrompt = ({ value, onChange, schema, placeholder }: { value: string;
         const typ = has('type');
         if (!mkt && typ) return 'Nice direction! Which markets do you want to target?';
         if (mkt && !typ) return 'That\'s cool! Now, which campaign type do you want to create? (PMax, Brand, Remarketing, Hotel Ads).';
-        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel — name, location, star rating, and what makes it special.';
+        if (mkt && typ && !has('hotel')) return 'Awesome! Tell me about the hotel ��� name, location, star rating, and what makes it special.';
         if (!has('angle')) return 'Great! Any angle or creative direction? Seasonal, luxury, family, deals, etc.';
         return 'You\'re doing great — add any extra details you think matter, or proceed when ready.';
     }, [value, missing, schema, has]);
@@ -2157,7 +2157,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                 </div>
                 <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
-            <div className={`grid gap-4 ${stage==='setup' ? 'grid-cols-1 max-w-2xl mx-auto' : 'grid-cols-1 md:grid-cols-2'}`}>
+            <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto' : 'grid grid-cols-12 gap-4 h-full'}>
                 <div>
                     <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                     <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-28" placeholder="Write a short brief about the offer, property, and audience" />
