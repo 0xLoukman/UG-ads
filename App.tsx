@@ -2149,7 +2149,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     };
 
     return (
-        <div className="space-y-4 pb-16">
+        <div className={stage==='setup' ? 'space-y-4 pb-16' : 'w-full h-[calc(100vh-180px)] bg-white border border-gray-200 rounded-lg overflow-hidden p-4'}>
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
