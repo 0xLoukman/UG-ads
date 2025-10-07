@@ -610,7 +610,7 @@ const GoogleCampaignDetails = ({ campaign, allCampaigns, brief, onUpdate, onAdd,
                 </button>
             </div>
             {(!googleAds.adGroups || googleAds.adGroups.length === 0) && (
-                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click ���Add Ad Group���.</div>
+                <div className="text-xs text-gray-500 mb-2">No ad groups yet — click “Add Ad Group���.</div>
             )}
 
             {googleAds.adGroups?.map((adg, adgIndex) => (
@@ -1845,8 +1845,6 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
     const countryLabels = COUNTRIES.map(c => `${c.name} (${c.iso})`);
     const parseIso = (label: string) => (label.match(/\(([A-Z]{2})\)$/)?.[1] || '').trim();
     const marketNamesFromLabels = (labels: string[]) => labels.map(l => l.replace(/ \([A-Z]{2}\)$/, ''));
-    const allLangOptions = Array.from(new Set(COUNTRIES.flatMap(c => getMarketWithLangs(c as any).browserLangs)));
-
     const headers = [
         { key: 'campaignName', label: 'Campaigns' },
         { key: 'campaignType', label: 'Type' },
