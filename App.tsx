@@ -1153,16 +1153,22 @@ const MARKET_LOOKUP = (() => {
 
 const extractMarketsFromText = (text: string): Market[] => {
   if (!text.trim()) return [];
-  const normalized = text.toLowerCase();
   const matches = new Map<string, Omit<Market, 'browserLangs'>>();
 
   MARKET_LOOKUP.forEach((country, key) => {
     const pattern = escapeRegex(key).replace(/\s+/g, '\\s+');
-    const regex = new RegExp(`\\b${pattern}\\b`, 'i');
-    if (regex.test(normalized)) {
+    const regex = new RegExp(`\\b${pattern}\\b`, 'gi');
+    const keyIsIso = /^[a-z]{2}$/.test(key);
+    const occurrences = text.matchAll(regex);
+    for (const occurrence of occurrences) {
+      const matchedValue = occurrence[0];
+      if (keyIsIso && matchedValue !== matchedValue.toUpperCase()) {
+        continue;
+      }
       if (!matches.has(country.iso)) {
         matches.set(country.iso, country);
       }
+      break;
     }
   });
 
