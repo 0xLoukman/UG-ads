@@ -2927,8 +2927,6 @@ const App: React.FC = () => {
                 )}
                 {topTab === 'creative' ? (
                     <CreativeGeneratorView onSaveBanner={handleSaveBannerPreset} onPickFromLibrary={openLibrary} bannerPresets={assetLibrary.banners || []} />
-                ) : topTab === 'creativeV2' ? (
-                    <CreativeGeneratorV2View onSaveBanner={handleSaveBannerPreset} onPickFromLibrary={openLibrary} bannerPresets={assetLibrary.banners || []} />
                 ) : (
                     renderContent()
                 )}
