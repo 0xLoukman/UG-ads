@@ -1915,43 +1915,51 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                 </td>
                             </tr>
                             {isEditing && (
-                                <tr className="bg-gray-50 border-b" key={`${s.id}-edit`}>
+                                <tr className="campaign-edit-row bg-gray-50 border-b" key={`${s.id}-edit`}>
                                     <td colSpan={headers.length} className="px-6 py-4">
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            <div>
-                                                <label className="block text-xs text-gray-600 mb-1">Campaign Name</label>
-                                                <input value={s.campaignName} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1" />
+                                        <div className="campaign-edit-form grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <div className="campaign-edit-field">
+                                                <label className="campaign-edit-field__label text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1 block">Campaign Name</label>
+                                                <input
+                                                    type="text"
+                                                    value={s.campaignName}
+                                                    onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignName: e.target.value}))}
+                                                    className="campaign-edit-field__input w-full h-10 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                                                />
                                             </div>
-                                            <div>
-                                                <label className="block text-xs text-gray-600 mb-1">Campaign Type</label>
-                                                <select value={s.campaignType} onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))} className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white">
-                                                    <option value="Brand">Brand</option>
-                                                    <option value="PMax">PMax</option>
-                                                    <option value="Remarketing">Remarketing</option>
-                                                    <option value="Hotel Ads">Hotel Ads</option>
+                                            <div className="campaign-edit-field">
+                                                <label className="campaign-edit-field__label text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1 block">Campaign Type</label>
+                                                <select
+                                                    value={s.campaignType}
+                                                    onChange={(e)=> onUpdate(s.id, prev => ({...prev, campaignType: e.target.value}))}
+                                                    className="campaign-edit-field__select w-full h-10 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
+                                                >
+                                                    {campaignTypeOptions.map(type => (
+                                                        <option key={type} value={type}>{type}</option>
+                                                    ))}
                                                 </select>
                                             </div>
-                                            <div className="sm:col-span-2">
-                                                <MultiSelectDropdown label="Markets" options={countryLabels} selectedOptions={marketLabelList} onToggle={(label) => {
-                                                    const currentSet = new Set<string>(marketLabelList);
-                                                    if (currentSet.has(label)) currentSet.delete(label); else currentSet.add(label);
-                                                    const arr = Array.from(currentSet);
-                                                    const isos = arr.map(parseIso).filter(Boolean);
-                                                    const names = marketNamesFromLabels(arr);
-                                                    const langs = Array.from(new Set(isos.flatMap(iso => getMarketWithLangs({ name: findMarket(iso)?.name || iso, iso } as any).browserLangs)));
-                                                    const nextMarket: Market = arr.length > 1 ? { name: names.join(', '), iso: 'WW', browserLangs: langs } : getMarketWithLangs({ name: names[0] || s.market.name, iso: isos[0] || s.market.iso } as any);
-                                                    onUpdate(s.id, prev => ({...prev, market: nextMarket }));
-                                                }} />
+                                            <div className="campaign-edit-field sm:col-span-2">
+                                                <MultiSelectDropdown
+                                                    label="Markets"
+                                                    options={countryLabels}
+                                                    selectedOptions={marketLabelList}
+                                                    placeholder="Select markets..."
+                                                    searchPlaceholder="Search countries"
+                                                    onToggle={(label) => {
+                                                        const currentSet = new Set<string>(marketLabelList);
+                                                        if (currentSet.has(label)) currentSet.delete(label); else currentSet.add(label);
+                                                        const arr = Array.from(currentSet);
+                                                        const isos = arr.map(parseIso).filter(Boolean);
+                                                        const names = marketNamesFromLabels(arr);
+                                                        const langs = Array.from(new Set(isos.flatMap(iso => getMarketWithLangs({ name: findMarket(iso)?.name || iso, iso } as any).browserLangs)));
+                                                        const nextMarket: Market = arr.length > 1 ? { name: names.join(', '), iso: 'WW', browserLangs: langs } : getMarketWithLangs({ name: names[0] || s.market.name, iso: isos[0] || s.market.iso } as any);
+                                                        onUpdate(s.id, prev => ({...prev, market: nextMarket }));
+                                                    }}
+                                                />
                                             </div>
-                                            <div>
-                                                <MultiSelectDropdown label="Browser Langs" options={allLangOptions} selectedOptions={s.market.browserLangs} onToggle={(opt) => {
-                                                    const set = new Set(s.market.browserLangs);
-                                                    set.has(opt) ? set.delete(opt) : set.add(opt);
-                                                    onUpdate(s.id, prev => ({...prev, market: { ...prev.market, browserLangs: Array.from(set) }}));
-                                                }} />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-700">Ad Language</label>
+                                            <div className="campaign-edit-field sm:col-span-2">
+                                                <label className="campaign-edit-field__label text-[11px] font-semibold uppercase tracking-wide text-gray-600 mb-1 block">Ad Language</label>
                                                 <select
                                                     value={s.languages[0] ? langNameFromCode(s.languages[0]) : ''}
                                                     onChange={(e) => {
@@ -1959,18 +1967,30 @@ const CampaignSummaryTable = ({ summaries, onSelect, onConfirm, onBack, onUpdate
                                                         const code = langCodeFromName(selected);
                                                         onUpdate(s.id, prev => ({ ...prev, languages: selected ? [code] : [] }));
                                                     }}
-                                                    className="w-full text-sm border border-gray-200 rounded-md px-2 py-1 bg-white"
+                                                    className="campaign-edit-field__select w-full h-10 text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300"
                                                 >
-                                                    <option value="">Select language</option>
+                                                    <option value="">Select language...</option>
                                                     {LANGUAGE_LIST.map(l => (
                                                         <option key={l.code} value={l.name}>{l.name}</option>
                                                     ))}
                                                 </select>
                                             </div>
                                         </div>
-                                        <div className="mt-3 flex justify-end gap-2">
-                                            <button onClick={() => setEditingId(null)} className="text-xs px-3 py-1.5 rounded-md bg-black text-white">Done</button>
-                                            <button onClick={() => setEditingId(null)} className="text-xs px-3 py-1.5 rounded-md bg-gray-100">Cancel</button>
+                                        <div className="campaign-edit-actions mt-4 flex items-center justify-end gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingId(null)}
+                                                className="campaign-edit-actions__cancel text-xs px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingId(null)}
+                                                className="campaign-edit-actions__done text-xs px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+                                            >
+                                                Done
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
