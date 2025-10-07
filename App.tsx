@@ -23,34 +23,10 @@ const GOOGLE_AD_ACCOUNTS: GoogleAdAccount[] = [
 ];
 
 const ALL_CAMPAIGN_TYPES = ["PMax", "Brand", "Retargeting", "Hotel Ads"];
-const COUNTRIES: Omit<Market, 'browserLangs'>[] = [
-    { name: "United States", iso: "US"}, { name: "United Kingdom", iso: "GB"},
-    { name: "Germany", iso: "DE"}, { name: "France", iso: "FR"},
-    { name: "Canada", iso: "CA"}, { name: "Australia", iso: "AU"},
-    { name: "Japan", iso: "JP"}, { name: "India", iso: "IN"},
-    { name: "Brazil", iso: "BR"}, { name: "Mexico", iso: "MX"},
-    { name: "Spain", iso: "ES"}, { name: "Italy", iso: "IT"},
-    { name: "Netherlands", iso: "NL"}, { name: "Sweden", iso: "SE"},
-    { name: "Switzerland", iso: "CH"}, { name: "Norway", iso: "NO"},
-    { name: "Denmark", iso: "DK"}, { name: "Finland", iso: "FI"},
-    { name: "Austria", iso: "AT"}, { name: "Belgium", iso: "BE"},
-    { name: "Ireland", iso: "IE"}, { name: "New Zealand", iso: "NZ"},
-    { name: "Singapore", iso: "SG"}, { name: "Hong Kong", iso: "HK"},
-    { name: "Algeria", iso: "DZ"}, { name: "Morocco", iso: "MA"}
-].sort((a,b) => a.name.localeCompare(b.name));
+const COUNTRIES: Omit<Market, 'browserLangs'>[] = WORLD_COUNTRIES.map(c => ({ name: c.name, iso: c.code }));
 
 const getMarketWithLangs = (country: Omit<Market, 'browserLangs'>): Market => {
-    // This is a simplified mapping. A real app would have a more comprehensive logic.
-    const langMap: Record<string, string[]> = {
-        US: ['en-US'], GB: ['en-GB'], DE: ['de-DE'], FR: ['fr-FR'],
-        CA: ['en-CA', 'fr-CA'], AU: ['en-AU'], JP: ['ja-JP'], IN: ['en-IN', 'hi-IN'],
-        BR: ['pt-BR'], MX: ['es-MX'], ES: ['es-ES'], IT: ['it-IT'],
-        NL: ['nl-NL'], SE: ['sv-SE'], CH: ['de-CH', 'fr-CH', 'it-CH'],
-        NO: ['no-NO'], DK: ['da-DK'], FI: ['fi-FI'], AT: ['de-AT'],
-        BE: ['nl-BE', 'fr-BE'], IE: ['en-IE'], NZ: ['en-NZ'], SG: ['en-SG'],
-        HK: ['en-HK', 'zh-HK'], DZ: ['ar-DZ', 'fr-DZ'], MA: ['fr-MA', 'ar-MA']
-    };
-    return { ...country, browserLangs: langMap[country.iso] || [] };
+    return { ...country, browserLangs: LANGUAGE_MAPPINGS[country.iso] || ['en-US'] };
 };
 
 
