@@ -1103,6 +1103,13 @@ const createClusterMarket = (codes: string[]): Market | null => {
   const iso = uniqueCodes.join('+');
   return { name, iso, browserLangs };
 };
+const getCountryFlag = (isoCode: string): string => {
+  if (!isoCode || isoCode === 'WW') return '🌍';
+  const code = isoCode.toUpperCase();
+  if (code.length !== 2) return '🌍';
+  const codePoints = [...code].map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+};
 const dedupeCodes = (codes: string[], assignedSet: Set<string>) => Array.from(new Set(codes)).filter(c => !assignedSet.has(c));
 const actionsForSelection = (picked: string[], assignedSet: Set<string>) => {
   const count = picked.length;
