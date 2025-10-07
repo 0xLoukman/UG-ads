@@ -1380,13 +1380,6 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                 console.error('Failed to extract prompt metadata with AI', error);
             }
 
-            if (!promptMarkets.length) {
-                promptMarkets = extractMarketsFromText(brief);
-            }
-            if (!promptCampaignTypes.length) {
-                promptCampaignTypes = extractCampaignTypesFromText(brief);
-            }
-
             const primaryMap = new Map<string, Market>(primaryMarkets.map(m => [m.iso, m]));
             promptMarkets.forEach(pm => {
                 if (pm.iso && !primaryMap.has(pm.iso)) {
