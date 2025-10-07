@@ -2146,6 +2146,26 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
         } finally { setIsLoading(false); }
     };
 
+    const activeImage = images[activeImageIndex] || null;
+
+    const selectNextImage = () => {
+        if (!images.length) return;
+        setActiveImageIndex(prev => (prev + 1) % images.length);
+    };
+
+    const selectPreviousImage = () => {
+        if (!images.length) return;
+        setActiveImageIndex(prev => (prev - 1 + images.length) % images.length);
+    };
+
+    const shuffleBackground = () => {
+        if (images.length <= 1) return;
+        const options = images.map((_, index) => index).filter(index => index !== activeImageIndex);
+        if (!options.length) return;
+        const randomIndex = options[Math.floor(Math.random() * options.length)];
+        setActiveImageIndex(randomIndex);
+    };
+
     const downloadHtml = (w: number, h: number) => {
         const bg = images[0] || '';
         const lg = logo || images[1] || '';
