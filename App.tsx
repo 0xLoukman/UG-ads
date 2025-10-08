@@ -2653,7 +2653,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     return (
                         <div className="border border-gray-200 rounded-lg p-3">
                             <div className="text-xs text-gray-600 mb-2">{s.label}</div>
-                            <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                            <div className="flex items-center justify-center bg-white rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
                                 <div className="relative" style={{width: s.w, height: s.h}}>
                                     {images[activeImage] && <img src={images[activeImage]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
                                     {template === 'overlay' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
