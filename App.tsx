@@ -2096,6 +2096,15 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     const [accent, setAccent] = useState('#0ea5e9');
     const [activeImageIndex, setActiveImageIndex] = useState(0);
 
+    const SIZES = [
+        { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
+        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
+        { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
+        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+    ] as const;
+    const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
+
     // Preview scaling to always fit available preview area without scrolling
     const previewContainerRef = useRef<HTMLDivElement | null>(null);
     const [previewScale, setPreviewScale] = useState(1);
@@ -2120,15 +2129,6 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
             try { if (ro && previewContainerRef.current) ro.disconnect(); } catch(e){}
         };
     }, [sizeKey, images.length, template]);
-
-    const SIZES = [
-        { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
-        { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
-        { key: '728x90',  w: 728, h: 90,  label: '728×90 ���� Leaderboard' },
-        { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
-    ] as const;
-    const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
     const updateImages = (updater: (current: string[]) => string[], focus?: number | 'first' | 'last') => {
         setImages(prevImages => {
