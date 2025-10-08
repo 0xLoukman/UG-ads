@@ -2227,14 +2227,16 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     };
 
     return (
-        <div className={stage==='setup' ? 'space-y-4 pb-16 max-w-3xl mx-auto w-full px-4 pt-4' : 'flex flex-col h-[calc(100vh-120px)] w-full px-4 pb-6 pt-4'}>
+        <div className={stage==='setup' ? 'space-y-4 pb-16 max-w-3xl mx-auto w-full px-4 pt-4' : 'flex flex-col h-screen w-full'}>
+            {stage==='setup' && (
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
                     <div className="text-xs text-gray-500">Upload brand assets and generate HTML5 banners</div>
                 </div>
-                <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
+                <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
+            )}
             <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 min-h-0 w-full bg-white'}>
                 <div className={stage==='setup' ? '' : 'md:col-span-4 h-full bg-white border-r p-4 flex flex-col'}>
                     {stage==='edit' && (
