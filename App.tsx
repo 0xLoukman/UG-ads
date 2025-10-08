@@ -2452,9 +2452,9 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         );
                     })()}
                 </div>
-                <div className={stage==='setup' ? 'hidden' : 'md:col-span-3 h-full overflow-y-auto pl-4'}>
-                    <div className="text-sm font-medium text-gray-800 mb-2">Saved banners</div>
-                    <div className="space-y-2">
+                <div className={stage==='setup' ? 'hidden' : 'md:col-span-3 flex flex-col min-h-0 pl-4'}>
+                    <div className="text-sm font-medium text-gray-800 mb-2 flex-shrink-0">Saved banners</div>
+                    <div className="space-y-2 overflow-y-auto">
                         {bannerPresets?.length === 0 && (
                             <div className="text-xs text-gray-500">No saved banners yet.</div>
                         )}
