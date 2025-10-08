@@ -2432,7 +2432,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
 
                                         {template === 'center-hero' && (
                                             <>
-                                                {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                                {activeImage && <img src={activeImage} className="absolute inset-0 w-full h-full object-cover" alt="Background" />}
                                                 <div className="absolute inset-0" style={{background:'linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55))'}} />
                                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center" style={{fontFamily:'Georgia, Times, serif'}}>
                                                     <div className="tracking-wide" style={{fontSize: Math.max(14, Math.min(28, Math.round(s.h*0.18))), fontWeight:800}}>{copy?.heading || 'Feels Like Home'}</div>
