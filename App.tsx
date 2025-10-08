@@ -2268,7 +2268,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                     Add images
                                 </label>
                                 <button
-                                    onClick={() => onPickFromLibrary('images', 5, (urls) => updateImages((prev) => [...prev, ...urls]))}
+                                    onClick={() => onPickFromLibrary('images', 5, (urls) => updateImages((prev) => [...prev, ...urls], 'last'))}
                                     className="px-2 py-1.5 text-xs rounded-md border"
                                 >
                                     Use library
