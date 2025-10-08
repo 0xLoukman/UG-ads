@@ -2202,7 +2202,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     };
 
     return (
-        <div className={stage==='setup' ? 'space-y-4 pb-16 max-w-3xl mx-auto w-full px-4 pt-4' : 'flex flex-col gap-4 min-h-[calc(100vh-120px)] w-full px-4 pb-6 pt-4'}>
+        <div className={stage==='setup' ? 'space-y-4 pb-16 max-w-3xl mx-auto w-full px-4 pt-4' : 'flex flex-col h-[calc(100vh-120px)] w-full px-4 pb-6 pt-4'}>
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
@@ -2210,8 +2210,8 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                 </div>
                 <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
-            <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 overflow-hidden w-full'}>
-                <div className={stage==='setup' ? '' : 'md:col-span-4 h-full overflow-y-auto pr-6'}>
+            <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 min-h-0 w-full'}>
+                <div className={stage==='setup' ? '' : 'md:col-span-4 flex flex-col min-h-0'}>
                     {stage==='edit' && (
                         <div className="flex items-center justify-between mb-3">
                             <div>
