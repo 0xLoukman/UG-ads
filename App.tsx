@@ -1423,7 +1423,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             )}
                             {selectedCampaignTypes.map(type => (
                                 <span key={`type-pill-${type}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
-                                    ��� {type}
+                                    🎯 {type}
                                     <button onClick={() => toggleCampaignType(type)} className="text-gray-500 hover:text-black">×</button>
                                 </span>
                             ))}
@@ -2549,7 +2549,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
 
     return (
         <div className="w-full h-[calc(100vh-180px)] bg-white border border-gray-200 rounded-lg overflow-hidden grid grid-cols-12">
-            <aside className="col-span-3 h-full overflow-auto border-r border-gray-200 p-3">
+            <aside className="col-span-4 h-full overflow-auto border-r border-gray-200 p-3">
                 <div className="mb-3">
                     <div className="text-sm font-semibold text-gray-800">Creative parameters</div>
                     <div className="text-xs text-gray-500">Set content, fonts and colors</div>
