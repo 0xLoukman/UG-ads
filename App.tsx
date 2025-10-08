@@ -2342,9 +2342,14 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                     {(() => {
                         const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
                         return (
-                            <div className="border border-gray-200 rounded-lg p-3">
-                                <div className="text-xs text-gray-600 mb-2">{s.label}</div>
-                                <div className="flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden" style={{width: s.w, height: s.h}}>
+                            <div className="flex flex-col h-full">
+                                <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+                                    <span>{images.length ? s.label : 'Add background images to see preview'}</span>
+                                    {images.length > 0 && (
+                                        <span className="text-[11px] text-gray-500">Image {activeImageIndex + 1} of {images.length}</span>
+                                    )}
+                                </div>
+                                <div className="flex flex-1 items-center justify-center rounded-xl bg-gray-50">
                                     <div className="relative" style={{width: s.w, height: s.h}}>
                                         {activeImage && <img src={activeImage} className="absolute inset-0 w-full h-full object-cover" alt="Background" />}
                                         {template !== 'text-panel' && template !== 'split' && template !== 'outline' && template !== 'stripe' && template !== 'glass' && template !== 'arch' && template !== 'center-hero' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
@@ -2454,16 +2459,18 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                         )}
                                     </div>
                                 </div>
-                                <div className="mt-2 flex justify-end gap-2">
-                                    <button onClick={() => {
-                                        const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
-                                        const name = `Banner ${new Date().toLocaleString()}`;
-                                        { const s = SIZES.find(x => x.key === sizeKey) || SIZES[0]; onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent, sizeKey, width: s.w, height: s.h }); }
-                                        setJustSaved(true);
-                                        setTimeout(()=> setJustSaved(false), 1500);
-                                    }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
-                                    {justSaved && <span className="text-[11px] text-green-600">Saved</span>}
-                                    {s && <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>}
+                                <div className="mt-4 flex items-center justify-between text-[11px] text-gray-500">
+                                    <span>{justSaved ? 'Saved to library' : ''}</span>
+                                    <div className="flex gap-2">
+                                        <button onClick={() => {
+                                            const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
+                                            const name = `Banner ${new Date().toLocaleString()}`;
+                                            { const s = SIZES.find(x => x.key === sizeKey) || SIZES[0]; onSaveBanner({ name, prompt, images, logo, copy: usedCopy, template, accent, sizeKey, width: s.w, height: s.h }); }
+                                            setJustSaved(true);
+                                            setTimeout(()=> setJustSaved(false), 1500);
+                                        }} className="text-xs px-3 py-1.5 rounded-md border">Save to library</button>
+                                        {s && <button onClick={()=> downloadHtml(s.w, s.h)} className="text-xs px-3 py-1.5 rounded-md border">Download HTML</button>}
+                                    </div>
                                 </div>
                             </div>
                         );
