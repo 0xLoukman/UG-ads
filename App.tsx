@@ -1164,7 +1164,7 @@ type InputViewProps = {
 
 const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAccount }: InputViewProps) => {
     const [brief, setBrief] = useState("");
-    const [selectedChannels, setSelectedChannels] = useState<Channel[]>([]);
+    const [selectedChannels, setSelectedChannels] = useState<Channel[]>(['Google']);
     const [showMarkets, setShowMarkets] = useState(false);
     const [selectedCampaignTypes, setSelectedCampaignTypes] = useState<string[]>([]);
     const [channelMenuOpen, setChannelMenuOpen] = useState(false);
