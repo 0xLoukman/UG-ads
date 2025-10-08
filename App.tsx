@@ -2416,7 +2416,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                                 <div className="absolute inset-0" style={{background: `linear-gradient(135deg, ${accent}, #1e3a8a)`}} />
                                                 <div className="absolute right-0 top-0 h-full" style={{width: Math.round(s.w*0.62)}}>
                                                     <div className="absolute right-0 top-0 h-full overflow-hidden" style={{width:'100%', borderTopLeftRadius: Math.round(s.w*0.35), borderTopRightRadius: Math.round(s.w*0.35)}}>
-                                                        {images[0] && <img src={images[0]} className="absolute inset-0 w-full h-full object-cover" alt="bg" />}
+                                                        {activeImage && <img src={activeImage} className="absolute inset-0 w-full h-full object-cover" alt="Background" />}
                                                     </div>
                                                 </div>
                                                 <div className="absolute inset-0 flex flex-col justify-center pl-3 pr-[40%] text-white">
