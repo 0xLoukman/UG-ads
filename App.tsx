@@ -2383,7 +2383,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                         <span className="text-[11px] text-gray-500">Image {activeImageIndex + 1} of {images.length}</span>
                                     )}
                                 </div>
-                                <div ref={previewContainerRef} className="flex flex-1 items-center justify-center rounded-xl bg-gray-50 min-h-0 overflow-hidden p-4">
+                                <div ref={previewContainerRef} className="flex flex-1 items-center justify-center rounded-xl bg-white min-h-0 overflow-hidden p-4">
                                     <div className="relative flex-shrink-0" style={{width: s.w, height: s.h, transform: `scale(${previewScale})`, transformOrigin: 'top center'}}>
                                         {activeImage && <img src={activeImage} className="absolute inset-0 w-full h-full object-cover" alt="Background" />}
 
