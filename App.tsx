@@ -2638,7 +2638,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                 </div>
             </aside>
 
-            <section className="col-span-8 h-full overflow-auto p-4">
+            <section className="col-span-8 h-full overflow-auto p-0">
                 <div className="flex items-center justify-between mb-2">
                     <div className="text-sm font-medium text-gray-800">Preview</div>
                     <div className="flex items-center gap-1">
