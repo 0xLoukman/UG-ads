@@ -2205,7 +2205,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                 <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
             <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 overflow-hidden w-full'}>
-                <div className={stage==='setup' ? '' : 'md:col-span-4 h-full overflow-auto pr-2'}>
+                <div className={stage==='setup' ? '' : 'md:col-span-4 h-full overflow-y-auto pr-6'}>
                     {stage==='edit' && (
                         <div className="flex items-center justify-between mb-3">
                             <div>
@@ -2528,7 +2528,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320×100 ��� Large mobile banner' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
     const [activeImage, setActiveImage] = useState(0);
