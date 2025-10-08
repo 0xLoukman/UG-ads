@@ -1417,7 +1417,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                 marketItems.map((c, i) => (
                                     <span key={`market-pill-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
                                         {c.type === 'single' ? '🌐' : '����️'} {c.name}
-                                        <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">×</button>
+                                        <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">��</button>
                                     </span>
                                 ))
                             )}
@@ -2235,7 +2235,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                 </div>
                 <button onClick={generate} disabled={isLoading} className={`px-4 py-2 rounded-full bg-black text-white text-sm disabled:bg-gray-400 ${stage==='edit' ? 'hidden' : ''}`}>{isLoading ? 'Generating…' : 'Generate banners'}</button>
             </div>
-            <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 min-h-0 w-full'}>
+            <div className={stage==='setup' ? 'grid grid-cols-1 gap-4 max-w-2xl mx-auto w-full' : 'grid grid-cols-12 gap-6 flex-1 min-h-0 w-full bg-white'}>
                 <div className={stage==='setup' ? '' : 'md:col-span-4 h-full overflow-y-auto pr-4'}>
                     {stage==='edit' && (
                         <div className="flex items-center justify-between mb-3">
