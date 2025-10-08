@@ -2466,7 +2466,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                     </div>
                                 </div>
                                 <div className="mt-4 flex items-center justify-between text-[11px] text-gray-500">
-                                    <span>{justSaved ? 'Saved to library' : ''}</span>
+                                    <span>{justSaved ? 'Saved to library' : '\u00A0'}</span>
                                     <div className="flex gap-2">
                                         <button onClick={() => {
                                             const usedCopy = copy || { heading: 'Special Offer', subtext: 'Save on your next stay when you book direct.', cta: 'Book Now' };
