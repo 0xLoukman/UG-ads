@@ -2554,7 +2554,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     <div className="text-sm font-semibold text-gray-800">Creative parameters</div>
                     <div className="text-xs text-gray-500">Set content, fonts and colors</div>
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 flex-1 overflow-y-auto">
                     <div>
                         <label className="block text-xs text-gray-600 mb-1">Prompt</label>
                         <textarea value={prompt} onChange={(e)=>setPrompt(e.target.value)} className="w-full border border-gray-200 rounded-md p-2 text-sm min-h-24" placeholder="Write a short brief" />
