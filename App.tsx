@@ -1416,7 +1416,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                             ) : (
                                 marketItems.map((c, i) => (
                                     <span key={`market-pill-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-100 border border-gray-200 text-xs">
-                                        {c.type === 'single' ? '🌐' : '����️'} {c.name}
+                                        {c.type === 'single' ? '��' : '����️'} {c.name}
                                         <button onClick={() => removeItem(i)} className="text-gray-500 hover:text-black">×</button>
                                     </span>
                                 ))
@@ -2095,6 +2095,31 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     const [justSaved, setJustSaved] = useState(false);
     const [accent, setAccent] = useState('#0ea5e9');
     const [activeImageIndex, setActiveImageIndex] = useState(0);
+
+    // Preview scaling to always fit available preview area without scrolling
+    const previewContainerRef = useRef<HTMLDivElement | null>(null);
+    const [previewScale, setPreviewScale] = useState(1);
+
+    useEffect(() => {
+        const compute = () => {
+            const el = previewContainerRef.current;
+            if (!el) return;
+            const s = SIZES.find(x => x.key === sizeKey) || SIZES[0];
+            const availableW = el.clientWidth - 16; // padding buffer
+            const availableH = el.clientHeight - 16; // padding buffer
+            const scale = Math.min(1, Math.max(0.25, Math.min(availableW / s.w, availableH / s.h)));
+            setPreviewScale(scale);
+        };
+        compute();
+        const ResizeObserverCtor = (window as any).ResizeObserver as any;
+        const ro = ResizeObserverCtor ? new ResizeObserverCtor(() => compute()) : null;
+        if (ro && previewContainerRef.current) ro.observe(previewContainerRef.current);
+        window.addEventListener('resize', compute);
+        return () => {
+            window.removeEventListener('resize', compute);
+            try { if (ro && previewContainerRef.current) ro.disconnect(); } catch(e){}
+        };
+    }, [sizeKey, images.length, template]);
 
     const SIZES = [
         { key: '300x250', w: 300, h: 250, label: '300×250 • Medium rectangle' },
