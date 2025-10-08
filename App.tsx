@@ -2105,13 +2105,19 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
-    const updateImages = (updater: (current: string[]) => string[], focusIndex?: number) => {
+    const updateImages = (updater: (current: string[]) => string[], focus?: number | 'first' | 'last') => {
         setImages(prevImages => {
             const nextImages = updater(prevImages).slice(0, 5);
             if (nextImages.length === 0) {
                 setActiveImageIndex(0);
-            } else if (typeof focusIndex === 'number' && focusIndex >= 0 && focusIndex < nextImages.length) {
-                setActiveImageIndex(focusIndex);
+                return nextImages;
+            }
+            if (focus === 'last') {
+                setActiveImageIndex(nextImages.length - 1);
+            } else if (focus === 'first') {
+                setActiveImageIndex(0);
+            } else if (typeof focus === 'number' && focus >= 0 && focus < nextImages.length) {
+                setActiveImageIndex(focus);
             } else {
                 setActiveImageIndex(prev => {
                     const safeIndex = Math.min(prev, nextImages.length - 1);
@@ -2134,7 +2140,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                     })
             )
         );
-        updateImages((prev) => [...prev, ...uploads]);
+        updateImages((prev) => [...prev, ...uploads], 'last');
     };
 
     const generate = async () => {
