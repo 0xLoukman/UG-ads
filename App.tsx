@@ -1508,7 +1508,7 @@ const InputView = ({ onGenerate, googleAccounts, selectedAccountId, onSelectAcco
                                         <span className="flex items-center gap-1">
                                             <span>{channelDisplayLabel}</span>
                                             {primaryChannel && selectedCampaignTypes.length > 0 && (
-                                                <span className="text-xs text-gray-500">• {selectedCampaignTypes.length} type{selectedCampaignTypes.length > 1 ? 's' : ''}</span>
+                                                <span className="text-xs text-gray-500">��� {selectedCampaignTypes.length} type{selectedCampaignTypes.length > 1 ? 's' : ''}</span>
                                             )}
                                         </span>
                                         <ChevronDownIcon className={`w-3 h-3 text-gray-400 transition-transform ${channelMenuOpen ? 'rotate-180' : ''}`} />
@@ -2196,7 +2196,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
     };
 
     return (
-        <div className={stage==='setup' ? 'space-y-4 pb-16' : 'w-full h-[calc(100vh-180px)] bg-white border border-gray-200 rounded-lg overflow-hidden p-4'}>
+        <div className={stage==='setup' ? 'space-y-4 pb-16 max-w-3xl mx-auto px-4' : 'flex flex-col gap-4 min-h-[calc(100vh-120px)] px-4 pb-6'}>
             <div className="flex items-center justify-between">
                 <div>
                     <div className="text-base font-semibold text-gray-800">AI Creative generator</div>
