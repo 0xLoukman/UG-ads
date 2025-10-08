@@ -2349,7 +2349,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         </div>
                     </div>
                 </div>
-                <div className={stage==='setup' ? 'hidden' : 'md:col-span-5 flex flex-col min-h-0'}>
+                <div className={stage==='setup' ? 'hidden' : 'md:col-span-8 flex flex-col min-h-0'}>
                     <div className="flex flex-wrap items-center justify-between mb-2 gap-2 flex-shrink-0">
                         <div className="text-sm font-medium text-gray-800">Preview</div>
                         <div className="flex flex-wrap items-center gap-2">
