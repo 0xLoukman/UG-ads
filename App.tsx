@@ -2101,7 +2101,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 �� Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
@@ -2379,6 +2379,15 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         const logoSize = calcFontSize(Math.round(s.h*0.18), 14, 24);
                         const logoTop = Math.max(8, Math.round(s.h * 0.04));
                         const logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                        // Estimate text block height (heading + subtext + cta) to avoid logo overlap with centered text
+                        const estHeading = calcFontSize(Math.round(s.h*0.18), 14, 28);
+                        const estSub = calcFontSize(Math.round(s.h*0.11), 10, 16);
+                        const estCta = calcFontSize(Math.round(s.h*0.1), 9, 14);
+                        const textBlockHeight = estHeading + estSub + estCta + 12; // extra spacing
+                        const textTop = Math.round(s.h/2 - textBlockHeight/2);
+                        const padding = Math.round(s.h * 0.02);
+                        const maxLogoTop = Math.max(4, textTop - logoHeight - padding);
+                        const safeLogoTop = Math.min(logoTop, maxLogoTop);
                         return (
                             <div className="flex flex-col flex-1 min-h-0">
                                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2 flex-shrink-0">
@@ -2444,7 +2453,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
 
                                         {/* Logo placement: center for center-hero, top-right for image side on split/text-panel/overlay */}
                                         {logo && (template === 'center-hero' ? (
-                                            <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: logoTop, height: logoHeight}} />
+                                            <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: safeLogoTop, height: logoHeight}} />
                                         ) : (['split','text-panel','overlay'].includes(template) ? (
                                             <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: logoSize}} />
                                         ) : null))}
@@ -2667,6 +2676,15 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     const ctaStyle: React.CSSProperties = { color: ctaColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
                     const logoTop = Math.max(8, Math.round(s.h * 0.04));
                     const logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                    // Estimate text block height (heading + subtext + cta) to avoid logo overlap with centered text
+                    const estHeading = Math.max(14, Math.min(28, Math.round(s.h*0.18)));
+                    const estSub = Math.max(10, Math.min(16, Math.round(s.h*0.11)));
+                    const estCta = Math.max(9, Math.min(14, Math.round(s.h*0.1)));
+                    const textBlockHeight = estHeading + estSub + estCta + 12;
+                    const textTop = Math.round(s.h/2 - textBlockHeight/2);
+                    const padding = Math.round(s.h * 0.02);
+                    const maxLogoTop = Math.max(4, textTop - logoHeight - padding);
+                    const safeLogoTop = Math.min(logoTop, maxLogoTop);
                     return (
                         <div className="border border-gray-200 rounded-lg p-3">
                             <div className="text-xs text-gray-600 mb-2">{s.label}</div>
@@ -2682,7 +2700,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                             <div>
                                                 <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
-                                            {logo && <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: logoTop, height: logoHeight}} alt="logo" />}
+                                            {logo && <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: safeLogoTop, height: logoHeight}} alt="logo" />}
                                         </div>
                                     )}
 
