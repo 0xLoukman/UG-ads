@@ -45,7 +45,7 @@ export default async function handler(req: Request) {
             <div style={{ marginTop: 8, display: 'flex' }}>
               <div style={{ display: 'inline-flex', background: accent, color: cc, padding: '10px 16px', borderRadius: 999, fontWeight: 700, fontSize: Math.max(12, Math.round(h*0.07)) }}>{cta}</div>
             </div>
-            {logo ? <img src={logo} style={{ position: 'absolute', top: 12, right: 12, height: Math.max(18, Math.round(h*0.1)) }} /> : null}
+            {logo ? (() => { const isWide = w / h > 2.5; if (isWide) { const logoH = Math.max(10, Math.round(h * 0.06)); const top = Math.max(6, Math.round(h * 0.02)); const right = Math.max(8, Math.round(w * 0.02)); return <img src={logo} style={{ position: 'absolute', top, right, height: logoH }} />; } return <img src={logo} style={{ position: 'absolute', top: 12, right: 12, height: Math.max(18, Math.round(h*0.1)) }} />; })() : null}
           </div>
         ) : template === 'split' ? (
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: Math.round(w*0.42), background: 'rgba(255,255,255,.95)', borderRight: '1px solid #e5e7eb', padding: 24, color: '#111' }}>
@@ -58,7 +58,7 @@ export default async function handler(req: Request) {
           </div>
         ) : template === 'center-hero' ? (
           <>
-            {logo ? <img src={logo} style={{ position: 'absolute', top: 12, right: 12, height: Math.max(18, Math.round(h*0.1)) }} /> : null}
+            {logo ? (() => { const isWide = w / h > 2.5; if (isWide) { const logoH = Math.max(10, Math.round(h * 0.06)); const top = Math.max(6, Math.round(h * 0.02)); const right = Math.max(8, Math.round(w * 0.02)); return <img src={logo} style={{ position: 'absolute', top, right, height: logoH }} />; } return <img src={logo} style={{ position: 'absolute', top: 12, right: 12, height: Math.max(18, Math.round(h*0.1)) }} />; })() : null}
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', color: '#fff', textAlign: 'center' }}>
               <div style={{ letterSpacing: '.02em', color: hc, fontWeight: 800, fontSize: Math.max(20, Math.round(h*0.14)) }}>{title}</div>
               <div style={{ opacity: .95, color: bc, marginTop: 6, fontSize: Math.max(12, Math.round(h*0.08)) }}>{subtitle}</div>
