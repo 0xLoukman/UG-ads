@@ -2392,7 +2392,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                         {/* Overlay */}
                                         {template === 'overlay' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
 
-                                        {/* Bottom text panel */}
+                                        {/* Text Panel */}
                                         {template === 'text-panel' && (
                                             <div className="absolute inset-x-0 bottom-0 bg-white/95 border-t border-gray-200 p-2 text-gray-900">
                                                 <div className="font-extrabold leading-tight" style={{fontSize: calcFontSize(Math.round(s.h*0.16), 12, 24)}}>{copy?.heading || 'Special Offer'}</div>
