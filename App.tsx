@@ -2460,7 +2460,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                         {/* Logo placement: center for center-hero, top-right for image side on split/text-panel/overlay */}
                                         {logo && (template === 'center-hero' ? (
                                             isWide ? (
-                                                <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: Math.max(10, Math.round(logoHeight * 0.85))}} />
+                                                <img src={logo} alt="logo" className="absolute object-contain" style={{top: safeTopWide, right: rightOffset, height: Math.max(10, Math.round(logoHeight * 0.85)), position: 'absolute'}} />
                                             ) : (
                                                 <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: safeLogoTop, height: logoHeight}} />
                                             )
@@ -2716,7 +2716,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                                 <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
                                             {logo && (isWide ? (
-                                                <img src={logo} className="absolute top-2 right-2 h-auto object-contain" style={{height: Math.max(10, Math.round(logoHeight * 0.85))}} alt="logo" />
+                                                <img src={logo} className="absolute h-auto object-contain" style={{top: safeTopWide, right: rightOffset, height: Math.max(10, Math.round(logoHeight * 0.85))}} alt="logo" />
                                             ) : (
                                                 <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: safeLogoTop, height: logoHeight}} alt="logo" />
                                             ))}
