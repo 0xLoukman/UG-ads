@@ -2101,7 +2101,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
         { key: '336x280', w: 336, h: 280, label: '336×280 • Large rectangle' },
         { key: '728x90',  w: 728, h: 90,  label: '728×90 • Leaderboard' },
         { key: '300x600', w: 300, h: 600, label: '300×600 • Half page' },
-        { key: '320x100', w: 320, h: 100, label: '320×100 �� Large mobile banner' },
+        { key: '320x100', w: 320, h: 100, label: '320×100 • Large mobile banner' },
     ] as const;
     const [sizeKey, setSizeKey] = useState<'300x250' | '336x280' | '728x90' | '300x600' | '320x100'>('300x250');
 
@@ -2453,7 +2453,11 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
 
                                         {/* Logo placement: center for center-hero, top-right for image side on split/text-panel/overlay */}
                                         {logo && (template === 'center-hero' ? (
-                                            <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: safeLogoTop, height: logoHeight}} />
+                                            isWide ? (
+                                                <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: Math.max(10, Math.round(logoHeight * 0.85))}} />
+                                            ) : (
+                                                <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: safeLogoTop, height: logoHeight}} />
+                                            )
                                         ) : (['split','text-panel','overlay'].includes(template) ? (
                                             <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: logoSize}} />
                                         ) : null))}
@@ -2700,7 +2704,11 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                             <div>
                                                 <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
-                                            {logo && <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: safeLogoTop, height: logoHeight}} alt="logo" />}
+                                            {logo && (isWide ? (
+                                                <img src={logo} className="absolute top-2 right-2 h-auto object-contain" style={{height: Math.max(10, Math.round(logoHeight * 0.85))}} alt="logo" />
+                                            ) : (
+                                                <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: safeLogoTop, height: logoHeight}} alt="logo" />
+                                            ))}
                                         </div>
                                     )}
 
