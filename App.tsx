@@ -1088,7 +1088,7 @@ const createClusterMarket = (codes: string[]): Market | null => {
 const getCountryFlag = (isoCode: string): string => {
   if (!isoCode || isoCode === 'WW') return '🌍';
   const code = isoCode.toUpperCase();
-  if (code.length !== 2) return '🌍';
+  if (code.length !== 2) return '��';
   const codePoints = [...code].map(char => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 };
@@ -2701,7 +2701,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                                 <div className="mt-1 opacity-95" style={{...bodyStyle, fontSize: Math.max(10, Math.min(16, Math.round(s.h*0.11)))}}>{copy?.subtext || 'Book direct for perks'}</div>
                                                 <button className="mt-2 px-2 py-1 rounded-md font-bold" style={{border:`2px solid ${accent}`, background:'transparent', ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
-                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                            {logo && <img src={logo} className="absolute left-1/2 top-2 transform -translate-x-1/2 w-auto object-contain" style={{height: Math.max(12, Math.round(s.h*0.08))}} alt="logo" />}
                                         </>
                                     )}
 
