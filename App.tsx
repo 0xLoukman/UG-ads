@@ -2377,6 +2377,8 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                             return Math.max(min, Math.min(max, base));
                         };
                         const logoSize = calcFontSize(Math.round(s.h*0.18), 14, 24);
+                        const logoTop = Math.max(8, Math.round(s.h * 0.04));
+                        const logoHeight = Math.max(12, Math.round(s.h * 0.08));
                         return (
                             <div className="flex flex-col flex-1 min-h-0">
                                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2 flex-shrink-0">
@@ -2442,7 +2444,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
 
                                         {/* Logo placement: center for center-hero, top-right for image side on split/text-panel/overlay */}
                                         {logo && (template === 'center-hero' ? (
-                                            <img src={logo} alt="logo" className="absolute left-1/2 top-2 transform -translate-x-1/2 object-contain" style={{height: Math.max(12, Math.round(s.h*0.08))}} />
+                                            <img src={logo} alt="logo" className="absolute left-1/2 transform -translate-x-1/2 object-contain" style={{top: logoTop, height: logoHeight}} />
                                         ) : (['split','text-panel','overlay'].includes(template) ? (
                                             <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: logoSize}} />
                                         ) : null))}
@@ -2663,6 +2665,8 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     const headingStyle: React.CSSProperties = { color: headingColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
                     const bodyStyle: React.CSSProperties = { color: bodyColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
                     const ctaStyle: React.CSSProperties = { color: ctaColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
+                    const logoTop = Math.max(8, Math.round(s.h * 0.04));
+                    const logoHeight = Math.max(12, Math.round(s.h * 0.08));
                     return (
                         <div className="border border-gray-200 rounded-lg p-3">
                             <div className="text-xs text-gray-600 mb-2">{s.label}</div>
@@ -2678,7 +2682,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                             <div>
                                                 <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
-                                            {logo && <img src={logo} className="absolute left-1/2 top-2 transform -translate-x-1/2 w-auto object-contain" style={{height: Math.max(12, Math.round(s.h*0.08))}} alt="logo" />}
+                                            {logo && <img src={logo} className="absolute left-1/2 transform -translate-x-1/2 w-auto object-contain" style={{top: logoTop, height: logoHeight}} alt="logo" />}
                                         </div>
                                     )}
 
