@@ -2378,7 +2378,11 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         };
                         const logoSize = calcFontSize(Math.round(s.h*0.18), 14, 24);
                         const logoTop = Math.max(8, Math.round(s.h * 0.04));
-                        const logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                        let logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                        // Reduce logo for very short banners
+                        if (s.h <= 110) {
+                            logoHeight = Math.max(8, Math.round(s.h * 0.06));
+                        }
                         // Estimate text block height (heading + subtext + cta) to avoid logo overlap with centered text
                         const estHeading = calcFontSize(Math.round(s.h*0.18), 14, 28);
                         const estSub = calcFontSize(Math.round(s.h*0.11), 10, 16);
@@ -2388,6 +2392,8 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                         const padding = Math.round(s.h * 0.02);
                         const maxLogoTop = Math.max(4, textTop - logoHeight - padding);
                         const safeLogoTop = Math.min(logoTop, maxLogoTop);
+                        const safeTopWide = Math.max(4, Math.min(logoTop, maxLogoTop));
+                        const rightOffset = Math.max(6, Math.round(s.w * 0.02));
                         return (
                             <div className="flex flex-col flex-1 min-h-0">
                                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2 flex-shrink-0">
@@ -2679,7 +2685,10 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     const bodyStyle: React.CSSProperties = { color: bodyColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
                     const ctaStyle: React.CSSProperties = { color: ctaColor, fontFamily: `'${font}', Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif` };
                     const logoTop = Math.max(8, Math.round(s.h * 0.04));
-                    const logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                    let logoHeight = Math.max(12, Math.round(s.h * 0.08));
+                    if (s.h <= 110) {
+                        logoHeight = Math.max(8, Math.round(s.h * 0.06));
+                    }
                     // Estimate text block height (heading + subtext + cta) to avoid logo overlap with centered text
                     const estHeading = Math.max(14, Math.min(28, Math.round(s.h*0.18)));
                     const estSub = Math.max(10, Math.min(16, Math.round(s.h*0.11)));
@@ -2689,6 +2698,8 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                     const padding = Math.round(s.h * 0.02);
                     const maxLogoTop = Math.max(4, textTop - logoHeight - padding);
                     const safeLogoTop = Math.min(logoTop, maxLogoTop);
+                    const safeTopWide = Math.max(4, Math.min(logoTop, maxLogoTop));
+                    const rightOffset = Math.max(6, Math.round(s.w * 0.02));
                     return (
                         <div className="border border-gray-200 rounded-lg p-3">
                             <div className="text-xs text-gray-600 mb-2">{s.label}</div>
