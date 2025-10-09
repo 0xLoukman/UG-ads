@@ -2390,7 +2390,18 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
                                         {activeImage && <img src={activeImage} className="absolute inset-0 w-full h-full object-cover" alt="Background" />}
 
                                         {/* Overlay */}
-                                        {template === 'overlay' && (<div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />)}
+                                        {template === 'overlay' && (
+                                            <>
+                                                <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/35" />
+                                                <div className="absolute inset-0 flex flex-col justify-end p-3 text-white text-left">
+                                                    <div className="font-extrabold leading-tight" style={{fontSize: calcFontSize(Math.round(s.h*0.16), 12, 24)}}>{copy?.heading || 'Special Offer'}</div>
+                                                    <div className="opacity-95 mt-0.5" style={{fontSize: calcFontSize(Math.round(s.h*0.11), 10, 16)}}>{copy?.subtext || 'Save on your next stay when you book direct.'}</div>
+                                                    <div>
+                                                        <button className="mt-2 px-2 py-1 rounded-full font-bold" style={{background: accent, color: '#fff', fontSize: calcFontSize(Math.round(s.h*0.1), 9, 14)}}>{copy?.cta || 'Book Now'}</button>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
 
                                         {/* Text Panel */}
                                         {template === 'text-panel' && (
@@ -2431,7 +2442,7 @@ const CreativeGeneratorView = ({ onSaveBanner, onPickFromLibrary, bannerPresets 
 
                                         {/* Logo placement: center for center-hero, top-right for image side on split/text-panel/overlay */}
                                         {logo && (template === 'center-hero' ? (
-                                            <img src={logo} alt="logo" className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 object-contain" style={{height: logoSize}} />
+                                            <img src={logo} alt="logo" className="absolute left-1/2 top-2 transform -translate-x-1/2 object-contain" style={{height: Math.max(12, Math.round(s.h*0.08))}} />
                                         ) : (['split','text-panel','overlay'].includes(template) ? (
                                             <img src={logo} alt="logo" className="absolute top-2 right-2 object-contain" style={{height: logoSize}} />
                                         ) : null))}
@@ -2667,7 +2678,7 @@ const CreativeGeneratorV2View = ({ onSaveBanner, onPickFromLibrary, bannerPreset
                                             <div>
                                                 <button className="mt-1 px-2 py-1 rounded-full font-bold" style={{background: accent, ...ctaStyle, fontSize: Math.max(9, Math.min(14, Math.round(s.h*0.1)))}}>{copy?.cta || 'Book Now'}</button>
                                             </div>
-                                            {logo && <img src={logo} className="absolute top-2 right-2 h-5 w-auto object-contain" alt="logo" />}
+                                            {logo && <img src={logo} className="absolute left-1/2 top-2 transform -translate-x-1/2 w-auto object-contain" style={{height: Math.max(12, Math.round(s.h*0.08))}} alt="logo" />}
                                         </div>
                                     )}
 
